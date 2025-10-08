@@ -10,6 +10,8 @@ vendingmachine.gui.neiColor.conditionDefault=000000
 vendingmachine.gui.neiColor.conditionSatisfied=55D441
 vendingmachine.gui.neiColor.conditionUnsatisfied=A87A5E
 vendingmachine.gui.item_eject=取出物品
+vendingmachine.gui.coin_eject=取出所有代币
+vendingmachine.gui.single_coin_type_eject_hint=Shift-点击提取
 vendingmachine.gui.search=搜索
 vendingmachine.gui.required_inputs=需要：
 
@@ -18,7 +20,10 @@ vendingmachine.gui.cooldown_display.minute=分
 vendingmachine.gui.cooldown_display.hour=时
 vendingmachine.gui.cooldown_display.day=天
 
+vendingmachine.gui.error.player_using=当前有其他玩家正在使用此自动售货机
+
 gt.blockmachines.multimachine.vendingmachine.name=自动售货机
+hatch.vendinguplink.me.name=ME自动售货接入接口
 
 vendingmachine.category.unknown=未知分类
 vendingmachine.category.all=全部物品
@@ -29,3 +34,18 @@ vendingmachine.category.chemistry=化工
 vendingmachine.category.magic=魔法
 vendingmachine.category.bees=蜜蜂
 vendingmachine.category.misc=杂项
+
+vendingmachine.coin.adventure=冒险代币
+vendingmachine.coin.bees=蜜蜂代币
+vendingmachine.coin.blood=血魔法代币
+vendingmachine.coin.chemist=化学家代币
+vendingmachine.coin.cook=厨师代币
+vendingmachine.coin.darkWizard=黑暗巫师代币
+vendingmachine.coin.farmer=农夫代币
+vendingmachine.coin.flower=花卉代币
+vendingmachine.coin.forestry=林业代币
+vendingmachine.coin.smith=工匠代币
+vendingmachine.coin.space=太空代币
+vendingmachine.coin.survivor=生存者代币
+vendingmachine.coin.technician=技师代币
+vendingmachine.coin.witch=巫术代币
