@@ -23,7 +23,7 @@ vendingmachine.gui.display_mode_list=List
 vendingmachine.gui.display_sort=Sort:
 vendingmachine.gui.display_sort_smart=Smart
 vendingmachine.gui.display_sort_alphabet=Alphabetical Order
-
+vendingmachine.gui.display_text_color=000000
 vendingmachine.gui.cooldown_display.second=s
 vendingmachine.gui.cooldown_display.minute=m
 vendingmachine.gui.cooldown_display.hour=h

@@ -16,7 +16,6 @@ public class Config {
     public static int gui_refresh_interval = 20;
     public static int dispense_frequency = 10;
     public static int dispense_amount = 16;
-    public static int display_text_color = 0x0;
     public static DisplayType display_type = DisplayType.TILE;
     public static MTEVendingMachineGui.SortMode sort_mode = MTEVendingMachineGui.SortMode.SMART;
 
@@ -43,16 +42,6 @@ public class Config {
             Integer.MAX_VALUE,
             "Number of items per dispense cycle");
 
-        try {
-            display_text_color = Integer.decode(
-                configuration.getString(
-                    "display_text_color",
-                    CONFIG_CATEGORY_VM,
-                    "0x0",
-                    "Color for text in Vending Machine GUI."));
-        } catch (NumberFormatException e) {
-            display_text_color = 0x0;
-        }
         try {
             display_type = DisplayType.valueOf(
                 configuration.getString(
