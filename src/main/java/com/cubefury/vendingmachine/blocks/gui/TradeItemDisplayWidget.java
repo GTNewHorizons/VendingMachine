@@ -20,6 +20,7 @@ import com.cleanroommc.modularui.utils.Platform;
 import com.cleanroommc.modularui.value.sync.GenericSyncValue;
 import com.cleanroommc.modularui.value.sync.SyncHandler;
 import com.cleanroommc.modularui.widgets.ItemDisplayWidget;
+import com.cubefury.vendingmachine.Config;
 import com.cubefury.vendingmachine.gui.GuiTextures;
 
 public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interactable {
@@ -97,7 +98,7 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
         ItemStack item = value.getValue();
         if (!Platform.isStackEmpty(item)) {
             if (this.displayType == DisplayType.TILE) {
-                GuiDraw.drawText(" " + this.display.display.stackSize, 4, 9, 1.0f, 0x0, false);
+                GuiDraw.drawText(" " + this.display.display.stackSize, 4, 9, 1.0f, Config.display_text_color, false);
                 GuiDraw.drawItem(item, 26, 4, 16, 16, context.getCurrentDrawingZ());
                 if (this.display.tradeableNow) {
                     GuiDraw.drawOutline(1, 1, 45, 23, 0x883CFF00, 2);
@@ -116,8 +117,19 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
                     IKey.str(display.hasCooldown ? this.display.cooldownText : "")
                         .style(IKey.WHITE));
             } else if (this.displayType == DisplayType.LIST) {
-                GuiDraw.drawText("" + this.display.display.stackSize, 6, 4, 0.9f, 0x0, false);
-                GuiDraw.drawText("" + this.display.display.getDisplayName(), 24, 4, 0.9f, 0x0, false);
+                GuiDraw.drawText("" + this.display.display.stackSize, 6, 4, 0.9f, Config.display_text_color, false);
+                GuiDraw.drawItem(item, 24, 2, 9, 9, context.getCurrentDrawingZ());
+                GuiDraw.drawText(
+                    this.display.display.getDisplayName()
+                        .length() > 21
+                            ? this.display.display.getDisplayName()
+                                .substring(0, 21) + "..."
+                            : this.display.display.getDisplayName(),
+                    36,
+                    4,
+                    0.9f,
+                    Config.display_text_color,
+                    false);
                 GuiDraw.drawRect(
                     1,
                     1,
