@@ -18,7 +18,7 @@ Alpha Testing
 This can be used as a standalone mod with several dependencies. The vending machine block and ME Vending Uplink do not come with default recipes.
 
 ### Required Dependencies:
-- GT5U
+- GT5Unofficial-GTNH (Not compatible with main GT5U branch!)
 - ModularUI 2
 - NotEnoughItems
 - Applied Energistics 2
