@@ -72,7 +72,7 @@ public class TradeDatabase {
             .sum();
     }
 
-    public void readFromNBT(NBTTagCompound nbt, boolean merge) {
+    public void readFromNBT(NBTTagCompound nbt, boolean merge, boolean isFileLoad) {
         if (!merge) {
             this.clear();
             if (VendingMachine.isBqLoaded) {
@@ -95,7 +95,7 @@ public class TradeDatabase {
 
             tradeGroups.put(tg.getId(), tg);
         }
-        if (Config.forceRewriteDatabase || newMetadataCount > 0) {
+        if (isFileLoad && (Config.forceRewriteDatabase || newMetadataCount > 0)) {
             VendingMachine.LOG.info("Appended metadata to {} new trades", newMetadataCount);
             DirtyDbMarker.markDirty();
         }
