@@ -89,7 +89,6 @@ public class NetTradeDisplaySync {
                 t.displayItem == null ? t.displayItem.convertToItemStack() : displayItem,
                 this.tgID,
                 this.tradeGroupOrder,
-                tg.getLabel(),
                 this.cooldown,
                 convertCooldownText(this.cooldown),
                 this.cooldown > 0,
