@@ -4,6 +4,7 @@ import static com.cubefury.vendingmachine.gui.GuiTextures.SORT_ALPHABET;
 import static com.cubefury.vendingmachine.gui.GuiTextures.SORT_SMART;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -572,8 +573,10 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
             .left(3);
         Flow coinColumn = new Column().width(COIN_COLUMN_WIDTH);
         int coinCount = 0;
+
+        UUID playerId = NameCache.INSTANCE.getUUIDFromPlayer(getBase().getCurrentUser());
         Map<CurrencyItem.CurrencyType, Integer> currentAmounts = TradeManager.INSTANCE.playerCurrency
-            .getOrDefault(NameCache.INSTANCE.getUUIDFromPlayer(getBase().getCurrentUser()), new HashMap<>());
+            .getOrDefault(playerId, Collections.EMPTY_MAP);
         for (CurrencyItem.CurrencyType type : CurrencyItem.CurrencyType.values()) {
             coinColumn.child(
                 new Row().child(
@@ -592,15 +595,17 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                                     .style(IKey.GRAY, IKey.ITALIC));
                             builder.setAutoUpdate(true);
                         }))
-                    .child(
-                        IKey.dynamic(
-                            () -> getReadableStringFromCoinAmount(
-                                currentAmounts.get(type) == null ? 0 : currentAmounts.get(type)))
-                            .scale(0.8f)
-                            .asWidget()
-                            .top(3)
-                            .left(14)
-                            .width(21))
+                    .child(IKey.dynamic(() -> {
+                        Map<CurrencyItem.CurrencyType, Integer> currencyMap = TradeManager.INSTANCE.playerCurrency
+                            .getOrDefault(playerId, Collections.EMPTY_MAP);
+                        return getReadableStringFromCoinAmount(
+                            currencyMap.get(type) == null ? 0 : currencyMap.get(type));
+                    })
+                        .scale(0.8f)
+                        .asWidget()
+                        .top(3)
+                        .left(14)
+                        .width(21))
                     .height(14));
             if (++coinCount % COIN_COLUMN_ROW_COUNT == 0) {
                 parent.child(coinColumn.left(3 + COIN_COLUMN_WIDTH * (coinCount / COIN_COLUMN_ROW_COUNT - 1)));
