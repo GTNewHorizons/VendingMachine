@@ -3,6 +3,7 @@ package com.cubefury.vendingmachine.trade;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraftforge.common.util.Constants;
@@ -56,6 +57,8 @@ public class Trade {
     }
 
     public void readFromNBT(NBTTagCompound nbt) {
+        displayItem = BigItemStack.loadItemStackFromNBT(nbt.getCompoundTag("displayItem"));
+
         fromCurrency.clear();
         fromItems.clear();
         toItems.clear();
@@ -76,9 +79,18 @@ public class Trade {
         }
     }
 
+    public ItemStack getDisplayItem() {
+        return this.displayItem.getBaseStack()
+            .isItemEqual(new ItemStack(ItemPlaceholder.placeholder))
+                ? this.toItems.get(0)
+                    .convertToItemStack()
+                : this.displayItem.getBaseStack();
+    }
+
     @Optional.Method(modid = "betterquesting")
     @SideOnly(Side.CLIENT)
     public IGuiPanel getTradeGui(IGuiRect rect) {
         return new PanelQBTrade(rect, this);
     }
+
 }

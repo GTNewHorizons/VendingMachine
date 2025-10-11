@@ -80,8 +80,7 @@ public class NetTradeDisplaySync {
             TradeGroup tg = TradeDatabase.INSTANCE.getTradeGroupFromId(this.tgID);
             Trade t = tg.getTrades()
                 .get(this.tradeGroupOrder);
-            ItemStack displayItem = t.toItems.get(0)
-                .convertToItemStack();
+            ItemStack displayItem = t.getDisplayItem();
             return new TradeItemDisplay(
                 t.fromCurrency,
                 t.fromItems,
