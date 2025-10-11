@@ -465,9 +465,6 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
 
             builder.emptyLine();
             builder.addLine(
-                IKey.str(cur.label)
-                    .style(IKey.GRAY));
-            builder.addLine(
                 IKey.str(Translator.translate("vendingmachine.gui.trade_hint"))
                     .style(IKey.GRAY));
         }

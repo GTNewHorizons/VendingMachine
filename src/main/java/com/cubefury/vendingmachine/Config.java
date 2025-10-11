@@ -10,6 +10,7 @@ import com.cubefury.vendingmachine.blocks.gui.TradeItemDisplayWidget.DisplayType
 public class Config {
 
     private static final String CONFIG_CATEGORY_VM = "Vending Machine Settings";
+    private static final String CONFIG_CATEGORY_DEVELOPER = "Developer Settings";
 
     public static String data_dir = "vendingmachine";
     public static String config_dir = "config/vendingmachine";
@@ -18,6 +19,7 @@ public class Config {
     public static int dispense_amount = 16;
     public static DisplayType display_type = DisplayType.TILE;
     public static MTEVendingMachineGui.SortMode sort_mode = MTEVendingMachineGui.SortMode.SMART;
+    public static boolean forceRewriteDatabase = false;
 
     public static File worldDir = null;
 
@@ -41,6 +43,13 @@ public class Config {
             1,
             Integer.MAX_VALUE,
             "Number of items per dispense cycle");
+
+        configuration.addCustomCategoryComment(CONFIG_CATEGORY_DEVELOPER, "Developer Settings");
+        forceRewriteDatabase = configuration.getBoolean(
+            "force_rewrite_database",
+            CONFIG_CATEGORY_DEVELOPER,
+            forceRewriteDatabase,
+            "Force rewrite database on load, for add/remove trades or change of format");
 
         try {
             display_type = DisplayType.valueOf(

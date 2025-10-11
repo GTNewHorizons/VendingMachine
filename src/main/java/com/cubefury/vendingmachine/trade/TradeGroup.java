@@ -28,7 +28,6 @@ public class TradeGroup {
     private final List<Trade> trades = new ArrayList<>();
     public int cooldown = -1;
     public int maxTrades = -1;
-    public String label = "";
     private TradeCategory category = TradeCategory.UNKNOWN;
     private String original_category_str = "";
     private final Set<ICondition> requirementSet = new HashSet<>();
@@ -193,7 +192,6 @@ public class TradeGroup {
         }
         this.cooldown = nbt.getInteger("cooldown");
         this.maxTrades = nbt.getInteger("maxTrades");
-        this.label = nbt.getString("label");
         NBTTagList tradeList = nbt.getTagList("trades", Constants.NBT.TAG_COMPOUND);
         for (int i = 0; i < tradeList.tagCount(); i++) {
             NBTTagCompound trade = tradeList.getCompoundTagAt(i);
@@ -217,7 +215,6 @@ public class TradeGroup {
         nbt.setTag("id", NBTConverter.UuidValueType.TRADEGROUP.writeId(this.id));
         nbt.setInteger("cooldown", this.cooldown);
         nbt.setInteger("maxTrades", this.maxTrades);
-        nbt.setString("label", this.label);
         nbt.setString("category", this.category.getKey());
         NBTTagList tList = new NBTTagList();
         for (Trade t : trades) {
@@ -230,10 +227,6 @@ public class TradeGroup {
         }
         nbt.setTag("requirements", cList);
         return nbt;
-    }
-
-    public String getLabel() {
-        return this.label;
     }
 
     @Optional.Method(modid = "betterquesting")

@@ -68,6 +68,6 @@ public class NetTradeDbSync {
         ) {
             return;
         }
-        TradeDatabase.INSTANCE.readFromNBT(message.getCompoundTag("data"), message.getBoolean("merge"));
+        TradeDatabase.INSTANCE.readFromNBT(message.getCompoundTag("data"), message.getBoolean("merge"), false);
     }
 }
