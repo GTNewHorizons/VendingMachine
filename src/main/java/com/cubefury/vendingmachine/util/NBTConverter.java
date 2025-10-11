@@ -10,7 +10,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -194,17 +193,20 @@ public class NBTConverter {
     public static void NBTtoJSON_Compound(NBTTagCompound parent, JsonWriter out, boolean format) throws IOException {
         out.beginObject();
 
-        if (parent != null) for (String key : (Set<String>) parent.func_150296_c()) {
-            NBTBase tag = parent.getTag(key);
+        if (parent != null) for (String key : parent.func_150296_c()
+            .stream()
+            .sorted(String::compareTo)
+            .collect(Collectors.toList())) {
+                NBTBase tag = parent.getTag(key);
 
-            if (format) {
-                out.name(key + ":" + tag.getId());
-                NBTtoJSON_Base(tag, true, out);
-            } else {
-                out.name(key);
-                NBTtoJSON_Base(tag, false, out);
+                if (format) {
+                    out.name(key + ":" + tag.getId());
+                    NBTtoJSON_Base(tag, true, out);
+                } else {
+                    out.name(key);
+                    NBTtoJSON_Base(tag, false, out);
+                }
             }
-        }
         out.endObject();
     }
 

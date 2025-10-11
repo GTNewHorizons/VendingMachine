@@ -13,6 +13,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraftforge.common.util.Constants;
 
+import com.cubefury.vendingmachine.Config;
 import com.cubefury.vendingmachine.VendingMachine;
 import com.cubefury.vendingmachine.integration.betterquesting.BqAdapter;
 import com.cubefury.vendingmachine.integration.nei.NeiRecipeCache;
@@ -94,7 +95,7 @@ public class TradeDatabase {
 
             tradeGroups.put(tg.getId(), tg);
         }
-        if (newMetadataCount > 0) {
+        if (Config.forceRewriteDatabase || newMetadataCount > 0) {
             VendingMachine.LOG.info("Appended metadata to {} new trades", newMetadataCount);
             DirtyDbMarker.markDirty();
         }
