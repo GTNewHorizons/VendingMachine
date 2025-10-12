@@ -1,6 +1,9 @@
 package com.cubefury.vendingmachine.gui;
 
+import net.minecraft.util.ResourceLocation;
+
 import com.cleanroommc.modularui.api.GuiAxis;
+import com.cleanroommc.modularui.drawable.ColorType;
 import com.cleanroommc.modularui.drawable.TabTexture;
 import com.cleanroommc.modularui.drawable.UITexture;
 import com.cubefury.vendingmachine.VendingMachine;
@@ -116,6 +119,11 @@ public final class GuiTextures {
         .name("coin_eject")
         .build();
 
-    public static final TabTexture TAB_LEFT = TabTexture
-        .of(UITexture.fullImage(VendingMachine.MODID, "gui/tabs_left", true), GuiAxis.X, false, 32, 28, 4);
+    public static final TabTexture TAB_LEFT = TabTexture.of(
+        UITexture.fullImage(new ResourceLocation(VendingMachine.MODID, "gui/tabs_left"), ColorType.DEFAULT),
+        GuiAxis.X,
+        false,
+        32,
+        28,
+        4);
 }

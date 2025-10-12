@@ -11,13 +11,15 @@ public final class WidgetThemes {
 
     public static void register() {
         IThemeApi themeApi = IThemeApi.get();
-        registerThemedTexture(themeApi, BACKGROUND_SIDEPANEL, GuiTextures.SIDE_PANEL_BACKGROUND);
+        registerThemedTexture(themeApi, BACKGROUND_SIDEPANEL, GuiTextures.SIDE_PANEL_BACKGROUND, 0, 0);
     }
 
-    private static void registerThemedTexture(IThemeApi themeApi, String textureThemeId, UITexture background) {
+    private static void registerThemedTexture(IThemeApi themeApi, String textureThemeId, UITexture background,
+        int defaultWidth, int defaultHeight) {
         themeApi.registerWidgetTheme(
             textureThemeId,
-            new WidgetTheme(background, null, Color.WHITE.main, 0xFF404040, false),
+            new WidgetTheme(defaultWidth, defaultHeight, background, Color.WHITE.main, 0xFF404040, false, 0),
+            new WidgetTheme(defaultWidth, defaultHeight, background, Color.WHITE.main, 0xFF404040, false, 0),
             WidgetTheme::new);
     }
 }

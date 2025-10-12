@@ -280,7 +280,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
         return new SearchBar(this).width(162)
             .left(3)
             .top(5)
-            .height(10);
+            .height(14);
     }
 
     // Eject code is in GUI instead of MTE since the syncers are per-gui instance
@@ -346,7 +346,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
     }
 
     private IWidget createIOColumn() {
-        return new ParentWidget<>().excludeAreaInNEI()
+        return new ParentWidget<>().excludeAreaInRecipeViewer()
             .width(50)
             .height(178)
             .right(-48)
