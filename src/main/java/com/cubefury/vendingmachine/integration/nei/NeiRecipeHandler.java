@@ -197,8 +197,8 @@ public class NeiRecipeHandler extends TemplateRecipeHandler {
 
         Point pos = GuiDraw.getMousePosition();
 
-        int guiLeft = (gui.width - gui.getWidgetSize().width) / 2;
-        int guiTop = 19 + (gui.height - gui.getWidgetSize().height) / 2;
+        int guiLeft = (gui.width - gui.getRecipeCatalystWidget().w) / 2;
+        int guiTop = 19 + (gui.height - gui.getRecipeCatalystWidget().w) / 2;
         Point relMousePos = new Point(pos.x - guiLeft - offset.x, pos.y - guiTop - offset.y);
         Rectangle textArea = new Rectangle(2, curY - GuiDraw.fontRenderer.FONT_HEIGHT, width + 2, height + 1);
         if (textArea.contains(relMousePos)) {
@@ -214,8 +214,8 @@ public class NeiRecipeHandler extends TemplateRecipeHandler {
         if (lastHoveredTextArea == null || lastHoveredQuestId == null || lastHoveredRecipeIndex != recipeIndex) {
             return false;
         }
-        int guiLeft = (gui.width - gui.getWidgetSize().width) / 2;
-        int guiTop = 19 + (gui.height - gui.getWidgetSize().height) / 2;
+        int guiLeft = (gui.width - gui.getRecipeCatalystWidget().w) / 2;
+        int guiTop = 19 + (gui.height - gui.getRecipeCatalystWidget().h) / 2;
 
         Point offset = gui.getRecipePosition(recipeIndex);
         Point pos = GuiDraw.getMousePosition();
