@@ -3,6 +3,7 @@ package com.cubefury.vendingmachine;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.cubefury.vendingmachine.gui.WidgetThemes;
 import com.cubefury.vendingmachine.items.VMItems;
 import com.cubefury.vendingmachine.network.PacketTypeRegistry;
 import com.cubefury.vendingmachine.network.SerializedPacket;
@@ -60,6 +61,9 @@ public class VendingMachine {
 
         proxy.registerHandlers();
         PacketTypeRegistry.INSTANCE.init();
+
+        // MUI2
+        WidgetThemes.init();
 
         // Register network handlers
         network.registerMessage(SerializedPacket.HandleClient.class, SerializedPacket.class, 0, Side.CLIENT);

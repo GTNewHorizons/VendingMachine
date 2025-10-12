@@ -21,6 +21,7 @@ import com.cleanroommc.modularui.value.sync.GenericSyncValue;
 import com.cleanroommc.modularui.value.sync.SyncHandler;
 import com.cleanroommc.modularui.widgets.ItemDisplayWidget;
 import com.cubefury.vendingmachine.gui.GuiTextures;
+import com.cubefury.vendingmachine.gui.WidgetThemes;
 import com.cubefury.vendingmachine.util.Translator;
 
 public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interactable {
@@ -57,22 +58,17 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
 
     public TradeItemDisplayWidget(TradeItemDisplay display, DisplayType displayType) {
         this.displayType = displayType;
+        widgetTheme(WidgetThemes.THEME_TRADE_BUTTON);
         if (displayType == DisplayType.TILE) {
             height(MTEVendingMachineGui.TILE_ITEM_HEIGHT);
             width(MTEVendingMachineGui.TILE_ITEM_WIDTH);
             background(
                 new DynamicDrawable(
                     () -> pressed ? GuiTextures.TILE_TRADE_BUTTON_PRESSED : GuiTextures.TILE_TRADE_BUTTON_UNPRESSED));
-            hoverBackground(
-                new DynamicDrawable(
-                    () -> pressed ? GuiTextures.TILE_TRADE_BUTTON_PRESSED : GuiTextures.TILE_TRADE_BUTTON_UNPRESSED));
         } else if (displayType == DisplayType.LIST) {
             height(MTEVendingMachineGui.LIST_ITEM_HEIGHT);
             width(MTEVendingMachineGui.LIST_ITEM_WIDTH);
             background(
-                new DynamicDrawable(
-                    () -> pressed ? GuiTextures.LIST_TRADE_BUTTON_PRESSED : GuiTextures.LIST_TRADE_BUTTON_UNPRESSED));
-            hoverBackground(
                 new DynamicDrawable(
                     () -> pressed ? GuiTextures.LIST_TRADE_BUTTON_PRESSED : GuiTextures.LIST_TRADE_BUTTON_UNPRESSED));
         }
