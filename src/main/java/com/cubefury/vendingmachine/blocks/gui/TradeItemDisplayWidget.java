@@ -30,8 +30,8 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
         TILE("tile", MODE_TILE),
         LIST("list", MODE_LIST);
 
-        private String type;
-        private Icon texture;
+        private final String type;
+        private final Icon texture;
 
         DisplayType(String type, UITexture texture) {
             this.type = type;
@@ -177,6 +177,7 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
     @Override
     public void onMouseEndHover() {
         pressed = false;
+        super.onMouseEndHover();
     }
 
     @Override
