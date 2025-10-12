@@ -63,12 +63,18 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
             background(
                 new DynamicDrawable(
                     () -> pressed ? GuiTextures.TILE_TRADE_BUTTON_PRESSED : GuiTextures.TILE_TRADE_BUTTON_UNPRESSED));
+            hoverBackground(
+                new DynamicDrawable(
+                    () -> pressed ? GuiTextures.TILE_TRADE_BUTTON_PRESSED : GuiTextures.TILE_TRADE_BUTTON_UNPRESSED));
         } else if (displayType == DisplayType.LIST) {
             height(MTEVendingMachineGui.LIST_ITEM_HEIGHT);
             width(MTEVendingMachineGui.LIST_ITEM_WIDTH);
             background(
                 new DynamicDrawable(
                     () -> pressed ? GuiTextures.LIST_TRADE_BUTTON_PRESSED : GuiTextures.LIST_TRADE_BUTTON_UNPRESSED));
+            hoverBackground(
+                new DynamicDrawable(
+                    () -> pressed ? GuiTextures.TILE_TRADE_BUTTON_PRESSED : GuiTextures.TILE_TRADE_BUTTON_UNPRESSED));
         }
 
         this.display = display;
