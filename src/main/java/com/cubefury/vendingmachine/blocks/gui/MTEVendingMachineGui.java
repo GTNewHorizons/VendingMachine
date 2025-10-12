@@ -85,6 +85,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
     public static final int CUSTOM_UI_HEIGHT = 320;
 
     // Trade Item Display
+    public static final int TRADE_ROW_WIDTH = 154;
     public static final int TILE_ITEMS_PER_ROW = 3;
     public static final int TILE_ITEM_HEIGHT = 25;
     public static final int TILE_ITEM_WIDTH = 47;
@@ -484,14 +485,14 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
             .height(146);
         for (TradeCategory category : this.tradeCategories) {
             ListWidget<IWidget, ?> tradeList = new ListWidget<>().debugName("items")
-                .width(156)
+                .width(161)
                 .top(1)
                 .height(144)
                 .collapseDisabledChild(true);
 
             tradeList.child(new Row().height(2));
             // Higher first row top margin
-            Flow row = new TradeRow().height(TILE_ITEM_HEIGHT +2).left(2);
+            Flow row = new TradeRow().height(TILE_ITEM_HEIGHT +2).width(TRADE_ROW_WIDTH).marginLeft(2);
 
             // Tiles Display
             for (int i = 0; i < MTEVendingMachine.MAX_TRADES; i++) {
@@ -515,7 +516,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                 if (i % TILE_ITEMS_PER_ROW == TILE_ITEMS_PER_ROW - 1) {
                     tradeList.child(row);
 
-                    row = new TradeRow().height(TILE_ITEM_HEIGHT +2).left(2);
+                    row = new TradeRow().height(TILE_ITEM_HEIGHT +2).width(TRADE_ROW_WIDTH).marginLeft(2);
                 }
             }
             if (row.hasChildren()) {
@@ -523,7 +524,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
             }
 
             // List Display
-            row = new TradeRow().height(LIST_ITEM_HEIGHT).left(2);
+            row = new TradeRow().height(LIST_ITEM_HEIGHT).width(TRADE_ROW_WIDTH).marginLeft(2);
             for (int i = 0; i < MTEVendingMachine.MAX_TRADES; i++) {
                 int index = i;
                 displayedTradesList.get(category).get(i).setRootPanel(rootPanel);
@@ -542,7 +543,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                         return displayType == display.displayType && display.getDisplay() != null;
                     }));
                 tradeList.child(row);
-                row = new TradeRow().height(LIST_ITEM_HEIGHT).left(2);
+                row = new TradeRow().height(LIST_ITEM_HEIGHT).width(TRADE_ROW_WIDTH).marginLeft(2);
             }
 
             tradeList.child(new Row().height(2)); // bottom padding for last row
