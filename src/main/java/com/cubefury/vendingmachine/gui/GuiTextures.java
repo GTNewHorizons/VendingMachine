@@ -50,28 +50,32 @@ public final class GuiTextures {
 
     // TODO: Restore canApplyTheme to trade button textures after scrolling texture bug is fixed in MUI2
     public static final UITexture TILE_TRADE_BUTTON_UNPRESSED = UITexture.builder()
-        .location(VendingMachine.MODID, "gui/background/trade_button_unpressed_color_corrected")
+        .location(VendingMachine.MODID, "gui/background/trade_button_unpressed")
+        .canApplyTheme()
         .imageSize(195, 136)
         .adaptable(4)
         .name("trade_button_unpressed")
         .build();
 
     public static final UITexture TILE_TRADE_BUTTON_PRESSED = UITexture.builder()
-        .location(VendingMachine.MODID, "gui/background/trade_button_pressed_color_corrected")
+        .location(VendingMachine.MODID, "gui/background/trade_button_pressed")
+        .canApplyTheme()
         .imageSize(195, 136)
         .adaptable(4)
         .name("trade_button_pressed")
         .build();
 
     public static final UITexture LIST_TRADE_BUTTON_UNPRESSED = UITexture.builder()
-        .location(VendingMachine.MODID, "gui/background/list_trade_button_unpressed_color_corrected")
+        .location(VendingMachine.MODID, "gui/background/list_trade_button_unpressed")
+        .canApplyTheme()
         .imageSize(195, 136)
         .adaptable(2)
         .name("list_trade_button_unpressed")
         .build();
 
     public static final UITexture LIST_TRADE_BUTTON_PRESSED = UITexture.builder()
-        .location(VendingMachine.MODID, "gui/background/list_trade_button_pressed_color_corrected")
+        .location(VendingMachine.MODID, "gui/background/list_trade_button_pressed")
+        .canApplyTheme()
         .imageSize(195, 136)
         .adaptable(2)
         .name("list_trade_button_pressed")
