@@ -4,6 +4,7 @@ import static com.cubefury.vendingmachine.gui.GuiTextures.SORT_ALPHABET;
 import static com.cubefury.vendingmachine.gui.GuiTextures.SORT_SMART;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -84,6 +85,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
     public static final int CUSTOM_UI_HEIGHT = 320;
 
     // Trade Item Display
+    public static final int TRADE_ROW_WIDTH = 154;
     public static final int TILE_ITEMS_PER_ROW = 3;
     public static final int TILE_ITEM_HEIGHT = 25;
     public static final int TILE_ITEM_WIDTH = 47;
@@ -279,7 +281,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
         return new SearchBar(this).width(162)
             .left(3)
             .top(5)
-            .height(10);
+            .height(14);
     }
 
     // Eject code is in GUI instead of MTE since the syncers are per-gui instance
@@ -345,7 +347,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
     }
 
     private IWidget createIOColumn() {
-        return new ParentWidget<>().excludeAreaInNEI()
+        return new ParentWidget<>().excludeAreaInRecipeViewer()
             .width(50)
             .height(178)
             .right(-48)
@@ -480,14 +482,14 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
             .height(146);
         for (TradeCategory category : this.tradeCategories) {
             ListWidget<IWidget, ?> tradeList = new ListWidget<>().debugName("items")
-                .width(156)
+                .width(161)
                 .top(1)
                 .height(144)
                 .collapseDisabledChild(true);
 
             tradeList.child(new Row().height(2));
             // Higher first row top margin
-            Flow row = new TradeRow().height(TILE_ITEM_HEIGHT +2).left(2);
+            Flow row = new TradeRow().height(TILE_ITEM_HEIGHT +2).width(TRADE_ROW_WIDTH).marginLeft(2);
 
             // Tiles Display
             for (int i = 0; i < MTEVendingMachine.MAX_TRADES; i++) {
@@ -511,7 +513,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                 if (i % TILE_ITEMS_PER_ROW == TILE_ITEMS_PER_ROW - 1) {
                     tradeList.child(row);
 
-                    row = new TradeRow().height(TILE_ITEM_HEIGHT +2).left(2);
+                    row = new TradeRow().height(TILE_ITEM_HEIGHT +2).width(TRADE_ROW_WIDTH).marginLeft(2);
                 }
             }
             if (row.hasChildren()) {
@@ -519,7 +521,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
             }
 
             // List Display
-            row = new TradeRow().height(LIST_ITEM_HEIGHT).left(2);
+            row = new TradeRow().height(LIST_ITEM_HEIGHT).width(TRADE_ROW_WIDTH).marginLeft(2);
             for (int i = 0; i < MTEVendingMachine.MAX_TRADES; i++) {
                 int index = i;
                 displayedTradesList.get(category).get(i).setRootPanel(rootPanel);
@@ -538,7 +540,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                         return displayType == display.displayType && display.getDisplay() != null;
                     }));
                 tradeList.child(row);
-                row = new TradeRow().height(LIST_ITEM_HEIGHT).left(2);
+                row = new TradeRow().height(LIST_ITEM_HEIGHT).width(TRADE_ROW_WIDTH).marginLeft(2);
             }
 
             tradeList.child(new Row().height(2)); // bottom padding for last row
@@ -569,8 +571,10 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
             .left(3);
         Flow coinColumn = new Column().width(COIN_COLUMN_WIDTH);
         int coinCount = 0;
+
+        UUID playerId = NameCache.INSTANCE.getUUIDFromPlayer(getBase().getCurrentUser());
         Map<CurrencyItem.CurrencyType, Integer> currentAmounts = TradeManager.INSTANCE.playerCurrency
-            .getOrDefault(NameCache.INSTANCE.getUUIDFromPlayer(getBase().getCurrentUser()), new HashMap<>());
+            .getOrDefault(playerId, Collections.EMPTY_MAP);
         for (CurrencyItem.CurrencyType type : CurrencyItem.CurrencyType.values()) {
             coinColumn.child(
                 new Row().child(
@@ -589,15 +593,17 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                                     .style(IKey.GRAY, IKey.ITALIC));
                             builder.setAutoUpdate(true);
                         }))
-                    .child(
-                        IKey.dynamic(
-                            () -> getReadableStringFromCoinAmount(
-                                currentAmounts.get(type) == null ? 0 : currentAmounts.get(type)))
-                            .scale(0.8f)
-                            .asWidget()
-                            .top(3)
-                            .left(14)
-                            .width(21))
+                    .child(IKey.dynamic(() -> {
+                        Map<CurrencyItem.CurrencyType, Integer> currencyMap = TradeManager.INSTANCE.playerCurrency
+                            .getOrDefault(playerId, Collections.EMPTY_MAP);
+                        return getReadableStringFromCoinAmount(
+                            currencyMap.get(type) == null ? 0 : currencyMap.get(type));
+                    })
+                        .scale(0.8f)
+                        .asWidget()
+                        .top(3)
+                        .left(14)
+                        .width(21))
                     .height(14));
             if (++coinCount % COIN_COLUMN_ROW_COUNT == 0) {
                 parent.child(coinColumn.left(3 + COIN_COLUMN_WIDTH * (coinCount / COIN_COLUMN_ROW_COUNT - 1)));
