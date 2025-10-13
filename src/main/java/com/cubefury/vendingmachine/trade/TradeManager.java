@@ -105,8 +105,14 @@ public class TradeManager {
     public void populateCurrencyFromNBT(NBTTagCompound nbt, UUID player, boolean merge) {
         NBTTagList tagList = nbt.getTagList("playerCurrency", Constants.NBT.TAG_COMPOUND);
         if (!merge) {
-            this.playerCurrency.clear();
-            this.invalidCurrency.clear();
+            if (player == null) {
+                this.playerCurrency.clear();
+                this.invalidCurrency.clear();
+            } else {
+                this.playerCurrency.remove(player);
+                this.invalidCurrency.remove(player);
+            }
+
         }
         this.playerCurrency.computeIfAbsent(player, k -> new HashMap<>());
         for (int i = 0; i < tagList.tagCount(); i++) {
