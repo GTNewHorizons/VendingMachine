@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -143,6 +144,13 @@ public class NameCache implements INameCache {
         }
 
         return Collections.unmodifiableList(nameCache);
+    }
+
+    @Override
+    public List<UUID> getAllUUIDS() {
+        return cache.keySet()
+            .stream()
+            .collect(Collectors.toList());
     }
 
     @Override
