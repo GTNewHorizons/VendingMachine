@@ -78,8 +78,6 @@ public class EventHandler {
         }
 
         NetBulkSync.sendReset(mpPlayer, true, true);
-
-        UUID playerId = NameCache.INSTANCE.getUUIDFromPlayer(mpPlayer);
     }
 
     @SubscribeEvent
@@ -146,7 +144,6 @@ public class EventHandler {
     }
 
     private void terminateVendingSession(@Nonnull EntityPlayer player) {
-        VendingMachine.LOG.info("terminating session for {}", player);
         if (VendingMachine.proxy.isClient()) {
             return;
         }
@@ -162,7 +159,6 @@ public class EventHandler {
             te instanceof IGregTechTileEntity
                 && ((IGregTechTileEntity) te).getMetaTileEntity() instanceof MTEVendingMachine
         ) {
-            VendingMachine.LOG.info("found VM MTE terminating session for {}", player);
             ((MTEVendingMachine) ((IGregTechTileEntity) te).getMetaTileEntity()).resetCurrentUser(player);
             SaveLoadHandler.INSTANCE
                 .writeTradeState(Collections.singleton(NameCache.INSTANCE.getUUIDFromPlayer(player)));

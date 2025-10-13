@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import javax.annotation.Nonnull;
+
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraftforge.common.util.Constants;
@@ -130,24 +132,25 @@ public class TradeManager {
         this.hasCurrencyUpdate = true;
     }
 
-    public NBTTagList writeCurrencyToNBT(UUID player) {
-        NBTTagList nbt = new NBTTagList();
+    public NBTTagCompound writeCurrencyToNBT(NBTTagCompound nbt, @Nonnull UUID player) {
         if (this.playerCurrency.get(player) == null) {
             return nbt;
         }
+        NBTTagList nbtCurrencyList = new NBTTagList();
         for (Map.Entry<CurrencyItem.CurrencyType, Integer> entry : this.playerCurrency.get(player)
             .entrySet()) {
             NBTTagCompound currencyEntry = new NBTTagCompound();
             currencyEntry.setString("currency", entry.getKey().id);
             currencyEntry.setInteger("amount", entry.getValue());
-            nbt.appendTag(currencyEntry);
+            nbtCurrencyList.appendTag(currencyEntry);
         }
 
         if (this.invalidCurrency.get(player) != null) {
             for (NBTTagCompound tag : this.invalidCurrency.get(player)) {
-                nbt.appendTag(tag);
+                nbtCurrencyList.appendTag(tag);
             }
         }
+        nbt.setTag("playerCurrency", nbtCurrencyList);
         return nbt;
     }
 
