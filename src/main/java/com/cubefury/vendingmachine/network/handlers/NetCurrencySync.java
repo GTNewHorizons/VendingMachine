@@ -32,15 +32,14 @@ public class NetCurrencySync {
         }
     }
 
-    // server side code for sending tradegroup data when player opens gui
+    // server side code for sending currency data when player opens gui
     public static void syncCurrencyToClient(@Nonnull EntityPlayerMP player) {
         UUID playerId = NameCache.INSTANCE.getUUIDFromPlayer(player);
 
         NBTTagCompound payload = new NBTTagCompound();
         payload.setString("dataType", "currencySync");
         NBTConverter.UuidValueType.PLAYER.writeId(playerId, payload);
-        payload.setTag("data", TradeManager.INSTANCE.writeCurrencyToNBT(playerId));
-
+        payload.setTag("data", TradeManager.INSTANCE.writeCurrencyToNBT(new NBTTagCompound(), playerId));
         PacketSender.INSTANCE.sendToPlayers(new UnserializedPacket(ID_NAME, payload), player);
     }
 

@@ -9,6 +9,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import javax.annotation.Nonnull;
+
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraftforge.common.util.Constants;
@@ -135,7 +137,7 @@ public class TradeDatabase {
         TradeManager.INSTANCE.populateCurrencyFromNBT(nbt, player, merge);
     }
 
-    public NBTTagCompound writeTradeStateToNBT(NBTTagCompound nbt, UUID player) {
+    public NBTTagCompound writeTradeStateToNBT(NBTTagCompound nbt, @Nonnull UUID player) {
         NBTTagList tradeStateList = new NBTTagList();
         for (Map.Entry<UUID, TradeGroup> entry : tradeGroups.entrySet()) {
             TradeHistory history = entry.getValue()
@@ -149,7 +151,7 @@ public class TradeDatabase {
             }
         }
         nbt.setTag("tradeState", tradeStateList);
-        nbt.setTag("playerCurrency", TradeManager.INSTANCE.writeCurrencyToNBT(player));
+        TradeManager.INSTANCE.writeCurrencyToNBT(nbt, player);
         return nbt;
     }
 
