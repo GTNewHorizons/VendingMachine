@@ -2,7 +2,6 @@ package com.cubefury.vendingmachine.handlers;
 
 import java.util.ArrayDeque;
 import java.util.Collections;
-import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.FutureTask;
 
@@ -78,8 +77,6 @@ public class EventHandler {
         }
 
         NetBulkSync.sendReset(mpPlayer, true, true);
-
-        UUID playerId = NameCache.INSTANCE.getUUIDFromPlayer(mpPlayer);
     }
 
     @SubscribeEvent
@@ -146,7 +143,6 @@ public class EventHandler {
     }
 
     private void terminateVendingSession(@Nonnull EntityPlayer player) {
-        VendingMachine.LOG.info("terminating session for {}", player);
         if (VendingMachine.proxy.isClient()) {
             return;
         }
@@ -162,7 +158,7 @@ public class EventHandler {
             te instanceof IGregTechTileEntity
                 && ((IGregTechTileEntity) te).getMetaTileEntity() instanceof MTEVendingMachine
         ) {
-            VendingMachine.LOG.info("found VM MTE terminating session for {}", player);
+            VendingMachine.LOG.info("Force terminating VM session for {}", player);
             ((MTEVendingMachine) ((IGregTechTileEntity) te).getMetaTileEntity()).resetCurrentUser(player);
             SaveLoadHandler.INSTANCE
                 .writeTradeState(Collections.singleton(NameCache.INSTANCE.getUUIDFromPlayer(player)));

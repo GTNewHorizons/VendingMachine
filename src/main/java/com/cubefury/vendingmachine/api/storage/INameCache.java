@@ -20,6 +20,8 @@ public interface INameCache {
 
     List<String> getAllNames();
 
+    List<UUID> getAllUUIDS();
+
     /**
      * Used primarily to know if a user is an OP client side<br>
      */

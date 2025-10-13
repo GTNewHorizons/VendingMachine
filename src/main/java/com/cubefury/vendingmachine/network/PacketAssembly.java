@@ -20,7 +20,7 @@ import com.cubefury.vendingmachine.VendingMachine;
 
 public final class PacketAssembly {
 
-    public static final betterquesting.network.PacketAssembly INSTANCE = new betterquesting.network.PacketAssembly();
+    public static final PacketAssembly INSTANCE = new PacketAssembly();
 
     // TODO: Allow for simultaneous packet assembly (may not be necessary)
     // TODO: Implement PROPER thread safety that doesn't cause dirty read/writes

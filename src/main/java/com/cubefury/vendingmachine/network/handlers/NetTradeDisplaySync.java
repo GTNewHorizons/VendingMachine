@@ -6,7 +6,6 @@ import java.util.UUID;
 import javax.annotation.Nonnull;
 
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.ResourceLocation;
@@ -80,12 +79,11 @@ public class NetTradeDisplaySync {
             TradeGroup tg = TradeDatabase.INSTANCE.getTradeGroupFromId(this.tgID);
             Trade t = tg.getTrades()
                 .get(this.tradeGroupOrder);
-            ItemStack displayItem = t.getDisplayItem();
             return new TradeItemDisplay(
                 t.fromCurrency,
                 t.fromItems,
                 t.toItems,
-                t.displayItem == null ? t.displayItem.convertToItemStack() : displayItem,
+                t.getDisplayItem(),
                 this.tgID,
                 this.tradeGroupOrder,
                 this.cooldown,
@@ -148,7 +146,6 @@ public class NetTradeDisplaySync {
 
     @SideOnly(Side.CLIENT)
     public static void onClient(NBTTagCompound message) {
-        // TODO: Load trade view on client
         List<TradeItemDisplay> tradeData = TradeManager.INSTANCE.tradeData;
         tradeData.clear();
 
