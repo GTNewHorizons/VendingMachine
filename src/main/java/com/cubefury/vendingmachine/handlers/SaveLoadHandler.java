@@ -30,6 +30,7 @@ public class SaveLoadHandler {
     private File fileDatabase = null;
     private File fileNames = null;
     private File dirTradeState = null;
+    private File dirBackupTradeState = null;
 
     private SaveLoadHandler() {}
 
@@ -42,6 +43,7 @@ public class SaveLoadHandler {
 
         fileDatabase = new File(Config.config_dir, "tradeDatabase.json");
         dirTradeState = new File(Config.worldDir, "tradeState");
+        dirBackupTradeState = new File(Config.worldDir, "backup/tradeState");
         fileNames = new File(Config.worldDir, "names.json");
 
         createFilesAndDirectories();
@@ -79,7 +81,6 @@ public class SaveLoadHandler {
 
     public void loadTradeState() {
         if (dirTradeState.exists()) {
-            CopyPaste(dirTradeState, new File(Config.worldDir + "/backup", "tradeState"));
             File[] fileList = dirTradeState.listFiles();
 
             if (fileList != null) {
@@ -96,11 +97,15 @@ public class SaveLoadHandler {
     }
 
     public List<Future<Void>> writeTradeState(Collection<UUID> players) {
+        if (!dirBackupTradeState.exists()) {
+            CopyPaste(dirTradeState, dirBackupTradeState);
+        }
+
         TradeDatabase db = TradeDatabase.INSTANCE;
         List<Future<Void>> futures = new ArrayList<>();
         for (UUID player : players) {
             File playerFile = new File(dirTradeState, player.toString() + ".json");
-            CopyPaste(playerFile, new File(Config.worldDir + "/backup", player.toString() + ".json"));
+            CopyPaste(playerFile, new File(dirBackupTradeState, player.toString() + ".json"));
             NBTTagCompound state = db.writeTradeStateToNBT(new NBTTagCompound(), player);
             futures.add(FileIO.WriteToFile(playerFile, out -> NBTConverter.NBTtoJSON_Compound(state, out, true)));
         }
