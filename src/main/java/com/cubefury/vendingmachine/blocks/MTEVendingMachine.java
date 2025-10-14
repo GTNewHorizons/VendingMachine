@@ -42,6 +42,7 @@ import com.cubefury.vendingmachine.network.handlers.NetTradeDisplaySync;
 import com.cubefury.vendingmachine.network.handlers.NetTradeRequestSync;
 import com.cubefury.vendingmachine.storage.NameCache;
 import com.cubefury.vendingmachine.trade.CurrencyItem;
+import com.cubefury.vendingmachine.trade.CurrencyType;
 import com.cubefury.vendingmachine.trade.Trade;
 import com.cubefury.vendingmachine.trade.TradeDatabase;
 import com.cubefury.vendingmachine.trade.TradeManager;
@@ -265,9 +266,9 @@ public class MTEVendingMachine extends MTEMultiBlockBase
         UUID currentPlayer = NameCache.INSTANCE.getUUIDFromPlayer(this.getCurrentUser());
 
         TradeManager.INSTANCE.playerCurrency.putIfAbsent(currentPlayer, new HashMap<>());
-        Map<CurrencyItem.CurrencyType, Integer> coinInventory = TradeManager.INSTANCE.playerCurrency.get(currentPlayer);
+        Map<CurrencyType, Integer> coinInventory = TradeManager.INSTANCE.playerCurrency.get(currentPlayer);
 
-        Map<CurrencyItem.CurrencyType, Integer> newCoinInventory = new HashMap<>();
+        Map<CurrencyType, Integer> newCoinInventory = new HashMap<>();
         for (CurrencyItem ci : trade.fromCurrency) {
             int oldValue = coinInventory.get(ci.type);
             if (!coinInventory.containsKey(ci.type) || oldValue < ci.value) {
@@ -308,7 +309,7 @@ public class MTEVendingMachine extends MTEMultiBlockBase
             }
         }
 
-        for (Map.Entry<CurrencyItem.CurrencyType, Integer> entry : newCoinInventory.entrySet()) {
+        for (Map.Entry<CurrencyType, Integer> entry : newCoinInventory.entrySet()) {
             if (entry.getValue() == 0) {
                 coinInventory.remove(entry.getKey());
             } else {
@@ -605,7 +606,7 @@ public class MTEVendingMachine extends MTEMultiBlockBase
         if (currencyItems == null || currencyItems.isEmpty()) {
             return true;
         }
-        Map<CurrencyItem.CurrencyType, Integer> availableCurrency = TradeManager.INSTANCE.playerCurrency.get(player);
+        Map<CurrencyType, Integer> availableCurrency = TradeManager.INSTANCE.playerCurrency.get(player);
         if (availableCurrency == null) {
             return false;
         }

@@ -5,14 +5,14 @@ import org.jetbrains.annotations.NotNull;
 import com.cleanroommc.modularui.api.drawable.IDrawable;
 import com.cleanroommc.modularui.api.widget.Interactable;
 import com.cleanroommc.modularui.widgets.ToggleButton;
-import com.cubefury.vendingmachine.trade.CurrencyItem;
+import com.cubefury.vendingmachine.trade.CurrencyType;
 
 public class CoinButton extends ToggleButton {
 
     private final TradeMainPanel panel;
-    private final CurrencyItem.CurrencyType type;
+    private final CurrencyType type;
 
-    public CoinButton(TradeMainPanel panel, CurrencyItem.CurrencyType type) {
+    public CoinButton(TradeMainPanel panel, CurrencyType type) {
         super();
         background(IDrawable.EMPTY);
         selectedBackground(IDrawable.EMPTY);

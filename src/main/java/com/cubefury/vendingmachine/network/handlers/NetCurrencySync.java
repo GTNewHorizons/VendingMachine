@@ -16,6 +16,7 @@ import com.cubefury.vendingmachine.network.PacketSender;
 import com.cubefury.vendingmachine.network.PacketTypeRegistry;
 import com.cubefury.vendingmachine.storage.NameCache;
 import com.cubefury.vendingmachine.trade.CurrencyItem;
+import com.cubefury.vendingmachine.trade.CurrencyType;
 import com.cubefury.vendingmachine.trade.TradeManager;
 import com.cubefury.vendingmachine.util.NBTConverter;
 
@@ -51,7 +52,7 @@ public class NetCurrencySync {
         PacketSender.INSTANCE.sendToPlayers(new UnserializedPacket(ID_NAME, payload), player);
     }
 
-    public static void resetPlayerCurrency(@Nonnull EntityPlayerMP player, @Nullable CurrencyItem.CurrencyType type) {
+    public static void resetPlayerCurrency(@Nonnull EntityPlayerMP player, @Nullable CurrencyType type) {
         NBTTagCompound payload = new NBTTagCompound();
         payload.setString("dataType", "currencyReset");
         if (type != null) {
@@ -87,7 +88,7 @@ public class NetCurrencySync {
             }
             case "currencyReset" -> TradeManager.INSTANCE.resetCurrency(
                 player,
-                message.hasKey("type") ? CurrencyItem.CurrencyType.getTypeFromId(message.getString("type")) : null);
+                message.hasKey("type") ? CurrencyType.getTypeFromId(message.getString("type")) : null);
             default -> VendingMachine.LOG.warn("Unknown trade state sync data received: {}", dataType);
         }
     }

@@ -26,7 +26,7 @@ public class TradeManager {
     private final Map<UUID, Set<UUID>> availableTrades = new HashMap<>();
     private final List<UUID> noConditionTrades = new ArrayList<>();
 
-    public final Map<UUID, Map<CurrencyItem.CurrencyType, Integer>> playerCurrency = new HashMap<>();
+    public final Map<UUID, Map<CurrencyType, Integer>> playerCurrency = new HashMap<>();
 
     // For writeback to file in original format, to prevent data loss
     private final Map<UUID, List<NBTTagCompound>> invalidCurrency = new HashMap<>();
@@ -110,8 +110,7 @@ public class TradeManager {
         this.playerCurrency.computeIfAbsent(player, k -> new HashMap<>());
         for (int i = 0; i < tagList.tagCount(); i++) {
             NBTTagCompound currencyEntry = tagList.getCompoundTagAt(i);
-            CurrencyItem.CurrencyType type = CurrencyItem.CurrencyType
-                .getTypeFromId(currencyEntry.getString("currency"));
+            CurrencyType type = CurrencyType.getTypeFromId(currencyEntry.getString("currency"));
             if (type == null) {
                 VendingMachine.LOG.warn("Unknown currency type found: {}", currencyEntry.getString("currency"));
                 this.invalidCurrency.computeIfAbsent(player, k -> new ArrayList<>());
@@ -136,7 +135,7 @@ public class TradeManager {
             return nbt;
         }
         NBTTagList nbtCurrencyList = new NBTTagList();
-        for (Map.Entry<CurrencyItem.CurrencyType, Integer> entry : this.playerCurrency.get(player)
+        for (Map.Entry<CurrencyType, Integer> entry : this.playerCurrency.get(player)
             .entrySet()) {
             NBTTagCompound currencyEntry = new NBTTagCompound();
             currencyEntry.setString("currency", entry.getKey().id);
@@ -153,7 +152,7 @@ public class TradeManager {
         return nbt;
     }
 
-    public void resetCurrency(UUID playerId, CurrencyItem.CurrencyType type) {
+    public void resetCurrency(UUID playerId, CurrencyType type) {
         this.playerCurrency.computeIfAbsent(playerId, k -> new HashMap<>());
         if (type == null) {
             this.playerCurrency.get(playerId)
