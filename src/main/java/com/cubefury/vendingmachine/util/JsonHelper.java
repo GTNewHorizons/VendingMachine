@@ -50,7 +50,6 @@ public class JsonHelper {
 
     public static void populateTradeDatabaseFromFile(File file) {
         TradeDatabase db = TradeDatabase.INSTANCE;
-        db.clear();
 
         Function<File, NBTTagCompound> readNbt = f -> NBTConverter
             .JSONtoNBT_Object(FileIO.ReadFromFile(f), new NBTTagCompound(), true);
@@ -59,8 +58,6 @@ public class JsonHelper {
     }
 
     public static void populateTradeStateFromFiles(List<File> files) {
-        TradeDatabase db = TradeDatabase.INSTANCE;
-        db.clearTradeState(null);
         files.forEach(JsonHelper::populateTradeStateFromFile);
     }
 
@@ -71,7 +68,6 @@ public class JsonHelper {
     }
 
     public static void populateNameCacheFromFile(File file) {
-        NameCache.INSTANCE.clear();
         JsonObject json = FileIO.ReadFromFile(file);
 
         NBTTagCompound nbt = NBTConverter.JSONtoNBT_Object(json, new NBTTagCompound(), true);
