@@ -41,6 +41,7 @@ public class TradeDatabase {
 
     public void clearTradeState(UUID player) {
         tradeGroups.forEach((k, v) -> v.clearTradeState(player));
+        TradeManager.INSTANCE.clearCurrency(player);
     }
 
     public TradeGroup getTradeGroupFromId(UUID tgId) {

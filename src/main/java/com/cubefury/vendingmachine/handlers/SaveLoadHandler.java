@@ -48,6 +48,8 @@ public class SaveLoadHandler {
 
         createFilesAndDirectories();
 
+        unloadAll();
+
         loadDatabase();
         loadTradeState();
         loadNames();
