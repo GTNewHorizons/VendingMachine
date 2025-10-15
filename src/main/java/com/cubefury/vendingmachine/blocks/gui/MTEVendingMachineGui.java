@@ -628,11 +628,9 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
     protected void registerSyncValues(PanelSyncManager syncManager) {
         super.registerSyncValues(syncManager);
 
-        // Item Slots
         syncManager.registerSlotGroup("inputSlotGroup", 2, true);
         syncManager.registerSlotGroup("outputSlotGroup", 2, false);
 
-        // Eject Items
         BooleanSyncValue ejectItemsSyncer = new BooleanSyncValue(() -> this.ejectItems, val -> {
             this.ejectItems = val;
             if (this.ejectItems) {
@@ -641,7 +639,6 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
         });
         syncManager.syncValue("ejectItems", ejectItemsSyncer);
 
-        // Eject Coins
         BooleanSyncValue ejectCoinsSyncer = new BooleanSyncValue(() -> this.ejectCoins, val -> {
             this.ejectCoins = val;
             if (this.ejectCoins) {
@@ -652,13 +649,11 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
 
         UUID playerId = NameCache.INSTANCE.getUUIDFromPlayer(getBase().getCurrentUser());
         for (CurrencyType type : CurrencyType.values()) {
-            // Coin Value Display
             IntSyncValue coinAmountSyncer = new IntSyncValue(
                 () -> TradeManager.INSTANCE.playerCurrency.getOrDefault(playerId, Collections.emptyMap())
                     .getOrDefault(type, 0));
             syncManager.syncValue("coinAmount_" + type.id, coinAmountSyncer);
 
-            // Eject Individual Coins
             BooleanSyncValue ejectCoinSyncer = new BooleanSyncValue(() -> this.ejectSingleCoin.get(type), val -> {
                 this.ejectSingleCoin.put(type, val);
                 if (val) {
