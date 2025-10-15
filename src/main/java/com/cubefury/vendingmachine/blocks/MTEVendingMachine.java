@@ -37,7 +37,6 @@ import com.cubefury.vendingmachine.Config;
 import com.cubefury.vendingmachine.VendingMachine;
 import com.cubefury.vendingmachine.blocks.gui.MTEVendingMachineGui;
 import com.cubefury.vendingmachine.blocks.gui.TradeItemDisplay;
-import com.cubefury.vendingmachine.network.handlers.NetCurrencySync;
 import com.cubefury.vendingmachine.network.handlers.NetTradeDisplaySync;
 import com.cubefury.vendingmachine.network.handlers.NetTradeRequestSync;
 import com.cubefury.vendingmachine.storage.NameCache;
@@ -563,7 +562,6 @@ public class MTEVendingMachine extends MTEMultiBlockBase
         if (this.currentUser == null) {
             return;
         }
-        NetCurrencySync.syncCurrencyToClient((EntityPlayerMP) this.currentUser);
         NetTradeDisplaySync.syncTradesToClient((EntityPlayerMP) this.currentUser, this);
     }
 

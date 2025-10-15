@@ -46,7 +46,6 @@ import com.cubefury.vendingmachine.VendingMachine;
 import com.cubefury.vendingmachine.blocks.MTEVendingMachine;
 import com.cubefury.vendingmachine.gui.GuiTextures;
 import com.cubefury.vendingmachine.gui.WidgetThemes;
-import com.cubefury.vendingmachine.network.handlers.NetCurrencySync;
 import com.cubefury.vendingmachine.network.handlers.NetTradeDisplaySync;
 import com.cubefury.vendingmachine.storage.NameCache;
 import com.cubefury.vendingmachine.trade.CurrencyItem;
@@ -307,7 +306,6 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
             base.spawnItem(ejectable);
         }
         TradeManager.INSTANCE.resetCurrency(currentUser, type);
-        NetCurrencySync.resetPlayerCurrency((EntityPlayerMP) base.getCurrentUser(), type);
         this.ejectSingleCoin.put(type, false);
     }
 
@@ -330,7 +328,6 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
             }
         }
         TradeManager.INSTANCE.resetCurrency(currentUser, null);
-        NetCurrencySync.resetPlayerCurrency((EntityPlayerMP) base.getCurrentUser(), null);
         ejectCoins = false;
     }
 
