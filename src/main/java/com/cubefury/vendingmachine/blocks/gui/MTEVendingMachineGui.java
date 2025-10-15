@@ -27,6 +27,7 @@ import com.cleanroommc.modularui.screen.UISettings;
 import com.cleanroommc.modularui.utils.Alignment;
 import com.cleanroommc.modularui.value.IntValue;
 import com.cleanroommc.modularui.value.sync.BooleanSyncValue;
+import com.cleanroommc.modularui.value.sync.IntSyncValue;
 import com.cleanroommc.modularui.value.sync.PanelSyncManager;
 import com.cleanroommc.modularui.widget.ParentWidget;
 import com.cleanroommc.modularui.widget.SingleChildWidget;
@@ -45,10 +46,10 @@ import com.cubefury.vendingmachine.VendingMachine;
 import com.cubefury.vendingmachine.blocks.MTEVendingMachine;
 import com.cubefury.vendingmachine.gui.GuiTextures;
 import com.cubefury.vendingmachine.gui.WidgetThemes;
-import com.cubefury.vendingmachine.network.handlers.NetCurrencySync;
 import com.cubefury.vendingmachine.network.handlers.NetTradeDisplaySync;
 import com.cubefury.vendingmachine.storage.NameCache;
 import com.cubefury.vendingmachine.trade.CurrencyItem;
+import com.cubefury.vendingmachine.trade.CurrencyType;
 import com.cubefury.vendingmachine.trade.TradeCategory;
 import com.cubefury.vendingmachine.trade.TradeDatabase;
 import com.cubefury.vendingmachine.trade.TradeManager;
@@ -67,7 +68,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
 
     private boolean ejectItems = false;
     private boolean ejectCoins = false;
-    private final Map<CurrencyItem.CurrencyType, Boolean> ejectSingleCoin = new HashMap<>();
+    private final Map<CurrencyType, Boolean> ejectSingleCoin = new HashMap<>();
     private final Map<TradeCategory, List<TradeItemDisplayWidget>> displayedTradesTiles = new HashMap<>();
     private final Map<TradeCategory, List<TradeItemDisplayWidget>> displayedTradesList = new HashMap<>();
     private final List<TradeCategory> tradeCategories = new ArrayList<>();
@@ -122,7 +123,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
         super(base);
         this.base = base;
 
-        for (CurrencyItem.CurrencyType type : CurrencyItem.CurrencyType.values()) {
+        for (CurrencyType type : CurrencyType.values()) {
             ejectSingleCoin.put(type, false);
         }
 
@@ -173,7 +174,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                         .get()))
                 .child(this.searchBar)
                 .child(createTradeUI((TradeMainPanel) panel, this.tabController));
-            mainColumn.child(createCoinInventoryRow((TradeMainPanel) panel));
+            mainColumn.child(createCoinInventoryRow((TradeMainPanel) panel, syncManager));
         }
         mainColumn.child(createInventoryRow());
         panel.child(mainColumn);
@@ -285,7 +286,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
     }
 
     // Eject code is in GUI instead of MTE since the syncers are per-gui instance
-    private void doEjectCoin(CurrencyItem.CurrencyType type) {
+    private void doEjectCoin(CurrencyType type) {
         if (this.guiData.isClient()) {
             return;
         }
@@ -305,7 +306,6 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
             base.spawnItem(ejectable);
         }
         TradeManager.INSTANCE.resetCurrency(currentUser, type);
-        NetCurrencySync.resetPlayerCurrency((EntityPlayerMP) base.getCurrentUser(), type);
         this.ejectSingleCoin.put(type, false);
     }
 
@@ -320,15 +320,14 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
             return;
         }
 
-        Map<CurrencyItem.CurrencyType, Integer> coins = TradeManager.INSTANCE.playerCurrency
+        Map<CurrencyType, Integer> coins = TradeManager.INSTANCE.playerCurrency
             .getOrDefault(currentUser, new HashMap<>());
-        for (Map.Entry<CurrencyItem.CurrencyType, Integer> entry : coins.entrySet()) {
+        for (Map.Entry<CurrencyType, Integer> entry : coins.entrySet()) {
             for (ItemStack ejectable : new CurrencyItem(entry.getKey(), entry.getValue()).itemize()) {
                 base.spawnItem(ejectable);
             }
         }
         TradeManager.INSTANCE.resetCurrency(currentUser, null);
-        NetCurrencySync.resetPlayerCurrency((EntityPlayerMP) base.getCurrentUser(), null);
         ejectCoins = false;
     }
 
@@ -563,7 +562,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
         }
     }
 
-    private IWidget createCoinInventoryRow(TradeMainPanel panel) {
+    private IWidget createCoinInventoryRow(TradeMainPanel panel, PanelSyncManager syncManager) {
         Flow parent = new Row() // .background(GuiTextures.TEXT_FIELD_BACKGROUND)
             .width(162)
             .height(36)
@@ -572,39 +571,8 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
         Flow coinColumn = new Column().width(COIN_COLUMN_WIDTH);
         int coinCount = 0;
 
-        UUID playerId = NameCache.INSTANCE.getUUIDFromPlayer(getBase().getCurrentUser());
-        Map<CurrencyItem.CurrencyType, Integer> currentAmounts = TradeManager.INSTANCE.playerCurrency
-            .getOrDefault(playerId, Collections.EMPTY_MAP);
-        for (CurrencyItem.CurrencyType type : CurrencyItem.CurrencyType.values()) {
-            coinColumn.child(
-                new Row().child(
-                    new CoinButton(panel, type).overlay(
-                        type.texture.asIcon()
-                            .size(12))
-                        .size(12)
-                        .left(0)
-                        .syncHandler("ejectCoin_" + type.id)
-                        .tooltipDynamic((builder) -> {
-                            builder.clearText();
-                            builder.addLine(currentAmounts.getOrDefault(type, 0) + " " + type.getLocalizedName());
-                            builder.emptyLine();
-                            builder.addLine(
-                                IKey.str(Translator.translate("vendingmachine.gui.single_coin_type_eject_hint"))
-                                    .style(IKey.GRAY, IKey.ITALIC));
-                            builder.setAutoUpdate(true);
-                        }))
-                    .child(IKey.dynamic(() -> {
-                        Map<CurrencyItem.CurrencyType, Integer> currencyMap = TradeManager.INSTANCE.playerCurrency
-                            .getOrDefault(playerId, Collections.EMPTY_MAP);
-                        return getReadableStringFromCoinAmount(
-                            currencyMap.get(type) == null ? 0 : currencyMap.get(type));
-                    })
-                        .scale(0.8f)
-                        .asWidget()
-                        .top(3)
-                        .left(14)
-                        .width(21))
-                    .height(14));
+        for (CurrencyType type : CurrencyType.values()) {
+            coinColumn.child(createCoinDisplay(panel, type, syncManager));
             if (++coinCount % COIN_COLUMN_ROW_COUNT == 0) {
                 parent.child(coinColumn.left(3 + COIN_COLUMN_WIDTH * (coinCount / COIN_COLUMN_ROW_COUNT - 1)));
                 coinColumn = new Column().width(COIN_COLUMN_WIDTH);
@@ -614,6 +582,34 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
             parent.child(coinColumn.left(3 + COIN_COLUMN_WIDTH * (coinCount / COIN_COLUMN_ROW_COUNT)));
         }
         return parent;
+    }
+
+    private IWidget createCoinDisplay(TradeMainPanel panel, CurrencyType type, PanelSyncManager syncManager) {
+        IntSyncValue coinSyncValue = ((IntSyncValue) syncManager.getSyncHandler("coinAmount_" + type.id + ":0"));
+        return new Row().child(
+            new CoinButton(panel, type).overlay(
+                type.texture.asIcon()
+                    .size(12))
+                .size(12)
+                .left(0)
+                .syncHandler("ejectCoin_" + type.id)
+                .tooltipDynamic((builder) -> {
+                    builder.clearText();
+                    builder.addLine(coinSyncValue.getValue() + " " + type.getLocalizedName());
+                    builder.emptyLine();
+                    builder.addLine(
+                        IKey.str(Translator.translate("vendingmachine.gui.single_coin_type_eject_hint"))
+                            .style(IKey.GRAY, IKey.ITALIC));
+                    builder.setAutoUpdate(true);
+                }))
+            .child(
+                IKey.dynamic(() -> getReadableStringFromCoinAmount(coinSyncValue.getValue()))
+                    .scale(0.8f)
+                    .asWidget()
+                    .top(3)
+                    .left(14)
+                    .width(21))
+            .height(14);
     }
 
     // why is the original method private lmao
@@ -631,6 +627,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
     @Override
     protected void registerSyncValues(PanelSyncManager syncManager) {
         super.registerSyncValues(syncManager);
+
         syncManager.registerSlotGroup("inputSlotGroup", 2, true);
         syncManager.registerSlotGroup("outputSlotGroup", 2, false);
 
@@ -640,16 +637,23 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                 doEjectItems();
             }
         });
+        syncManager.syncValue("ejectItems", ejectItemsSyncer);
+
         BooleanSyncValue ejectCoinsSyncer = new BooleanSyncValue(() -> this.ejectCoins, val -> {
             this.ejectCoins = val;
             if (this.ejectCoins) {
                 doEjectCoins();
             }
         });
-        syncManager.syncValue("ejectItems", ejectItemsSyncer);
         syncManager.syncValue("ejectCoins", ejectCoinsSyncer);
 
-        for (CurrencyItem.CurrencyType type : CurrencyItem.CurrencyType.values()) {
+        UUID playerId = NameCache.INSTANCE.getUUIDFromPlayer(getBase().getCurrentUser());
+        for (CurrencyType type : CurrencyType.values()) {
+            IntSyncValue coinAmountSyncer = new IntSyncValue(
+                () -> TradeManager.INSTANCE.playerCurrency.getOrDefault(playerId, Collections.emptyMap())
+                    .getOrDefault(type, 0));
+            syncManager.syncValue("coinAmount_" + type.id, coinAmountSyncer);
+
             BooleanSyncValue ejectCoinSyncer = new BooleanSyncValue(() -> this.ejectSingleCoin.get(type), val -> {
                 this.ejectSingleCoin.put(type, val);
                 if (val) {
@@ -658,6 +662,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
             });
             syncManager.syncValue("ejectCoin_" + type.id, ejectCoinSyncer);
         }
+
     }
 
     public void attemptPurchase(TradeItemDisplay display) {
