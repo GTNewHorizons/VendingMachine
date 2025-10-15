@@ -23,6 +23,7 @@ public class Trade {
 
     public final List<CurrencyItem> fromCurrency = new ArrayList<>();
     public final List<BigItemStack> fromItems = new ArrayList<>();
+    public final List<BigItemStack> nonConsumedItems = new ArrayList<>();
     public final List<BigItemStack> toItems = new ArrayList<>();
     public BigItemStack displayItem = new BigItemStack(ItemPlaceholder.placeholder);
 
@@ -43,6 +44,14 @@ public class Trade {
                 fromItemsArray.appendTag(JsonHelper.ItemStackToJson(stack, new NBTTagCompound()));
             }
             nbt.setTag("fromItems", fromItemsArray);
+        }
+
+        if (!this.nonConsumedItems.isEmpty()) {
+            NBTTagList ncArray = new NBTTagList();
+            for (BigItemStack stack : this.nonConsumedItems) {
+                ncArray.appendTag(JsonHelper.ItemStackToJson(stack, new NBTTagCompound()));
+            }
+            nbt.setTag("nonConsumedItems", ncArray);
         }
 
         if (!this.toItems.isEmpty()) {
@@ -71,6 +80,11 @@ public class Trade {
         NBTTagList fromList = nbt.getTagList("fromItems", Constants.NBT.TAG_COMPOUND);
         for (int i = 0; i < fromList.tagCount(); i++) {
             fromItems.add(JsonHelper.JsonToItemStack(fromList.getCompoundTagAt(i)));
+        }
+
+        NBTTagList ncList = nbt.getTagList("nonConsumedItems", Constants.NBT.TAG_COMPOUND);
+        for (int i = 0; i < ncList.tagCount(); i++) {
+            nonConsumedItems.add(JsonHelper.JsonToItemStack(ncList.getCompoundTagAt(i)));
         }
 
         NBTTagList toList = nbt.getTagList("toItems", Constants.NBT.TAG_COMPOUND);

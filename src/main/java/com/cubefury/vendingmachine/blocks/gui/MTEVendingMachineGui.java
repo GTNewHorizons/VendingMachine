@@ -447,21 +447,39 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                 // builder.add(new ItemDrawable(toItem.getBaseStack()));
             }
             builder.emptyLine();
-            builder.addLine(
-                IKey.str(Translator.translate("vendingmachine.gui.required_inputs"))
-                    .style(IKey.DARK_GREEN, IKey.ITALIC));
-            for (CurrencyItem currencyItem : cur.fromCurrency) {
+
+            if (!cur.fromCurrency.isEmpty() || !cur.fromItems.isEmpty()) {
                 builder.addLine(
-                    IKey.str(currencyItem.value + " " + currencyItem.type.getLocalizedName())
-                        .style(IKey.DARK_GREEN));
+                    IKey.lang("vendingmachine.gui.required_inputs")
+                        .style(IKey.DARK_GREEN, IKey.ITALIC));
+                for (CurrencyItem currencyItem : cur.fromCurrency) {
+                    builder.addLine(
+                        IKey.str(currencyItem.value + " " + currencyItem.type.getLocalizedName())
+                            .style(IKey.DARK_GREEN));
+                }
+                for (BigItemStack fromItem : cur.fromItems) {
+                    builder.addLine(
+                        IKey.str(
+                            fromItem.stackSize + " "
+                                + fromItem.getBaseStack()
+                                    .getDisplayName())
+                            .style(IKey.DARK_GREEN));
+                }
             }
-            for (BigItemStack fromItem : cur.fromItems) {
+
+            builder.emptyLine();
+            if (!cur.ncItems.isEmpty()) {
                 builder.addLine(
-                    IKey.str(
-                        fromItem.stackSize + " "
-                            + fromItem.getBaseStack()
-                                .getDisplayName())
-                        .style(IKey.DARK_GREEN));
+                    IKey.lang("vendingmachine.gui.nc_inputs")
+                        .style(IKey.DARK_GREEN, IKey.ITALIC));
+                for (BigItemStack fromItem : cur.ncItems) {
+                    builder.addLine(
+                        IKey.str(
+                            fromItem.stackSize + " "
+                                + fromItem.getBaseStack()
+                                    .getDisplayName())
+                            .style(IKey.DARK_GREEN));
+                }
             }
 
             builder.emptyLine();
