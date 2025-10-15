@@ -37,7 +37,7 @@ public class CurrencyItem {
             return outputs;
         }
         for (int i = 0; i < coinValues.length; i++) {
-            while (this.value > coinValues[i]) {
+            while (this.value >= coinValues[i]) {
                 Item outputItem = (Item) Item.itemRegistry.getObject(this.type.itemPrefix + coinSuffixes[i]);
                 int stackSize = Math.min(this.value / coinValues[i], outputItem.getItemStackLimit());
                 outputs.add(new ItemStack(outputItem, stackSize));
