@@ -42,6 +42,17 @@ public class PanelQBTrade extends CanvasMinimum {
             x_offset += 20;
         }
 
+        for (int i = 0; i < trade.nonConsumedItems.size(); i++) {
+            BigItemStack stack = trade.nonConsumedItems.get(i)
+                .toBQBigItemStack();
+            GuiRectangle rectangle = new GuiRectangle(x_offset, 0, 18, 18, 0);
+            PanelItemSlot is = PanelItemSlotBuilder.forValue(stack, rectangle)
+                .showCount(true)
+                .build();
+            this.addPanel(is);
+            x_offset += 20;
+        }
+
         for (int i = 0; i < trade.fromCurrency.size(); i++) {
             CurrencyItem currencyItem = trade.fromCurrency.get(i);
             BigItemStack stack = new BigItemStack(currencyItem.getItemRepresentation());

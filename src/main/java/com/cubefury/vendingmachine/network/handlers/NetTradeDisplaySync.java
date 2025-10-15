@@ -82,6 +82,7 @@ public class NetTradeDisplaySync {
             return new TradeItemDisplay(
                 t.fromCurrency,
                 t.fromItems,
+                t.nonConsumedItems,
                 t.toItems,
                 t.getDisplayItem(),
                 this.tgID,
@@ -133,6 +134,7 @@ public class NetTradeDisplaySync {
                 Trade trade = tg.getTrades()
                     .get(i);
                 boolean tradableNow = base.inputItemsSatisfied(trade.fromItems)
+                    && base.inputItemsSatisfied(trade.nonConsumedItems)
                     && base.inputCurrencySatisfied(trade.fromCurrency, playerId);
                 trades.appendTag(
                     new Tradable(tg.getId(), i, cooldownRemaining, enabled, tradableNow)

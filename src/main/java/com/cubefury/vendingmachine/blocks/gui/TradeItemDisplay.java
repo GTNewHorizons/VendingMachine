@@ -14,6 +14,7 @@ public class TradeItemDisplay {
 
     public List<CurrencyItem> fromCurrency;
     public List<BigItemStack> fromItems;
+    public List<BigItemStack> ncItems;
     public List<BigItemStack> toItems;
     public ItemStack display;
     public UUID tgID;
@@ -24,11 +25,12 @@ public class TradeItemDisplay {
     public boolean enabled;
     public boolean tradeableNow;
 
-    public TradeItemDisplay(List<CurrencyItem> fromCurrency, List<BigItemStack> fromItems, List<BigItemStack> toItems,
-        ItemStack display, UUID tgID, int tradeGroupOrder, long cooldown, String cooldownText, boolean hasCooldown,
-        boolean enabled, boolean tradeableNow) {
+    public TradeItemDisplay(List<CurrencyItem> fromCurrency, List<BigItemStack> fromItems, List<BigItemStack> ncItems,
+        List<BigItemStack> toItems, ItemStack display, UUID tgID, int tradeGroupOrder, long cooldown,
+        String cooldownText, boolean hasCooldown, boolean enabled, boolean tradeableNow) {
         this.fromCurrency = fromCurrency;
         this.fromItems = fromItems;
+        this.ncItems = ncItems;
         this.toItems = toItems;
         this.display = display;
         this.tgID = tgID;
