@@ -465,9 +465,8 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                                     .getDisplayName())
                             .style(IKey.DARK_GREEN));
                 }
+                builder.emptyLine();
             }
-
-            builder.emptyLine();
             if (!cur.ncItems.isEmpty()) {
                 builder.addLine(
                     IKey.lang("vendingmachine.gui.nc_inputs")
@@ -480,9 +479,9 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                                     .getDisplayName())
                             .style(IKey.DARK_GREEN));
                 }
+                builder.emptyLine();
             }
 
-            builder.emptyLine();
             builder.addLine(
                 IKey.str(Translator.translate("vendingmachine.gui.trade_hint"))
                     .style(IKey.GRAY));
