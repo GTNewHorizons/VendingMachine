@@ -47,6 +47,7 @@ import codechicken.nei.PositionedStack;
 import codechicken.nei.api.API;
 import codechicken.nei.recipe.GuiCraftingRecipe;
 import codechicken.nei.recipe.GuiRecipe;
+import codechicken.nei.recipe.GuiRecipeCatalyst;
 import codechicken.nei.recipe.TemplateRecipeHandler;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Optional;
@@ -197,8 +198,12 @@ public class NeiRecipeHandler extends TemplateRecipeHandler {
 
         Point pos = GuiDraw.getMousePosition();
 
-        int guiLeft = (gui.width - gui.getRecipeCatalystWidget().w) / 2;
-        int guiTop = 19 + (gui.height - gui.getRecipeCatalystWidget().w) / 2;
+        // very cursed I'm sorry :doom:
+        GuiRecipeCatalyst catalystWidget = gui.getRecipeCatalystWidget();
+
+        int guiLeft = catalystWidget.x + catalystWidget.w - 6;
+        int guiTop = catalystWidget.y + 9;
+
         Point relMousePos = new Point(pos.x - guiLeft - offset.x, pos.y - guiTop - offset.y);
         Rectangle textArea = new Rectangle(2, curY - GuiDraw.fontRenderer.FONT_HEIGHT, width + 2, height + 1);
         if (textArea.contains(relMousePos)) {
@@ -214,8 +219,10 @@ public class NeiRecipeHandler extends TemplateRecipeHandler {
         if (lastHoveredTextArea == null || lastHoveredQuestId == null || lastHoveredRecipeIndex != recipeIndex) {
             return false;
         }
-        int guiLeft = (gui.width - gui.getRecipeCatalystWidget().w) / 2;
-        int guiTop = 19 + (gui.height - gui.getRecipeCatalystWidget().h) / 2;
+        GuiRecipeCatalyst catalystWidget = gui.getRecipeCatalystWidget();
+
+        int guiLeft = catalystWidget.x + catalystWidget.w - 6;
+        int guiTop = catalystWidget.y + 9;
 
         Point offset = gui.getRecipePosition(recipeIndex);
         Point pos = GuiDraw.getMousePosition();
@@ -286,7 +293,9 @@ public class NeiRecipeHandler extends TemplateRecipeHandler {
                 } else {
                     String translatedQuestKey = getTextWithoutFormattingCodes(
                         QuestTranslation.translateQuestName(questId, quest));
-                    unformatted.append(translatedQuestKey);
+                    unformatted.append(
+                        translatedQuestKey.length() <= 18 ? translatedQuestKey
+                            : translatedQuestKey.substring(0, 18) + "...");
                     requirementString.append(
                         isMouseOverBqCondition(recipeIndex, y, questId, unformatted.toString()) ? UNDERLINE : "");
                     requirementString.append(unformatted);
