@@ -59,7 +59,7 @@ public class NeiRecipeHandler extends TemplateRecipeHandler {
     private static final int GUI_WIDTH = 166;
     private static final int GRID_COUNT = 4;
     private static final int LINE_SPACE = GuiDraw.fontRenderer.FONT_HEIGHT + 1;
-    private static final int CONDITIONS_START_Y = 27 + LINE_SPACE;
+    private static final int CONDITIONS_START_Y = 63 + LINE_SPACE;
     private UUID currentPlayerId;
     private int textColorConditionDefault;
     private int textColorConditionSatisfied;
@@ -179,7 +179,7 @@ public class NeiRecipeHandler extends TemplateRecipeHandler {
     public void drawBackground(int recipe) {
         GL11.glColor4f(1, 1, 1, 1);
         changeTexture(getGuiTexture());
-        drawTexturedModalRect(0, 0, 0, 0, GUI_WIDTH, 105);
+        drawTexturedModalRect(0, 0, 0, 0, GUI_WIDTH, 140);
     }
 
     // Caching the last hovered valid quest here is a bit jank, but it works I guess
@@ -348,30 +348,36 @@ public class NeiRecipeHandler extends TemplateRecipeHandler {
             int index = 0;
             for (BigItemStack stack : trade.fromItems) {
                 if (index >= GRID_COUNT) {
-                    break;
+                    y += SLOT_SIZE;
+                    index = 0;
                 }
                 int x = xOffset + index * SLOT_SIZE;
                 inputs.add(new PositionedStack(extractStacks(stack), x, y));
                 index++;
             }
 
+            for (CurrencyItem ci : trade.fromCurrency) {
+                if (index >= GRID_COUNT) {
+                    y += SLOT_SIZE;
+                    index = 0;
+                }
+                int x = xOffset + index * SLOT_SIZE;
+                inputs.add(new PositionedStack(ci.getItemRepresentation(), x, y));
+                index++;
+            }
+
+            y += SLOT_SIZE;
+            index = 0;
             for (BigItemStack stack : trade.nonConsumedItems) {
                 if (index >= GRID_COUNT) {
-                    break;
+                    y += SLOT_SIZE;
+                    index = 0;
                 }
                 int x = xOffset + index * SLOT_SIZE;
                 ncInputs.add(new PositionedStack(extractStacks(stack), x, y));
                 index++;
             }
 
-            for (CurrencyItem ci : trade.fromCurrency) {
-                if (index >= GRID_COUNT) {
-                    break;
-                }
-                int x = xOffset + index * SLOT_SIZE;
-                inputs.add(new PositionedStack(ci.getItemRepresentation(), x, y));
-                index++;
-            }
         }
 
         private void loadOutputs(Trade trade) {
@@ -404,14 +410,10 @@ public class NeiRecipeHandler extends TemplateRecipeHandler {
         public List<PositionedStack> getOtherStacks() {
             return outputs;
         }
-
-        public List<PositionedStack> getNcInputs() {
-            return ncInputs;
-        }
     }
 
     @Override
     public void loadTransferRects() {
-        transferRects.add(new RecipeTransferRect(new Rectangle(75, 0, 16, 24), getOverlayIdentifier()));
+        transferRects.add(new RecipeTransferRect(new Rectangle(75, 16, 16, 24), getOverlayIdentifier()));
     }
 }
