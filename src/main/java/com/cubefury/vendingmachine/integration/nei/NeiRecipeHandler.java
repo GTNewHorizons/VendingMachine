@@ -287,7 +287,7 @@ public class NeiRecipeHandler extends TemplateRecipeHandler {
         GuiDraw.drawString(
             Translator.translate("vendingmachine.gui.requirementHeader"),
             2,
-            27,
+            63,
             textColorConditionDefault,
             false);
         int y = CONDITIONS_START_Y;
@@ -414,6 +414,6 @@ public class NeiRecipeHandler extends TemplateRecipeHandler {
 
     @Override
     public void loadTransferRects() {
-        transferRects.add(new RecipeTransferRect(new Rectangle(75, 16, 16, 24), getOverlayIdentifier()));
+        transferRects.add(new RecipeTransferRect(new Rectangle(75, 5, 16, 55), getOverlayIdentifier()));
     }
 }
