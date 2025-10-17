@@ -56,9 +56,9 @@ import com.cubefury.vendingmachine.trade.TradeManager;
 import com.cubefury.vendingmachine.util.BigItemStack;
 import com.cubefury.vendingmachine.util.Translator;
 
-import gregtech.api.metatileentity.implementations.gui.MTEMultiBlockBaseGui;
 import gregtech.api.modularui2.GTGuiTextures;
 import gregtech.api.modularui2.GTWidgetThemes;
+import gregtech.common.gui.modularui.multiblock.base.MTEMultiBlockBaseGui;
 
 public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
 
@@ -474,13 +474,14 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
     // spotless:off
     private IWidget createTradeUI(TradeMainPanel rootPanel, PagedWidget.Controller tabController) {
         PagedWidget<?> paged = new PagedWidget<>()
+            .name("paged")
             .width(162)
-            .debugName("paged")
             .controller(tabController)
             .background(GuiTextures.TEXT_FIELD_BACKGROUND)
             .height(146);
         for (TradeCategory category : this.tradeCategories) {
-            ListWidget<IWidget, ?> tradeList = new ListWidget<>().debugName("items")
+            ListWidget<IWidget, ?> tradeList = new ListWidget<>()
+                .name("items")
                 .width(161)
                 .top(1)
                 .height(144)
@@ -585,7 +586,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
     }
 
     private IWidget createCoinDisplay(TradeMainPanel panel, CurrencyType type, PanelSyncManager syncManager) {
-        IntSyncValue coinSyncValue = ((IntSyncValue) syncManager.getSyncHandler("coinAmount_" + type.id + ":0"));
+        IntSyncValue coinSyncValue = syncManager.findSyncHandler("coinAmount_" + type.id, 0, IntSyncValue.class);
         return new Row().child(
             new CoinButton(panel, type).overlay(
                 type.texture.asIcon()
