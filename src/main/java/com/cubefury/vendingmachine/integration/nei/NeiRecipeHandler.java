@@ -271,6 +271,19 @@ public class NeiRecipeHandler extends TemplateRecipeHandler {
     public void drawExtras(int recipeIndex) {
         CachedTradeRecipe recipe = (CachedTradeRecipe) this.arecipes.get(recipeIndex);
 
+        float scale = 0.5f;
+        GL11.glPushMatrix();
+        GL11.glScalef(scale, scale, 1);
+        for (PositionedStack ps : recipe.ncInputs) {
+            GuiDraw.fontRenderer.drawString(
+                "NC",
+                (int) (ps.relx / scale),
+                (int) (ps.rely / scale),
+                Translator.getColor("vendingmachine.gui.nc_inputs_overlay_color"),
+                false);
+        }
+        GL11.glPopMatrix();
+
         GuiDraw.drawString(
             Translator.translate("vendingmachine.gui.requirementHeader"),
             2,
@@ -319,6 +332,7 @@ public class NeiRecipeHandler extends TemplateRecipeHandler {
     public class CachedTradeRecipe extends CachedRecipe {
 
         private final List<PositionedStack> inputs = new ArrayList<>();
+        private final List<PositionedStack> ncInputs = new ArrayList<>();
         private final List<PositionedStack> outputs = new ArrayList<>();
         private final List<ICondition> requirements = new ArrayList<>();
 
@@ -341,13 +355,12 @@ public class NeiRecipeHandler extends TemplateRecipeHandler {
                 index++;
             }
 
-            // TODO: Add NC annotation on top of item
             for (BigItemStack stack : trade.nonConsumedItems) {
                 if (index >= GRID_COUNT) {
                     break;
                 }
                 int x = xOffset + index * SLOT_SIZE;
-                inputs.add(new PositionedStack(extractStacks(stack), x, y));
+                ncInputs.add(new PositionedStack(extractStacks(stack), x, y));
                 index++;
             }
 
@@ -381,12 +394,19 @@ public class NeiRecipeHandler extends TemplateRecipeHandler {
 
         @Override
         public List<PositionedStack> getIngredients() {
-            return getCycledIngredients(cycleticks / 20, inputs);
+            List<PositionedStack> allInputs = new ArrayList<>();
+            allInputs.addAll(inputs);
+            allInputs.addAll(ncInputs);
+            return getCycledIngredients(cycleticks / 20, allInputs);
         }
 
         @Override
         public List<PositionedStack> getOtherStacks() {
             return outputs;
+        }
+
+        public List<PositionedStack> getNcInputs() {
+            return ncInputs;
         }
     }
 
