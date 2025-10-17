@@ -331,6 +331,17 @@ public class NeiRecipeHandler extends TemplateRecipeHandler {
                 inputs.add(new PositionedStack(extractStacks(stack), x, y));
                 index++;
             }
+
+            // TODO: Add NC annotation on top of item
+            for (BigItemStack stack : trade.nonConsumedItems) {
+                if (index >= GRID_COUNT) {
+                    break;
+                }
+                int x = xOffset + index * SLOT_SIZE;
+                inputs.add(new PositionedStack(extractStacks(stack), x, y));
+                index++;
+            }
+
             for (CurrencyItem ci : trade.fromCurrency) {
                 if (index >= GRID_COUNT) {
                     break;

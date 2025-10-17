@@ -252,6 +252,7 @@ public class MTEVendingMachine extends MTEMultiBlockBase
         if (
             !this.inputCurrencySatisfied(trade.fromCurrency, tradeRequest.playerID)
                 || !this.inputItemsSatisfied(trade.fromItems)
+                || !this.inputItemsSatisfied(trade.nonConsumedItems)
         ) {
             return false;
         }
