@@ -20,6 +20,7 @@ import com.cleanroommc.modularui.utils.Platform;
 import com.cleanroommc.modularui.value.sync.GenericSyncValue;
 import com.cleanroommc.modularui.value.sync.SyncHandler;
 import com.cleanroommc.modularui.widgets.ItemDisplayWidget;
+import com.cubefury.vendingmachine.blocks.MTEVendingMachine;
 import com.cubefury.vendingmachine.gui.GuiTextures;
 import com.cubefury.vendingmachine.gui.WidgetThemes;
 import com.cubefury.vendingmachine.util.Translator;
@@ -49,6 +50,7 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
         }
     }
 
+    private MTEVendingMachine vm;
     private TradeMainPanel rootPanel;
     private boolean pressed = false;
     private IValue<ItemStack> value;
@@ -56,7 +58,8 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
 
     private TradeItemDisplay display;
 
-    public TradeItemDisplayWidget(TradeItemDisplay display, DisplayType displayType) {
+    public TradeItemDisplayWidget(TradeItemDisplay display, MTEVendingMachine base, DisplayType displayType) {
+        this.vm = base;
         this.displayType = displayType;
         widgetTheme(WidgetThemes.THEME_TRADE_BUTTON);
         if (displayType == DisplayType.TILE) {
@@ -80,6 +83,10 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
     public void setDisplay(TradeItemDisplay display) {
         this.display = display;
         this.item(display == null ? null : display.display);
+    }
+
+    private boolean checkVmActive() {
+        return this.vm != null && this.vm.getActive();
     }
 
     public TradeItemDisplay getDisplay() {
@@ -106,7 +113,7 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
                 if (this.display.tradeableNow) {
                     GuiDraw.drawOutline(1, 1, 45, 23, 0x883CFF00, 2);
                 }
-                if (this.display.hasCooldown || !this.display.enabled) {
+                if (!this.checkVmActive() || this.display.hasCooldown || !this.display.enabled) {
                     GuiDraw.drawRoundedRect(
                         1,
                         1,
@@ -139,7 +146,7 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
                     3,
                     MTEVendingMachineGui.LIST_ITEM_HEIGHT - 3,
                     this.display.tradeableNow ? 0x883CFF00 : 0x88333333);
-                if (this.display.hasCooldown || !this.display.enabled) {
+                if (!this.checkVmActive() || this.display.hasCooldown || !this.display.enabled) {
                     GuiDraw.drawRect(
                         1,
                         1,
