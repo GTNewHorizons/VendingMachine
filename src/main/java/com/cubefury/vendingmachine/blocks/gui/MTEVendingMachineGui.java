@@ -287,7 +287,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
 
     // Eject code is in GUI instead of MTE since the syncers are per-gui instance
     private void doEjectCoin(CurrencyType type) {
-        if (this.guiData.isClient()) {
+        if (this.guiData.isClient() || this.base == null || !this.base.getActive()) {
             return;
         }
         UUID currentUser = NameCache.INSTANCE.getUUIDFromPlayer(base.getCurrentUser());
@@ -314,6 +314,11 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
             return;
         }
 
+        if (!this.base.getActive()) {
+            ejectCoins = false;
+            return;
+        }
+
         UUID currentUser = NameCache.INSTANCE.getUUIDFromPlayer(base.getCurrentUser());
         if (!TradeManager.INSTANCE.playerCurrency.containsKey(currentUser)) {
             ejectCoins = false;
@@ -335,6 +340,11 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
         if (this.guiData.isClient()) {
             return;
         }
+        if (!this.base.getActive()) {
+            ejectItems = false;
+            return;
+        }
+
         for (int i = 0; i < MTEVendingMachine.INPUT_SLOTS; i++) {
             ItemStack stack = base.inputItems.getStackInSlot(i);
             if (stack != null) {
@@ -395,7 +405,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
         return SlotGroupWidget.builder()
             .matrix("II", "II", "II")
             .key('I', index -> {
-                InterceptingSlot slot = new InterceptingSlot(base.inputItems, index);
+                InterceptingSlot slot = new InterceptingSlot(base.inputItems, index, this.base);
                 this.inputSlots.add(slot);
                 return new ItemSlot().slot(
                     slot.slotGroup("inputSlotGroup")
