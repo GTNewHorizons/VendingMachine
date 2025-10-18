@@ -47,6 +47,7 @@ import codechicken.nei.PositionedStack;
 import codechicken.nei.api.API;
 import codechicken.nei.recipe.GuiCraftingRecipe;
 import codechicken.nei.recipe.GuiRecipe;
+import codechicken.nei.recipe.GuiRecipeCatalyst;
 import codechicken.nei.recipe.TemplateRecipeHandler;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Optional;
@@ -58,7 +59,7 @@ public class NeiRecipeHandler extends TemplateRecipeHandler {
     private static final int GUI_WIDTH = 166;
     private static final int GRID_COUNT = 4;
     private static final int LINE_SPACE = GuiDraw.fontRenderer.FONT_HEIGHT + 1;
-    private static final int CONDITIONS_START_Y = 27 + LINE_SPACE;
+    private static final int CONDITIONS_START_Y = 63 + LINE_SPACE;
     private UUID currentPlayerId;
     private int textColorConditionDefault;
     private int textColorConditionSatisfied;
@@ -178,7 +179,7 @@ public class NeiRecipeHandler extends TemplateRecipeHandler {
     public void drawBackground(int recipe) {
         GL11.glColor4f(1, 1, 1, 1);
         changeTexture(getGuiTexture());
-        drawTexturedModalRect(0, 0, 0, 0, GUI_WIDTH, 105);
+        drawTexturedModalRect(0, 0, 0, 0, GUI_WIDTH, 140);
     }
 
     // Caching the last hovered valid quest here is a bit jank, but it works I guess
@@ -197,8 +198,12 @@ public class NeiRecipeHandler extends TemplateRecipeHandler {
 
         Point pos = GuiDraw.getMousePosition();
 
-        int guiLeft = (gui.width - gui.getRecipeCatalystWidget().w) / 2;
-        int guiTop = 19 + (gui.height - gui.getRecipeCatalystWidget().w) / 2;
+        // very cursed I'm sorry :doom:
+        GuiRecipeCatalyst catalystWidget = gui.getRecipeCatalystWidget();
+
+        int guiLeft = catalystWidget.x + catalystWidget.w - 6;
+        int guiTop = catalystWidget.y + 9;
+
         Point relMousePos = new Point(pos.x - guiLeft - offset.x, pos.y - guiTop - offset.y);
         Rectangle textArea = new Rectangle(2, curY - GuiDraw.fontRenderer.FONT_HEIGHT, width + 2, height + 1);
         if (textArea.contains(relMousePos)) {
@@ -214,8 +219,10 @@ public class NeiRecipeHandler extends TemplateRecipeHandler {
         if (lastHoveredTextArea == null || lastHoveredQuestId == null || lastHoveredRecipeIndex != recipeIndex) {
             return false;
         }
-        int guiLeft = (gui.width - gui.getRecipeCatalystWidget().w) / 2;
-        int guiTop = 19 + (gui.height - gui.getRecipeCatalystWidget().h) / 2;
+        GuiRecipeCatalyst catalystWidget = gui.getRecipeCatalystWidget();
+
+        int guiLeft = catalystWidget.x + catalystWidget.w - 6;
+        int guiTop = catalystWidget.y + 9;
 
         Point offset = gui.getRecipePosition(recipeIndex);
         Point pos = GuiDraw.getMousePosition();
@@ -264,10 +271,23 @@ public class NeiRecipeHandler extends TemplateRecipeHandler {
     public void drawExtras(int recipeIndex) {
         CachedTradeRecipe recipe = (CachedTradeRecipe) this.arecipes.get(recipeIndex);
 
+        float scale = 0.5f;
+        GL11.glPushMatrix();
+        GL11.glScalef(scale, scale, 1);
+        for (PositionedStack ps : recipe.ncInputs) {
+            GuiDraw.fontRenderer.drawString(
+                "NC",
+                (int) (ps.relx / scale),
+                (int) (ps.rely / scale),
+                Translator.getColor("vendingmachine.gui.nc_inputs_overlay_color"),
+                false);
+        }
+        GL11.glPopMatrix();
+
         GuiDraw.drawString(
             Translator.translate("vendingmachine.gui.requirementHeader"),
             2,
-            27,
+            63,
             textColorConditionDefault,
             false);
         int y = CONDITIONS_START_Y;
@@ -286,7 +306,9 @@ public class NeiRecipeHandler extends TemplateRecipeHandler {
                 } else {
                     String translatedQuestKey = getTextWithoutFormattingCodes(
                         QuestTranslation.translateQuestName(questId, quest));
-                    unformatted.append(translatedQuestKey);
+                    unformatted.append(
+                        translatedQuestKey.length() <= 18 ? translatedQuestKey
+                            : translatedQuestKey.substring(0, 18) + "...");
                     requirementString.append(
                         isMouseOverBqCondition(recipeIndex, y, questId, unformatted.toString()) ? UNDERLINE : "");
                     requirementString.append(unformatted);
@@ -310,6 +332,7 @@ public class NeiRecipeHandler extends TemplateRecipeHandler {
     public class CachedTradeRecipe extends CachedRecipe {
 
         private final List<PositionedStack> inputs = new ArrayList<>();
+        private final List<PositionedStack> ncInputs = new ArrayList<>();
         private final List<PositionedStack> outputs = new ArrayList<>();
         private final List<ICondition> requirements = new ArrayList<>();
 
@@ -325,17 +348,8 @@ public class NeiRecipeHandler extends TemplateRecipeHandler {
             int index = 0;
             for (BigItemStack stack : trade.fromItems) {
                 if (index >= GRID_COUNT) {
-                    break;
-                }
-                int x = xOffset + index * SLOT_SIZE;
-                inputs.add(new PositionedStack(extractStacks(stack), x, y));
-                index++;
-            }
-
-            // TODO: Add NC annotation on top of item
-            for (BigItemStack stack : trade.nonConsumedItems) {
-                if (index >= GRID_COUNT) {
-                    break;
+                    y += SLOT_SIZE;
+                    index = 0;
                 }
                 int x = xOffset + index * SLOT_SIZE;
                 inputs.add(new PositionedStack(extractStacks(stack), x, y));
@@ -344,12 +358,26 @@ public class NeiRecipeHandler extends TemplateRecipeHandler {
 
             for (CurrencyItem ci : trade.fromCurrency) {
                 if (index >= GRID_COUNT) {
-                    break;
+                    y += SLOT_SIZE;
+                    index = 0;
                 }
                 int x = xOffset + index * SLOT_SIZE;
                 inputs.add(new PositionedStack(ci.getItemRepresentation(), x, y));
                 index++;
             }
+
+            y += SLOT_SIZE;
+            index = 0;
+            for (BigItemStack stack : trade.nonConsumedItems) {
+                if (index >= GRID_COUNT) {
+                    y += SLOT_SIZE;
+                    index = 0;
+                }
+                int x = xOffset + index * SLOT_SIZE;
+                ncInputs.add(new PositionedStack(extractStacks(stack), x, y));
+                index++;
+            }
+
         }
 
         private void loadOutputs(Trade trade) {
@@ -372,7 +400,10 @@ public class NeiRecipeHandler extends TemplateRecipeHandler {
 
         @Override
         public List<PositionedStack> getIngredients() {
-            return getCycledIngredients(cycleticks / 20, inputs);
+            List<PositionedStack> allInputs = new ArrayList<>();
+            allInputs.addAll(inputs);
+            allInputs.addAll(ncInputs);
+            return getCycledIngredients(cycleticks / 20, allInputs);
         }
 
         @Override
@@ -383,6 +414,6 @@ public class NeiRecipeHandler extends TemplateRecipeHandler {
 
     @Override
     public void loadTransferRects() {
-        transferRects.add(new RecipeTransferRect(new Rectangle(75, 0, 16, 24), getOverlayIdentifier()));
+        transferRects.add(new RecipeTransferRect(new Rectangle(75, 5, 16, 55), getOverlayIdentifier()));
     }
 }
