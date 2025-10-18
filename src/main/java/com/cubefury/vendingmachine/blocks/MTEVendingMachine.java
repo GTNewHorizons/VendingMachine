@@ -551,7 +551,7 @@ public class MTEVendingMachine extends MTEMultiBlockBase
         }
         if (aBaseMetaTileEntity.isServerSide()) {
             dispenseItems();
-            if (aBaseMetaTileEntity.isActive() && this.ticksSinceTradeUpdate++ >= Config.gui_refresh_interval) {
+            if (this.getActive() && this.ticksSinceTradeUpdate++ >= Config.gui_refresh_interval) {
                 this.sendTradeUpdate();
             }
             if (this.mUpdate++ % STRUCTURE_CHECK_TICKS == 0) {
