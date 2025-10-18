@@ -287,7 +287,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
 
     // Eject code is in GUI instead of MTE since the syncers are per-gui instance
     private void doEjectCoin(CurrencyType type) {
-        if (this.guiData.isClient() || this.base == null || !this.base.getActive()) {
+        if (this.guiData.isClient() || !this.base.getActive()) {
             return;
         }
         UUID currentUser = NameCache.INSTANCE.getUUIDFromPlayer(base.getCurrentUser());
