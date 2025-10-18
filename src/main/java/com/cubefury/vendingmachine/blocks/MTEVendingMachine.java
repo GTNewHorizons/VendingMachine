@@ -151,7 +151,7 @@ public class MTEVendingMachine extends MTEMultiBlockBase
 
     public void sendTradeRequest(TradeItemDisplay trade) {
         IGregTechTileEntity baseTile = getBaseMetaTileEntity();
-        if (baseTile == null) {
+        if (baseTile == null || !baseTile.isActive()) {
             return;
         }
         NetTradeRequestSync.sendTradeRequest(
@@ -167,6 +167,10 @@ public class MTEVendingMachine extends MTEMultiBlockBase
     }
 
     public void dispenseItems() {
+        IGregTechTileEntity base = this.getBaseMetaTileEntity();
+        if (base == null || !base.isActive()) {
+            return;
+        }
         if (!this.pendingTrades.isEmpty()) {
             TradeRequest tradeRequest = this.pendingTrades.poll();
             if (!processTradeOnServer(tradeRequest)) {
@@ -548,7 +552,7 @@ public class MTEVendingMachine extends MTEMultiBlockBase
         }
         if (aBaseMetaTileEntity.isServerSide()) {
             dispenseItems();
-            if (this.ticksSinceTradeUpdate++ >= Config.gui_refresh_interval) {
+            if (aBaseMetaTileEntity.isActive() && this.ticksSinceTradeUpdate++ >= Config.gui_refresh_interval) {
                 this.sendTradeUpdate();
             }
             if (this.mUpdate++ % STRUCTURE_CHECK_TICKS == 0) {

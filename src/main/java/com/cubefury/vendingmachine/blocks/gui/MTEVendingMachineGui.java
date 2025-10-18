@@ -134,12 +134,12 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
             displayedTradesTiles.put(c, new ArrayList<>(MTEVendingMachine.MAX_TRADES));
             for (int i = 0; i < MTEVendingMachine.MAX_TRADES; i++) {
                 displayedTradesTiles.get(c)
-                    .add(new TradeItemDisplayWidget(null, TradeItemDisplayWidget.DisplayType.TILE));
+                    .add(new TradeItemDisplayWidget(null, this.base, TradeItemDisplayWidget.DisplayType.TILE));
             }
             displayedTradesList.put(c, new ArrayList<>(MTEVendingMachine.MAX_TRADES));
             for (int i = 0; i < MTEVendingMachine.MAX_TRADES; i++) {
                 displayedTradesList.get(c)
-                    .add(new TradeItemDisplayWidget(null, TradeItemDisplayWidget.DisplayType.LIST));
+                    .add(new TradeItemDisplayWidget(null, this.base, TradeItemDisplayWidget.DisplayType.LIST));
             }
         }
 
