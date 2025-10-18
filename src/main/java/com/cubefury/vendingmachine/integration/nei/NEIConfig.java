@@ -34,7 +34,7 @@ public class NEIConfig implements IConfigureNEI {
         event.registerHandlerInfo(
             new HandlerInfo.Builder("vendingmachine", VendingMachine.NAME, VendingMachine.MODID).setHeight(104)
                 .setWidth(166)
-                .setMaxRecipesPerPage(3)
+                .setMaxRecipesPerPage(2)
                 .setDisplayStack(VMItems.vendingMachine)
                 .build());
     }
