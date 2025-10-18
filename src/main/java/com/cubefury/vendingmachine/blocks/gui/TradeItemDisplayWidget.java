@@ -25,8 +25,6 @@ import com.cubefury.vendingmachine.gui.GuiTextures;
 import com.cubefury.vendingmachine.gui.WidgetThemes;
 import com.cubefury.vendingmachine.util.Translator;
 
-import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
-
 public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interactable {
 
     public enum DisplayType {
@@ -52,7 +50,7 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
         }
     }
 
-    private IGregTechTileEntity baseMTE;
+    private MTEVendingMachine vm;
     private TradeMainPanel rootPanel;
     private boolean pressed = false;
     private IValue<ItemStack> value;
@@ -61,7 +59,7 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
     private TradeItemDisplay display;
 
     public TradeItemDisplayWidget(TradeItemDisplay display, MTEVendingMachine base, DisplayType displayType) {
-        this.baseMTE = base.getBaseMetaTileEntity();
+        this.vm = base;
         this.displayType = displayType;
         widgetTheme(WidgetThemes.THEME_TRADE_BUTTON);
         if (displayType == DisplayType.TILE) {
@@ -88,7 +86,7 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
     }
 
     private boolean checkVmActive() {
-        return this.baseMTE != null && this.baseMTE.isActive();
+        return this.vm != null && this.vm.getActive();
     }
 
     public TradeItemDisplay getDisplay() {
