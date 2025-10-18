@@ -167,8 +167,7 @@ public class MTEVendingMachine extends MTEMultiBlockBase
     }
 
     public void dispenseItems() {
-        IGregTechTileEntity base = this.getBaseMetaTileEntity();
-        if (base == null || !base.isActive()) {
+        if (!this.getActive()) {
             return;
         }
         if (!this.pendingTrades.isEmpty()) {
