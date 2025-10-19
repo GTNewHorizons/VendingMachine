@@ -16,7 +16,6 @@ import com.cubefury.vendingmachine.VendingMachine;
 import com.cubefury.vendingmachine.items.VMItems;
 
 import appeng.api.config.Actionable;
-import appeng.api.config.FuzzyMode;
 import appeng.api.implementations.IPowerChannelState;
 import appeng.api.networking.GridFlags;
 import appeng.api.networking.IGridNode;
@@ -30,7 +29,6 @@ import appeng.api.util.DimensionalCoord;
 import appeng.me.GridAccessException;
 import appeng.me.helpers.AENetworkProxy;
 import appeng.me.helpers.IGridProxyable;
-import appeng.util.IterationCounter;
 import appeng.util.item.AEItemStack;
 import gregtech.api.interfaces.ITexture;
 import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
