@@ -197,7 +197,10 @@ public class MTEVendingUplinkHatch extends MTEHatch implements IGridProxyable, I
                 .extractItems(AEItemStack.create(remove), simulate ? Actionable.SIMULATE : Actionable.MODULATE, source);
             return stack != null && stack.getStackSize() >= remove.stackSize;
         }
-        VendingMachine.LOG.info("target remove: {}", remove);
+
+        if (cachedItems == null) {
+            return false;
+        }
 
         List<IAEItemStack> outputList = new ArrayList<>();
         for (IAEItemStack stack : cachedItems) {
@@ -206,39 +209,9 @@ public class MTEVendingUplinkHatch extends MTEHatch implements IGridProxyable, I
             }
         }
 
-        // test
-        List<IAEItemStack> result = new ArrayList<>();
-        storage.getItemInventory()
-            .getSortedFuzzyItems(
-                result,
-                AEItemStack.create(remove),
-                FuzzyMode.IGNORE_ALL,
-                IterationCounter.fetchNewId());
-        VendingMachine.LOG.info(
-            "found {} matched items with fuzzy search IGNOREALL",
-            result.stream()
-                .mapToLong(s -> s.getStackSize())
-                .sum());
-
-        result = new ArrayList<>();
-        storage.getItemInventory()
-            .getSortedFuzzyItems(
-                result,
-                AEItemStack.create(remove),
-                FuzzyMode.PERCENT_99,
-                IterationCounter.fetchNewId());
-        VendingMachine.LOG.info(
-            "found {} matched items with fuzzy search 99",
-            result.stream()
-                .mapToLong(s -> s.getStackSize())
-                .sum());
-
-        // endtest
-
         long numMatch = outputList.stream()
             .mapToLong(stack -> stack.getStackSize())
             .sum();
-        VendingMachine.LOG.info("found {} matched items", numMatch);
         if (simulate || numMatch < remove.stackSize) {
             return numMatch >= remove.stackSize;
         }
