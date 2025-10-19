@@ -753,4 +753,10 @@ public class MTEVendingMachine extends MTEMultiBlockBase
         this.uplinkHatches.add(uplinkHatch);
         return true;
     }
+
+    public void refreshMeItemCache() {
+        for (MTEVendingUplinkHatch hatch : this.uplinkHatches) {
+            hatch.refreshStorageContents();
+        }
+    }
 }

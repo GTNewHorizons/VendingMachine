@@ -112,6 +112,7 @@ public class NetTradeDisplaySync {
         UUID playerId = NameCache.INSTANCE.getUUIDFromPlayer(player);
         List<TradeGroup> availableGroups = TradeManager.INSTANCE.getAvailableTradeGroups(playerId);
         base.refreshInputSlotCache();
+        base.refreshMeItemCache();
 
         long currentTimestamp = System.currentTimeMillis();
 

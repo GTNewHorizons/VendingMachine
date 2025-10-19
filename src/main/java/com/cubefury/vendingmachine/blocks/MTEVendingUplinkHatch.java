@@ -3,7 +3,9 @@ package com.cubefury.vendingmachine.blocks;
 import static com.cubefury.vendingmachine.api.enums.Textures.VUPLINK_OVERLAY_0;
 import static com.cubefury.vendingmachine.api.enums.Textures.VUPLINK_OVERLAY_1;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.List;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -14,6 +16,7 @@ import com.cubefury.vendingmachine.VendingMachine;
 import com.cubefury.vendingmachine.items.VMItems;
 
 import appeng.api.config.Actionable;
+import appeng.api.config.FuzzyMode;
 import appeng.api.implementations.IPowerChannelState;
 import appeng.api.networking.GridFlags;
 import appeng.api.networking.IGridNode;
@@ -21,11 +24,13 @@ import appeng.api.networking.security.IActionHost;
 import appeng.api.networking.security.MachineSource;
 import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IItemList;
 import appeng.api.util.AECableType;
 import appeng.api.util.DimensionalCoord;
 import appeng.me.GridAccessException;
 import appeng.me.helpers.AENetworkProxy;
 import appeng.me.helpers.IGridProxyable;
+import appeng.util.IterationCounter;
 import appeng.util.item.AEItemStack;
 import gregtech.api.interfaces.ITexture;
 import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
@@ -37,6 +42,7 @@ public class MTEVendingUplinkHatch extends MTEHatch implements IGridProxyable, I
 
     protected AENetworkProxy gridProxy = null;
     protected boolean additionalConnection = false;
+    private IItemList<IAEItemStack> cachedItems;
 
     public static final int mTier = 3;
 
@@ -172,15 +178,98 @@ public class MTEVendingUplinkHatch extends MTEHatch implements IGridProxyable, I
         return null;
     }
 
+    public void refreshStorageContents() {
+        IStorageGrid storage = accessStorage();
+        if (storage == null) return;
+
+        cachedItems = storage.getItemInventory()
+            .getStorageList();
+    }
+
     public boolean removeItem(ItemStack remove, boolean simulate) {
         if (remove == null || remove.stackSize <= 0) return true;
         IStorageGrid storage = accessStorage();
         if (storage == null) return false;
-        IAEItemStack stack = storage.getItemInventory()
-            .extractItems(
+
+        MachineSource source = new MachineSource(this);
+        if (!remove.isItemStackDamageable()) {
+            IAEItemStack stack = storage.getItemInventory()
+                .extractItems(AEItemStack.create(remove), simulate ? Actionable.SIMULATE : Actionable.MODULATE, source);
+            return stack != null && stack.getStackSize() >= remove.stackSize;
+        }
+        VendingMachine.LOG.info("target remove: {}", remove);
+
+        List<IAEItemStack> outputList = new ArrayList<>();
+        for (IAEItemStack stack : cachedItems) {
+            if (stack.getItem() == remove.getItem() && stack.getItemDamage() == remove.getItemDamage()) {
+                outputList.add(stack);
+            }
+        }
+
+        // test
+        List<IAEItemStack> result = new ArrayList<>();
+        storage.getItemInventory()
+            .getSortedFuzzyItems(
+                result,
                 AEItemStack.create(remove),
-                simulate ? Actionable.SIMULATE : Actionable.MODULATE,
-                new MachineSource(this));
-        return stack != null && stack.getStackSize() >= remove.stackSize;
+                FuzzyMode.IGNORE_ALL,
+                IterationCounter.fetchNewId());
+        VendingMachine.LOG.info(
+            "found {} matched items with fuzzy search IGNOREALL",
+            result.stream()
+                .mapToLong(s -> s.getStackSize())
+                .sum());
+
+        result = new ArrayList<>();
+        storage.getItemInventory()
+            .getSortedFuzzyItems(
+                result,
+                AEItemStack.create(remove),
+                FuzzyMode.PERCENT_99,
+                IterationCounter.fetchNewId());
+        VendingMachine.LOG.info(
+            "found {} matched items with fuzzy search 99",
+            result.stream()
+                .mapToLong(s -> s.getStackSize())
+                .sum());
+
+        // endtest
+
+        long numMatch = outputList.stream()
+            .mapToLong(stack -> stack.getStackSize())
+            .sum();
+        VendingMachine.LOG.info("found {} matched items", numMatch);
+        if (simulate || numMatch < remove.stackSize) {
+            return numMatch >= remove.stackSize;
+        }
+
+        // Simulate removing the needed count first, and add successful to modulateList for actual removal,
+        // due to possible view-only items that can't be actually extracted
+        long remain = remove.stackSize;
+        List<IAEItemStack> modulateList = new ArrayList<>();
+        for (IAEItemStack removable : outputList) {
+            long toRemove = Math.min(removable.getStackSize(), remain);
+            removable.setStackSize(toRemove);
+            IAEItemStack stack = storage.getItemInventory()
+                .extractItems(removable, Actionable.SIMULATE, source);
+            if (stack != null && stack.getItemDamage() == remove.getItemDamage()) {
+                modulateList.add(stack);
+            } else {
+                continue;
+            }
+            remain -= toRemove;
+            if (remain <= 0) {
+                break;
+            }
+        }
+        if (remain > 0) {
+            return false;
+        }
+
+        for (IAEItemStack modulate : modulateList) {
+            storage.getItemInventory()
+                .extractItems(modulate, Actionable.MODULATE, source);
+        }
+        return true;
     }
 }
