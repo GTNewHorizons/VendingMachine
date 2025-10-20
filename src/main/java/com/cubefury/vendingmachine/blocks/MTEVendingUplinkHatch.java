@@ -146,7 +146,7 @@ public class MTEVendingUplinkHatch extends MTEHatch implements IGridProxyable, I
 
     @Override
     public void onPostTick(IGregTechTileEntity baseMetaTileEntity, long tick) {
-        if (baseMetaTileEntity.isServerSide()) {
+        if (baseMetaTileEntity.isServerSide() && tick % 20 == 0) {
             baseMetaTileEntity.setActive(isActive());
         }
         super.onPostTick(baseMetaTileEntity, tick);
