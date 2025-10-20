@@ -1,7 +1,7 @@
 package com.cubefury.vendingmachine.blocks;
 
-import static com.cubefury.vendingmachine.api.enums.Textures.VUPLINK_OVERLAY_0;
-import static com.cubefury.vendingmachine.api.enums.Textures.VUPLINK_OVERLAY_1;
+import static com.cubefury.vendingmachine.api.enums.Textures.VUPLINK_OVERLAY_ACTIVE;
+import static com.cubefury.vendingmachine.api.enums.Textures.VUPLINK_OVERLAY_INACTIVE;
 
 import java.util.EnumSet;
 
@@ -120,12 +120,12 @@ public class MTEVendingUplinkHatch extends MTEHatch implements IGridProxyable, I
 
     @Override
     public ITexture[] getTexturesActive(ITexture aBaseTexture) {
-        return new ITexture[] { aBaseTexture, TextureFactory.of(VUPLINK_OVERLAY_1) };
+        return new ITexture[] { aBaseTexture, TextureFactory.of(VUPLINK_OVERLAY_ACTIVE) };
     }
 
     @Override
     public ITexture[] getTexturesInactive(ITexture aBaseTexture) {
-        return new ITexture[] { aBaseTexture, TextureFactory.of(VUPLINK_OVERLAY_0) };
+        return new ITexture[] { aBaseTexture, TextureFactory.of(VUPLINK_OVERLAY_INACTIVE) };
     }
 
     @Override
@@ -142,6 +142,14 @@ public class MTEVendingUplinkHatch extends MTEHatch implements IGridProxyable, I
     public void onFirstTick(IGregTechTileEntity baseMetaTileEntity) {
         super.onFirstTick(baseMetaTileEntity);
         getProxy().onReady();
+    }
+
+    @Override
+    public void onPostTick(IGregTechTileEntity baseMetaTileEntity, long tick) {
+        if (baseMetaTileEntity.isServerSide()) {
+            baseMetaTileEntity.setActive(isActive());
+        }
+        super.onPostTick(baseMetaTileEntity, tick);
     }
 
     private void updateValidGridProxySides() {

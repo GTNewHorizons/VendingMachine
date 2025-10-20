@@ -20,8 +20,8 @@ public class Textures {
         VM_OVERLAY_ACTIVE_2 = new CustomIcon("vendingmachine:vending_machine_overlay_active_2"),
         VM_OVERLAY_ACTIVE_3 = new CustomIcon("vendingmachine:vending_machine_overlay_active_3"),
 
-        VUPLINK_OVERLAY_0 = new CustomIcon("vendingmachine:vending_uplink_machine_overlay_inactive"),
-        VUPLINK_OVERLAY_1 = new CustomIcon("vendingmachine:vending_uplink_machine_overlay_active");
+        VUPLINK_OVERLAY_INACTIVE = new CustomIcon("vendingmachine:vending_uplink_machine_overlay_inactive"),
+        VUPLINK_OVERLAY_ACTIVE = new CustomIcon("vendingmachine:vending_uplink_machine_overlay_active");
 
     public static final IIconContainer[] VM_OVERLAY_ACTIVE = { VM_OVERLAY_ACTIVE_0, VM_OVERLAY_ACTIVE_1,
         VM_OVERLAY_ACTIVE_2, VM_OVERLAY_ACTIVE_3, VM_OVERLAY_4 // bottom right not animated
