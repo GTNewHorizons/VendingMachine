@@ -284,6 +284,7 @@ public class MTEVendingMachine extends MTEMultiBlockBase
         for (BigItemStack stack : trade.fromItems) {
             ItemStack requiredStack = stack.getBaseStack()
                 .copy();
+            requiredStack.setTagCompound(null);
             requiredStack.stackSize = 1; // just in case it's not pulled as 1 for some reason
             int requiredAmount = stack.stackSize;
             // Remove Items from last stacks if possible
@@ -293,10 +294,7 @@ public class MTEVendingMachine extends MTEMultiBlockBase
                 }
                 ItemStack tmp = inputSlots[i].copy();
                 tmp.stackSize = 1;
-                if (
-                    ItemStack.areItemStacksEqual(requiredStack, tmp)
-                        && ItemStack.areItemStackTagsEqual(requiredStack, tmp)
-                ) {
+                if (ItemStack.areItemStacksEqual(requiredStack, tmp)) {
                     if (requiredAmount >= inputSlots[i].stackSize) {
                         requiredAmount -= inputSlots[i].stackSize;
                         inputSlots[i] = null;
@@ -575,6 +573,7 @@ public class MTEVendingMachine extends MTEMultiBlockBase
             ItemStack stack = this.inputItems.getStackInSlot(i);
             if (stack != null) {
                 BigItemStack tmp = new BigItemStack(stack);
+                tmp.setTagCompound(null);
                 tmp.stackSize = 1;
                 items.putIfAbsent(tmp, 0);
                 items.replace(tmp, items.get(tmp) + stack.stackSize);
@@ -586,6 +585,7 @@ public class MTEVendingMachine extends MTEMultiBlockBase
     public boolean inputItemsSatisfied(List<BigItemStack> fromItems) {
         for (BigItemStack bis : fromItems) {
             BigItemStack base = bis.copy();
+            bis.setTagCompound(null);
             base.stackSize = 1; // shouldn't need this, but just in case
 
             ItemStack aeStackSearch = base.getBaseStack();
@@ -752,5 +752,11 @@ public class MTEVendingMachine extends MTEMultiBlockBase
         uplinkHatch.updateCraftingIcon(uplinkHatch.getMachineCraftingIcon());
         this.uplinkHatches.add(uplinkHatch);
         return true;
+    }
+
+    public void refreshMeItemCache() {
+        for (MTEVendingUplinkHatch hatch : this.uplinkHatches) {
+            hatch.refreshStorageContents();
+        }
     }
 }
