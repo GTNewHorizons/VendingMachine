@@ -472,7 +472,13 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                         IKey.str(
                             fromItem.stackSize + " "
                                 + fromItem.getBaseStack()
-                                    .getDisplayName())
+                                    .getDisplayName()
+                                + (fromItem.hasOreDict()
+                                    ? "(" + IKey.lang("vendingmachine.gui.alternative_oredict")
+                                        + " "
+                                        + fromItem.getOreDict()
+                                        + ")"
+                                    : ""))
                             .style(IKey.DARK_GREEN));
                 }
                 builder.emptyLine();
