@@ -10,6 +10,7 @@ import static com.gtnewhorizon.structurelib.structure.StructureUtility.ofChain;
 import static gregtech.api.util.GTStructureUtility.ofHatchAdderOptional;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +29,7 @@ import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraftforge.oredict.OreDictionary;
 
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.input.Keyboard;
@@ -287,7 +289,7 @@ public class MTEVendingMachine extends MTEMultiBlockBase
             requiredStack.setTagCompound(null);
             requiredStack.stackSize = 1; // just in case it's not pulled as 1 for some reason
             int requiredAmount = stack.stackSize;
-            // Remove Items from last stacks if possible
+            // Remove Items from last stacks if possible (exact matches)
             for (int i = MTEVendingMachine.INPUT_SLOTS - 1; i >= 0 && requiredAmount > 0; i--) {
                 if (inputSlots[i] == null) {
                     continue;
@@ -304,8 +306,35 @@ public class MTEVendingMachine extends MTEMultiBlockBase
                     }
                 }
             }
+            // Remove Items from last stacks if possible (oredict matches)
+            if (stack.hasOreDict()) {
+                int oreId = OreDictionary.getOreID(stack.getOreDict());
+                for (int i = MTEVendingMachine.INPUT_SLOTS - 1; i >= 0 && requiredAmount > 0; i--) {
+                    if (inputSlots[i] == null) {
+                        continue;
+                    }
+                    ItemStack tmp = inputSlots[i].copy();
+                    tmp.stackSize = 1;
+                    if (
+                        Arrays.stream(OreDictionary.getOreIDs(tmp))
+                            .anyMatch(id -> id == oreId)
+                    ) {
+                        if (requiredAmount >= inputSlots[i].stackSize) {
+                            requiredAmount -= inputSlots[i].stackSize;
+                            inputSlots[i] = null;
+                        } else {
+                            inputSlots[i].stackSize -= requiredAmount;
+                            requiredAmount = 0;
+                        }
+                    }
+                }
+            }
+
             requiredStack.stackSize = requiredAmount;
-            if (requiredAmount > 0 && !fetchItemFromAE(requiredStack, false)) {
+            if (
+                requiredAmount > 0
+                    && !fetchItemFromAE(requiredStack, false, stack.hasOreDict() ? stack.getOreDict() : null)
+            ) {
                 return false;
             }
         }
@@ -334,9 +363,9 @@ public class MTEVendingMachine extends MTEMultiBlockBase
         return true;
     }
 
-    public boolean fetchItemFromAE(ItemStack requiredStack, boolean simulate) {
+    public boolean fetchItemFromAE(ItemStack requiredStack, boolean simulate, String matchOreDict) {
         for (MTEVendingUplinkHatch hatch : this.uplinkHatches) {
-            if (hatch.removeItem(requiredStack, simulate)) {
+            if (hatch.removeItem(requiredStack, simulate, matchOreDict)) {
                 return true;
             }
         }
@@ -585,6 +614,8 @@ public class MTEVendingMachine extends MTEMultiBlockBase
     public boolean inputItemsSatisfied(List<BigItemStack> fromItems) {
         for (BigItemStack bis : fromItems) {
             BigItemStack base = bis.copy();
+            boolean hasOreDict = bis.hasOreDict();
+            int oreId = OreDictionary.getOreID(bis.getOreDict());
             bis.setTagCompound(null);
             base.stackSize = 1; // shouldn't need this, but just in case
 
@@ -593,11 +624,23 @@ public class MTEVendingMachine extends MTEMultiBlockBase
             if (this.inputSlotCache.get(base) != null) {
                 aeStackSearch.stackSize = Math
                     .max(aeStackSearch.stackSize - this.inputSlotCache.getOrDefault(base, 0), 0);
+            } else if (hasOreDict) {
+                for (Map.Entry<BigItemStack, Integer> item : this.inputSlotCache.entrySet()) {
+                    if (
+                        Arrays.stream(
+                            OreDictionary.getOreIDs(
+                                item.getKey()
+                                    .getBaseStack()))
+                            .anyMatch(id -> id == oreId)
+                    ) {
+                        aeStackSearch.stackSize = Math.max(aeStackSearch.stackSize - item.getValue(), 0);
+                    }
+                }
             }
             if (aeStackSearch.stackSize == 0) {
                 continue;
             }
-            if (!this.fetchItemFromAE(aeStackSearch, true)) {
+            if (!this.fetchItemFromAE(aeStackSearch, true, hasOreDict ? bis.getOreDict() : null)) {
                 return false;
             }
         }
