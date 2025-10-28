@@ -28,7 +28,7 @@ public class CommandVending extends CommandBase {
 
     @Override
     public String getCommandUsage(ICommandSender sender) {
-        return "/vending <set|add|reset> [player] [coin_type|all] [amount]";
+        return "/vending <set|add|reset> [player] <coin_type|all> <amount>";
     }
 
     @Override
@@ -158,6 +158,6 @@ public class CommandVending extends CommandBase {
         if (!arg.equals("add") && !arg.equals("set")) {
             return getCommandUsage(sender);
         }
-        return "/vending " + arg + " [player] [coin_type|all] [amount]";
+        return "/vending " + arg + " [player] <coin_type|all> <amount>";
     }
 }
