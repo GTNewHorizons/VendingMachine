@@ -493,7 +493,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
             }
 
             builder.addLine(
-                IKey.str(Translator.translate("vendingmachine.gui.trade_hint"))
+                IKey.lang("vendingmachine.gui.trade_hint")
                     .style(IKey.GRAY));
         }
     }
@@ -626,7 +626,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                     builder.addLine(coinSyncValue.getValue() + " " + type.getLocalizedName());
                     builder.emptyLine();
                     builder.addLine(
-                        IKey.str(Translator.translate("vendingmachine.gui.single_coin_type_eject_hint"))
+                        IKey.lang("vendingmachine.gui.single_coin_type_eject_hint")
                             .style(IKey.GRAY, IKey.ITALIC));
                     builder.setAutoUpdate(true);
                 }))
