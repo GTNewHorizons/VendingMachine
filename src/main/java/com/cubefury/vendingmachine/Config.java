@@ -4,7 +4,7 @@ import java.io.File;
 
 import net.minecraftforge.common.config.Configuration;
 
-import com.cubefury.vendingmachine.blocks.gui.MTEVendingMachineGui;
+import com.cubefury.vendingmachine.blocks.gui.SortMode;
 import com.cubefury.vendingmachine.blocks.gui.TradeItemDisplayWidget.DisplayType;
 
 public class Config {
@@ -18,7 +18,7 @@ public class Config {
     public static int dispense_frequency = 10;
     public static int dispense_amount = 16;
     public static DisplayType display_type = DisplayType.TILE;
-    public static MTEVendingMachineGui.SortMode sort_mode = MTEVendingMachineGui.SortMode.SMART;
+    public static SortMode sort_mode = SortMode.SMART;
     public static boolean forceRewriteDatabase = false;
 
     public static File worldDir = null;
@@ -62,14 +62,14 @@ public class Config {
             display_type = DisplayType.TILE;
         }
         try {
-            sort_mode = MTEVendingMachineGui.SortMode.valueOf(
+            sort_mode = SortMode.valueOf(
                 configuration.getString(
                     "sort_mode",
                     CONFIG_CATEGORY_VM,
                     "SMART",
                     "Default sort mode, either SMART or ALPHABET. Case sensitive."));
         } catch (IllegalArgumentException e) {
-            sort_mode = MTEVendingMachineGui.SortMode.SMART;
+            sort_mode = SortMode.SMART;
         }
 
         if (configuration.hasChanged()) {
