@@ -4,6 +4,11 @@ tooltip.vendingmachine=Who's even restocking this...
 
 structure.vendingmachine.hint.1=Hint 1 Dot: Tin Item Pipe Casing, ME Vending Uplink Hatch
 
+vendingmachine.command.usage=Usage:
+vendingmachine.command.invalid_player=Could not identify player
+vendingmachine.command.unknown_action=Unknown action:
+vendingmachine.command.unknown_currency=Unknown currency type:
+
 vendingmachine.gui.requirementHeader=Requirements:
 vendingmachine.gui.requirement.unknown=Unknown Requirement
 vendingmachine.gui.requirement.betterquesting=Quest
