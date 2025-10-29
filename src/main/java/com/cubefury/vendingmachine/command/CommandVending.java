@@ -14,6 +14,7 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ChatComponentText;
 
+import com.cubefury.vendingmachine.VendingMachine;
 import com.cubefury.vendingmachine.storage.NameCache;
 import com.cubefury.vendingmachine.trade.CurrencyType;
 import com.cubefury.vendingmachine.trade.TradeManager;
@@ -79,7 +80,7 @@ public class CommandVending extends CommandBase {
 
     @Override
     public void processCommand(ICommandSender sender, String[] args) {
-        if (args.length < 1) {
+        if (args.length < 2) {
             sender.addChatMessage(
                 new ChatComponentText(
                     Translator.translate("vendingmachine.command.usage") + " " + getCommandUsage(sender)));
@@ -89,7 +90,8 @@ public class CommandVending extends CommandBase {
         String action = args[0];
         EntityPlayerMP target = null;
 
-        if (args.length >= 2) {
+        VendingMachine.LOG.info(args.length);
+        if (args.length > 2 && action.equals("reset") || args.length > 3) {
             target = getPlayer(sender, args[1]);
         } else if (sender instanceof EntityPlayer) {
             target = getCommandSenderAsPlayer(sender);
@@ -101,7 +103,7 @@ public class CommandVending extends CommandBase {
         }
 
         if (action.equals("set") || action.equals("add")) {
-            int typeOffset = args.length >= 3 ? 2 : 1;
+            int typeOffset = args.length > 3 ? 2 : 1;
             CurrencyType type = CurrencyType.getTypeFromId(args[typeOffset]);
             if (type == null && !args[typeOffset].equals("all")) {
                 sender.addChatMessage(
@@ -131,7 +133,7 @@ public class CommandVending extends CommandBase {
                             + getAddOrSetUsage(sender, args[0])));
             }
         } else if (action.equals("reset")) {
-            int typeOffset = args.length >= 2 ? 2 : 1;
+            int typeOffset = args.length > 2 ? 2 : 1;
             CurrencyType type = CurrencyType.getTypeFromId(args[typeOffset]);
             if (type == null && !args[typeOffset].equals("all")) {
                 sender.addChatMessage(
