@@ -28,7 +28,10 @@ public class Trade {
     public BigItemStack displayItem = new BigItemStack(ItemPlaceholder.placeholder);
 
     public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
-        nbt.setTag("displayItem", displayItem.writeToNBT(new NBTTagCompound()));
+        nbt.setTag(
+            "displayItem",
+            (displayItem != null ? displayItem : new BigItemStack(ItemPlaceholder.placeholder))
+                .writeToNBT(new NBTTagCompound()));
 
         if (!this.fromCurrency.isEmpty()) {
             NBTTagList fromCurrencyArray = new NBTTagList();
@@ -66,7 +69,9 @@ public class Trade {
     }
 
     public void readFromNBT(NBTTagCompound nbt) {
-        displayItem = BigItemStack.loadItemStackFromNBT(nbt.getCompoundTag("displayItem"));
+        if (nbt.hasKey("displayItem")) {
+            displayItem = BigItemStack.loadItemStackFromNBT(nbt.getCompoundTag("displayItem"));
+        }
 
         fromCurrency.clear();
         fromItems.clear();
