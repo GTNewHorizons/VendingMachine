@@ -14,7 +14,6 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ChatComponentText;
 
-import com.cubefury.vendingmachine.VendingMachine;
 import com.cubefury.vendingmachine.storage.NameCache;
 import com.cubefury.vendingmachine.trade.CurrencyType;
 import com.cubefury.vendingmachine.trade.TradeManager;
@@ -29,7 +28,7 @@ public class CommandVending extends CommandBase {
 
     @Override
     public String getCommandUsage(ICommandSender sender) {
-        return "/vending <set|add|reset> [player] <coin_type|all> <amount>";
+        return "/vending <set|add|reset> [player] <coin_type|all> [amount]";
     }
 
     @Override
@@ -90,7 +89,6 @@ public class CommandVending extends CommandBase {
         String action = args[0];
         EntityPlayerMP target = null;
 
-        VendingMachine.LOG.info(args.length);
         if (args.length > 2 && action.equals("reset") || args.length > 3) {
             target = getPlayer(sender, args[1]);
         } else if (sender instanceof EntityPlayer) {
@@ -118,13 +116,12 @@ public class CommandVending extends CommandBase {
                 Map<CurrencyType, Integer> coinInventory = TradeManager.INSTANCE.playerCurrency.get(playerId);
                 if (args[typeOffset].equals("all")) {
                     for (CurrencyType cur : CurrencyType.values()) {
-                        coinInventory.putIfAbsent(cur, 0);
-
-                        coinInventory.put(cur, action.equals("add") ? coinInventory.get(cur) + amount : amount);
+                        coinInventory
+                            .put(cur, action.equals("add") ? coinInventory.getOrDefault(cur, 0) + amount : amount);
                     }
                 } else {
-                    coinInventory.putIfAbsent(type, 0);
-                    coinInventory.put(type, action.equals("add") ? coinInventory.get(type) + amount : amount);
+                    coinInventory
+                        .put(type, action.equals("add") ? coinInventory.getOrDefault(type, 0) + amount : amount);
                 }
             } catch (NumberFormatException e) {
                 sender.addChatMessage(
