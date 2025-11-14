@@ -79,9 +79,7 @@ public class CommandVending extends CommandBase {
     @Override
     public void processCommand(ICommandSender sender, String[] args) {
         if (args.length < 2) {
-            sender.addChatMessage(
-                new ChatComponentText(
-                    "Usage: " + getCommandUsage(sender)));
+            sender.addChatMessage(new ChatComponentText("Usage: " + getCommandUsage(sender)));
             return;
         }
 
@@ -103,9 +101,7 @@ public class CommandVending extends CommandBase {
             int typeOffset = args.length > 3 ? 2 : 1;
             CurrencyType type = CurrencyType.getTypeFromId(args[typeOffset]);
             if (type == null && !args[typeOffset].equals("all")) {
-                sender.addChatMessage(
-                    new ChatComponentText(
-                         "Unknown Currency Type: " + args[typeOffset]));
+                sender.addChatMessage(new ChatComponentText("Unknown Currency Type: " + args[typeOffset]));
                 return;
             }
             try {
@@ -123,18 +119,13 @@ public class CommandVending extends CommandBase {
                         .put(type, action.equals("add") ? coinInventory.getOrDefault(type, 0) + amount : amount);
                 }
             } catch (NumberFormatException e) {
-                sender.addChatMessage(
-                    new ChatComponentText(
-                        "Usage: "
-                            + getAddOrSetUsage(sender, args[0])));
+                sender.addChatMessage(new ChatComponentText("Usage: " + getAddOrSetUsage(sender, args[0])));
             }
         } else if (action.equals("reset")) {
             int typeOffset = args.length > 2 ? 2 : 1;
             CurrencyType type = CurrencyType.getTypeFromId(args[typeOffset]);
             if (type == null && !args[typeOffset].equals("all")) {
-                sender.addChatMessage(
-                    new ChatComponentText(
-                        "Unknown Currency Type: " + args[typeOffset]));
+                sender.addChatMessage(new ChatComponentText("Unknown Currency Type: " + args[typeOffset]));
                 return;
             }
             UUID playerId = NameCache.INSTANCE.getUUIDFromPlayer(target);
@@ -146,8 +137,7 @@ public class CommandVending extends CommandBase {
                 coinInventory.remove(type);
             }
         } else {
-            sender.addChatMessage(
-                new ChatComponentText("Unknown Action: " + action));
+            sender.addChatMessage(new ChatComponentText("Unknown Action: " + action));
         }
 
     }
