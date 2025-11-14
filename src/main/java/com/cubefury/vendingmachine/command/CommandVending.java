@@ -114,9 +114,24 @@ public class CommandVending extends CommandBase {
                         coinInventory
                             .put(cur, action.equals("add") ? coinInventory.getOrDefault(cur, 0) + amount : amount);
                     }
+                    sender.addChatMessage(
+                        new ChatComponentText(
+                            String.format(
+                                "%s %dx all coins for %s",
+                                action.equals("add") ? "Added" : "Set",
+                                amount,
+                                target.getDisplayName())));
                 } else {
                     coinInventory
                         .put(type, action.equals("add") ? coinInventory.getOrDefault(type, 0) + amount : amount);
+                    sender.addChatMessage(
+                        new ChatComponentText(
+                            String.format(
+                                "%s %dx %s coins for %s",
+                                action.equals("add") ? "Added" : "Set",
+                                amount,
+                                type.id,
+                                target.getDisplayName())));
                 }
             } catch (NumberFormatException e) {
                 sender.addChatMessage(new ChatComponentText("Usage: " + getAddOrSetUsage(sender, args[0])));
@@ -133,8 +148,12 @@ public class CommandVending extends CommandBase {
             Map<CurrencyType, Integer> coinInventory = TradeManager.INSTANCE.playerCurrency.get(playerId);
             if (args[typeOffset].equals("all")) {
                 coinInventory.clear();
+                sender.addChatMessage(
+                    new ChatComponentText(String.format("Reset all coins for %s", target.getDisplayName())));
             } else {
                 coinInventory.remove(type);
+                sender.addChatMessage(
+                    new ChatComponentText(String.format("Reset %s coins for %s", type.id, target.getDisplayName())));
             }
         } else {
             sender.addChatMessage(new ChatComponentText("Unknown Action: " + action));
