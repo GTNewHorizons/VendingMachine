@@ -17,7 +17,6 @@ import net.minecraft.util.ChatComponentText;
 import com.cubefury.vendingmachine.storage.NameCache;
 import com.cubefury.vendingmachine.trade.CurrencyType;
 import com.cubefury.vendingmachine.trade.TradeManager;
-import com.cubefury.vendingmachine.util.Translator;
 
 public class CommandVending extends CommandBase {
 
@@ -82,7 +81,7 @@ public class CommandVending extends CommandBase {
         if (args.length < 2) {
             sender.addChatMessage(
                 new ChatComponentText(
-                    Translator.translate("vendingmachine.command.usage") + " " + getCommandUsage(sender)));
+                    "Usage: " + getCommandUsage(sender)));
             return;
         }
 
@@ -96,7 +95,7 @@ public class CommandVending extends CommandBase {
         }
 
         if (target == null) {
-            sender.addChatMessage(new ChatComponentText(Translator.translate("vendingmachine.command.invalid_player")));
+            sender.addChatMessage(new ChatComponentText("Could not identify player."));
             return;
         }
 
@@ -106,7 +105,7 @@ public class CommandVending extends CommandBase {
             if (type == null && !args[typeOffset].equals("all")) {
                 sender.addChatMessage(
                     new ChatComponentText(
-                        Translator.translate("vendingmachine.command.unknown_currency") + " " + args[typeOffset]));
+                         "Unknown Currency Type: " + args[typeOffset]));
                 return;
             }
             try {
@@ -126,7 +125,7 @@ public class CommandVending extends CommandBase {
             } catch (NumberFormatException e) {
                 sender.addChatMessage(
                     new ChatComponentText(
-                        Translator.translate("vendingmachine.command.usage") + " "
+                        "Usage: "
                             + getAddOrSetUsage(sender, args[0])));
             }
         } else if (action.equals("reset")) {
@@ -135,7 +134,7 @@ public class CommandVending extends CommandBase {
             if (type == null && !args[typeOffset].equals("all")) {
                 sender.addChatMessage(
                     new ChatComponentText(
-                        Translator.translate("vendingmachine.command.unknown_currency") + " " + args[typeOffset]));
+                        "Unknown Currency Type: " + args[typeOffset]));
                 return;
             }
             UUID playerId = NameCache.INSTANCE.getUUIDFromPlayer(target);
@@ -148,7 +147,7 @@ public class CommandVending extends CommandBase {
             }
         } else {
             sender.addChatMessage(
-                new ChatComponentText(Translator.translate("vendingmachine.command.unknown_action") + " " + action));
+                new ChatComponentText("Unknown Action: " + action));
         }
 
     }
