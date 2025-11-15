@@ -5,6 +5,7 @@ import net.minecraft.command.ServerCommandManager;
 import net.minecraft.server.MinecraftServer;
 import net.minecraftforge.common.MinecraftForge;
 
+import com.cubefury.vendingmachine.command.CommandVending;
 import com.cubefury.vendingmachine.handlers.EventHandler;
 import com.cubefury.vendingmachine.handlers.SaveLoadHandler;
 
@@ -34,6 +35,8 @@ public class CommonProxy {
         MinecraftServer server = event.getServer();
         ICommandManager command = server.getCommandManager();
         ServerCommandManager manager = (ServerCommandManager) command;
+
+        manager.registerCommand(new CommandVending());
 
         SaveLoadHandler.INSTANCE.init(server);
     }
