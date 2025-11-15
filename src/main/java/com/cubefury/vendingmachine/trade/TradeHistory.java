@@ -11,7 +11,7 @@ public class TradeHistory {
 
     public TradeHistory(long lastTrade, int tradeCount) {
         this.lastTrade = lastTrade;
-        this.tradeCount = 0;
+        this.tradeCount = tradeCount;
     }
 
     public void executeTrade() {

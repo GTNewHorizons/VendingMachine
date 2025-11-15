@@ -155,7 +155,7 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
                         0xBB000000);
                 }
                 this.overlay(
-                    IKey.str(display.hasCooldown ? this.display.cooldownText : "")
+                    IKey.str(display.hasCooldown && this.display.enabled ? this.display.cooldownText : "")
                         .style(IKey.WHITE)
                         .scale(0.9f));
             }
