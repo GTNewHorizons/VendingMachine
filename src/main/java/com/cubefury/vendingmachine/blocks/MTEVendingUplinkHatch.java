@@ -4,6 +4,7 @@ import static com.cubefury.vendingmachine.api.enums.Textures.VUPLINK_OVERLAY_ACT
 import static com.cubefury.vendingmachine.api.enums.Textures.VUPLINK_OVERLAY_INACTIVE;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 
@@ -11,6 +12,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ChatComponentTranslation;
 import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraftforge.oredict.OreDictionary;
 
 import com.cubefury.vendingmachine.VendingMachine;
 import com.cubefury.vendingmachine.items.VMItems;
@@ -192,13 +194,13 @@ public class MTEVendingUplinkHatch extends MTEHatch implements IGridProxyable, I
             .getStorageList();
     }
 
-    public boolean removeItem(ItemStack remove, boolean simulate) {
+    public boolean removeItem(ItemStack remove, boolean simulate, String matchOreDict) {
         if (remove == null || remove.stackSize <= 0) return true;
         IStorageGrid storage = accessStorage();
         if (storage == null) return false;
 
         MachineSource source = new MachineSource(this);
-        if (!remove.isItemStackDamageable()) {
+        if (!remove.isItemStackDamageable() && matchOreDict != null) {
             IAEItemStack stack = storage.getItemInventory()
                 .extractItems(AEItemStack.create(remove), simulate ? Actionable.SIMULATE : Actionable.MODULATE, source);
             return stack != null && stack.getStackSize() >= remove.stackSize;
@@ -208,9 +210,17 @@ public class MTEVendingUplinkHatch extends MTEHatch implements IGridProxyable, I
             return false;
         }
 
+        int oreId = OreDictionary.getOreID(matchOreDict);
         List<IAEItemStack> outputList = new ArrayList<>();
         for (IAEItemStack stack : cachedItems) {
-            if (stack.getItem() == remove.getItem() && stack.getItemDamage() == remove.getItemDamage()) {
+            // no oredict data: check if item + item damage matches required item
+            // oredict data: check if item contains desired oredict string
+            if (
+                (matchOreDict == null && stack.getItem() == remove.getItem()
+                    && stack.getItemDamage() == remove.getItemDamage())
+                    || (matchOreDict != null && Arrays.stream(OreDictionary.getOreIDs(stack.getItemStack()))
+                        .anyMatch(id -> id == oreId))
+            ) {
                 outputList.add(stack);
             }
         }
