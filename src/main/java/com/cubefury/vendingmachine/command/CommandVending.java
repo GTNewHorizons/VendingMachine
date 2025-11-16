@@ -32,7 +32,7 @@ public class CommandVending extends CommandBase {
 
     @Override
     public int getRequiredPermissionLevel() {
-        return 2;
+        return 4;
     }
 
     @Override
@@ -98,45 +98,56 @@ public class CommandVending extends CommandBase {
         }
 
         if (action.equals("set") || action.equals("add")) {
+            if (args.length < 3 || args.length > 4) {
+                sender.addChatMessage(new ChatComponentText("Usage: " + getAddOrSetUsage(sender, args[0])));
+                return;
+            }
+
+            int amount = 0;
+            try {
+                amount = Integer.parseInt(args[args.length - 1]);
+            } catch (NumberFormatException e) {
+                sender.addChatMessage(new ChatComponentText("Usage: " + getAddOrSetUsage(sender, args[0])));
+                return;
+            }
+
             int typeOffset = args.length > 3 ? 2 : 1;
             CurrencyType type = CurrencyType.getTypeFromId(args[typeOffset]);
             if (type == null && !args[typeOffset].equals("all")) {
                 sender.addChatMessage(new ChatComponentText("Unknown Currency Type: " + args[typeOffset]));
                 return;
             }
-            try {
-                int amount = Integer.parseInt(args[typeOffset + 1]);
-                UUID playerId = NameCache.INSTANCE.getUUIDFromPlayer(target);
-                TradeManager.INSTANCE.playerCurrency.putIfAbsent(playerId, new HashMap<>());
-                Map<CurrencyType, Integer> coinInventory = TradeManager.INSTANCE.playerCurrency.get(playerId);
-                if (args[typeOffset].equals("all")) {
-                    for (CurrencyType cur : CurrencyType.values()) {
-                        coinInventory
-                            .put(cur, action.equals("add") ? coinInventory.getOrDefault(cur, 0) + amount : amount);
-                    }
-                    sender.addChatMessage(
-                        new ChatComponentText(
-                            String.format(
-                                "%s %dx all coins for %s",
-                                action.equals("add") ? "Added" : "Set",
-                                amount,
-                                target.getDisplayName())));
-                } else {
-                    coinInventory
-                        .put(type, action.equals("add") ? coinInventory.getOrDefault(type, 0) + amount : amount);
-                    sender.addChatMessage(
-                        new ChatComponentText(
-                            String.format(
-                                "%s %dx %s coins for %s",
-                                action.equals("add") ? "Added" : "Set",
-                                amount,
-                                type.id,
-                                target.getDisplayName())));
+
+            UUID playerId = NameCache.INSTANCE.getUUIDFromPlayer(target);
+            TradeManager.INSTANCE.playerCurrency.putIfAbsent(playerId, new HashMap<>());
+            Map<CurrencyType, Integer> coinInventory = TradeManager.INSTANCE.playerCurrency.get(playerId);
+            if (args[typeOffset].equals("all")) {
+                for (CurrencyType cur : CurrencyType.values()) {
+                    coinInventory.put(cur, action.equals("add") ? coinInventory.getOrDefault(cur, 0) + amount : amount);
                 }
-            } catch (NumberFormatException e) {
-                sender.addChatMessage(new ChatComponentText("Usage: " + getAddOrSetUsage(sender, args[0])));
+                sender.addChatMessage(
+                    new ChatComponentText(
+                        String.format(
+                            "%s %dx all coins for %s",
+                            action.equals("add") ? "Added" : "Set",
+                            amount,
+                            target.getDisplayName())));
+            } else {
+                coinInventory.put(type, action.equals("add") ? coinInventory.getOrDefault(type, 0) + amount : amount);
+                sender.addChatMessage(
+                    new ChatComponentText(
+                        String.format(
+                            "%s %dx %s coins for %s",
+                            action.equals("add") ? "Added" : "Set",
+                            amount,
+                            type.id,
+                            target.getDisplayName())));
             }
         } else if (action.equals("reset")) {
+            if (args.length < 2 || args.length > 3) {
+                sender.addChatMessage(new ChatComponentText("Usage: /vending reset [player] [coin_type|all]"));
+                return;
+            }
             int typeOffset = args.length > 2 ? 2 : 1;
             CurrencyType type = CurrencyType.getTypeFromId(args[typeOffset]);
             if (type == null && !args[typeOffset].equals("all")) {
