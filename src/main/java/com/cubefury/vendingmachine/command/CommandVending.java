@@ -32,11 +32,6 @@ public class CommandVending extends CommandBase {
     }
 
     @Override
-    public int getRequiredPermissionLevel() {
-        return 4;
-    }
-
-    @Override
     public boolean canCommandSenderUseCommand(ICommandSender sender) {
         return sender.canCommandSenderUseCommand(getRequiredPermissionLevel(), getCommandName());
     }
