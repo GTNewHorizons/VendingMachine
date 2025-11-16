@@ -66,7 +66,10 @@ public class Trade {
     }
 
     public void readFromNBT(NBTTagCompound nbt) {
-        displayItem = BigItemStack.loadItemStackFromNBT(nbt.getCompoundTag("displayItem"));
+        if (nbt.hasKey("displayItem")) {
+            BigItemStack readStack = BigItemStack.loadItemStackFromNBT(nbt.getCompoundTag("displayItem"));
+            displayItem = readStack == null ? displayItem : readStack;
+        }
 
         fromCurrency.clear();
         fromItems.clear();
