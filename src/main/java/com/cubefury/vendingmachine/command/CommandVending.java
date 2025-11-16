@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
+import net.minecraft.command.PlayerNotFoundException;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
@@ -59,6 +60,12 @@ public class CommandVending extends CommandBase {
                 return suggestions;
             }
             case 3: {
+                try {
+                    getPlayer(sender, args[1]);
+                } catch (PlayerNotFoundException except) {
+                    return null;
+                }
+
                 List<String> suggestions = Arrays.stream(CurrencyType.values())
                     .map(c -> c.id)
                     .collect(Collectors.toList());
@@ -87,7 +94,9 @@ public class CommandVending extends CommandBase {
         EntityPlayerMP target = null;
 
         if (args.length > 2 && action.equals("reset") || args.length > 3) {
-            target = getPlayer(sender, args[1]);
+            try {
+                target = getPlayer(sender, args[1]);
+            } catch (PlayerNotFoundException ignored) {}
         } else if (sender instanceof EntityPlayer) {
             target = getCommandSenderAsPlayer(sender);
         }
@@ -144,7 +153,7 @@ public class CommandVending extends CommandBase {
                             target.getDisplayName())));
             }
         } else if (action.equals("reset")) {
-            if (args.length < 2 || args.length > 3) {
+            if (args.length > 3) {
                 sender.addChatMessage(new ChatComponentText("Usage: /vending reset [player] [coin_type|all]"));
                 return;
             }
