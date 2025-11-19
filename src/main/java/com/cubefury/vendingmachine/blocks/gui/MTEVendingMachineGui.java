@@ -429,6 +429,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                             if (hasCoin) {
                                 this.refreshInputSlots();
                             }
+                            base.markDirty();
                         }));
             })
             .build();
@@ -440,7 +441,10 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
             .key('I', index -> {
                 return new ItemSlot().slot(
                     new ModularSlot(base.outputItems, index).accessibility(false, true)
-                        .slotGroup("outputSlotGroup"));
+                        .slotGroup("outputSlotGroup")
+                        .changeListener((newItem, onlyAmountChanged, client, init) -> {
+                            base.markDirty();
+                }));
             })
             .build();
     }
