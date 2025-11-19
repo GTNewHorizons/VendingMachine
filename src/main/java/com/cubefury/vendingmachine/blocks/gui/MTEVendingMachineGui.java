@@ -442,9 +442,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                 return new ItemSlot().slot(
                     new ModularSlot(base.outputItems, index).accessibility(false, true)
                         .slotGroup("outputSlotGroup")
-                        .changeListener((newItem, onlyAmountChanged, client, init) -> {
-                            base.markDirty();
-                }));
+                        .changeListener((newItem, onlyAmountChanged, client, init) -> { base.markDirty(); }));
             })
             .build();
     }
