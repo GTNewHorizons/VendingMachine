@@ -200,7 +200,7 @@ public class MTEVendingUplinkHatch extends MTEHatch implements IGridProxyable, I
         if (storage == null) return false;
 
         MachineSource source = new MachineSource(this);
-        if (!remove.isItemStackDamageable() && matchOreDict != null) {
+        if (!remove.isItemStackDamageable() && matchOreDict == null) {
             IAEItemStack stack = storage.getItemInventory()
                 .extractItems(AEItemStack.create(remove), simulate ? Actionable.SIMULATE : Actionable.MODULATE, source);
             return stack != null && stack.getStackSize() >= remove.stackSize;
