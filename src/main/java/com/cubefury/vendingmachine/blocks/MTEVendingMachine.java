@@ -236,6 +236,7 @@ public class MTEVendingMachine extends MTEMultiBlockBase
         }
         ticksSinceOutput = this.newBufferedOutputs ? 0 : ticksSinceOutput + 1;
         this.newBufferedOutputs = false;
+        this.markDirty();
     }
 
     private boolean processTradeOnServer(TradeRequest tradeRequest) {
@@ -331,6 +332,7 @@ public class MTEVendingMachine extends MTEMultiBlockBase
             .get(tradeRequest.tradeGroup)
             .executeTrade(tradeRequest.playerID);
         this.sendTradeUpdate();
+        this.markDirty();
         return true;
     }
 
