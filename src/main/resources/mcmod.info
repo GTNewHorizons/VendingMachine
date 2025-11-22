@@ -6,7 +6,7 @@
 		"description": "Adds a vending machine.",
 		"version": "${modVersion}",
 		"mcversion": "${minecraftVersion}",
-		"url": "https://github.com/cubefury/VendingMachine",
+		"url": "https://github.com/GTNewHorizons/VendingMachine",
 		"updateUrl": "",
 		"authorList": ["cubefury"],
 		"credits": "",
