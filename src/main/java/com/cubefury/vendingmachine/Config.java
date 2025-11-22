@@ -7,10 +7,15 @@ import net.minecraftforge.common.config.Configuration;
 import com.cubefury.vendingmachine.blocks.gui.MTEVendingMachineGui;
 import com.cubefury.vendingmachine.blocks.gui.TradeItemDisplayWidget.DisplayType;
 
+import cpw.mods.fml.client.event.ConfigChangedEvent;
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+
 public class Config {
 
-    private static final String CONFIG_CATEGORY_VM = "Vending Machine Settings";
-    private static final String CONFIG_CATEGORY_DEVELOPER = "Developer Settings";
+    public static Configuration configuration;
+
+    public static final String CONFIG_CATEGORY_VM = "Vending Machine Settings";
+    public static final String CONFIG_CATEGORY_DEVELOPER = "Developer Settings";
 
     public static String data_dir = "vendingmachine";
     public static String config_dir = "config/vendingmachine";
@@ -24,8 +29,13 @@ public class Config {
     public static File worldDir = null;
 
     public static void init(File configFile) {
-        Configuration configuration = new Configuration(configFile);
+        if (configuration == null) {
+            configuration = new Configuration(configFile);
+            loadConfiguration();
+        }
+    }
 
+    private static void loadConfiguration() {
         data_dir = configuration
             .getString("data_dir", Configuration.CATEGORY_GENERAL, data_dir, "World vendingmachine data directory");
         config_dir = configuration
@@ -74,6 +84,13 @@ public class Config {
 
         if (configuration.hasChanged()) {
             configuration.save();
+        }
+    }
+
+    @SubscribeEvent
+    public void onConfigChangeEvent(ConfigChangedEvent.OnConfigChangedEvent event) {
+        if (event.modID.equalsIgnoreCase(VendingMachine.MODID)) {
+            loadConfiguration();
         }
     }
 }

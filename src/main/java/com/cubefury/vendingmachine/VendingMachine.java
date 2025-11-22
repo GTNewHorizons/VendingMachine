@@ -31,6 +31,7 @@ import cpw.mods.fml.relauncher.Side;
 @Mod(
     modid = VendingMachine.MODID,
     version = Tags.VERSION,
+    guiFactory = VendingMachine.GUI_FACTORY_CLASS,
     name = VendingMachine.NAME,
     acceptedMinecraftVersions = "[1.7.10]")
 public class VendingMachine {
@@ -39,6 +40,7 @@ public class VendingMachine {
     public static final Logger LOG = LogManager.getLogger(MODID);
     public static final String CHANNEL = "VM_NET_CHAN";
     public static final String NAME = "Vending Machine";
+    public static final String GUI_FACTORY_CLASS = "com.cubefury.vendingmachine.gui.client.GuiFactory";
 
     @Mod.Instance(MODID)
     public static VendingMachine instance;
