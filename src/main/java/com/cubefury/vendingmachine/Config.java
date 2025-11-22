@@ -14,8 +14,8 @@ public class Config {
 
     public static Configuration configuration;
 
-    public static final String CONFIG_CATEGORY_VM = "Vending Machine Settings";
-    public static final String CONFIG_CATEGORY_DEVELOPER = "Developer Settings";
+    public static final String CONFIG_CATEGORY_VM = "vending machine settings";
+    public static final String CONFIG_CATEGORY_DEVELOPER = "developer settings";
 
     public static String data_dir = "vendingmachine";
     public static String config_dir = "config/vendingmachine";
