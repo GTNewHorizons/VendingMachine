@@ -91,6 +91,25 @@ public class Config {
         }
     }
 
+    public static void setDisplayType(DisplayType newType) {
+        Property display_type_prop = configuration
+            .get(CONFIG_CATEGORY_VM, "display_type", "TILE", DISPLAY_TYPE_COMMENT);
+        display_type = newType;
+        display_type_prop.set(newType.toString());
+        display_type_prop.comment = DISPLAY_TYPE_COMMENT;
+
+        configuration.save();
+    }
+
+    public static void setSortMode(MTEVendingMachineGui.SortMode newMode) {
+        Property sort_mode_prop = configuration.get(CONFIG_CATEGORY_VM, "sort_mode", "SMART", SORT_MODE_COMMENT);
+        sort_mode = newMode;
+        sort_mode_prop.set(newMode.toString());
+        sort_mode_prop.comment = SORT_MODE_COMMENT;
+
+        configuration.save();
+    }
+
     @SubscribeEvent
     public void onConfigChangeEvent(ConfigChangedEvent.OnConfigChangedEvent event) {
         if (event.modID.equalsIgnoreCase(VendingMachine.MODID)) {
