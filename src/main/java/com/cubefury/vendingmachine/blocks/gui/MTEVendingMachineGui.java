@@ -80,8 +80,6 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
 
     public static String lastSearch = "";
     public static int lastPage = 0;
-    public static TradeItemDisplayWidget.DisplayType displayType = Config.display_type;
-    public static SortMode sortMode = Config.sort_mode;
 
     public static final int CUSTOM_UI_HEIGHT = 320;
 
@@ -202,17 +200,17 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
             new CycleButtonWidget().size(14)
                 .overlay(
                     new DynamicDrawable(
-                        () -> displayType.getTexture()
+                        () -> Config.display_type.getTexture()
                             .size(14)))
                 .stateCount(TradeItemDisplayWidget.DisplayType.values().length)
-                .value(new IntValue.Dynamic(() -> displayType.ordinal(), val -> {
-                    displayType = TradeItemDisplayWidget.DisplayType.values()[val];
+                .value(new IntValue.Dynamic(() -> Config.display_type.ordinal(), val -> {
+                    TradeItemDisplayWidget.DisplayType displayType = TradeItemDisplayWidget.DisplayType.values()[val];
                     Config.setDisplayType(displayType);
                 }))
                 .tooltipDynamic(builder -> {
                     builder.clearText();
-                    builder
-                        .addLine(IKey.lang("vendingmachine.gui.display_mode") + " " + displayType.getLocalizedName());
+                    builder.addLine(
+                        IKey.lang("vendingmachine.gui.display_mode") + " " + Config.display_type.getLocalizedName());
                 })
                 .tooltipAutoUpdate(true));
         buttonColumn.child(
@@ -220,16 +218,17 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                 .top(17)
                 .overlay(
                     new DynamicDrawable(
-                        () -> sortMode.getTexture()
+                        () -> Config.sort_mode.getTexture()
                             .size(14)))
                 .stateCount(SortMode.values().length)
-                .value(new IntValue.Dynamic(() -> sortMode.ordinal(), val -> {
-                    sortMode = SortMode.values()[val];
+                .value(new IntValue.Dynamic(() -> Config.sort_mode.ordinal(), val -> {
+                    SortMode sortMode = SortMode.values()[val];
                     Config.setSortMode(sortMode);
                 }))
                 .tooltipDynamic(builder -> {
                     builder.clearText();
-                    builder.addLine(IKey.lang("vendingmachine.gui.display_sort") + " " + sortMode.getLocalizedName());
+                    builder.addLine(
+                        IKey.lang("vendingmachine.gui.display_sort") + " " + Config.sort_mode.getLocalizedName());
                     setForceRefresh();
                 })
                 .tooltipAutoUpdate(true));
@@ -539,7 +538,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                     .tooltipAutoUpdate(true)
                     .setEnabledIf(slot -> {
                         TradeItemDisplayWidget display = ((TradeItemDisplayWidget) slot);
-                        return displayType == display.displayType && display.getDisplay() != null;
+                        return Config.display_type == display.displayType && display.getDisplay() != null;
                     })
                     .margin(2));
                 if (i % TILE_ITEMS_PER_ROW == TILE_ITEMS_PER_ROW - 1) {
@@ -569,7 +568,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                     .tooltipAutoUpdate(true)
                     .setEnabledIf(slot -> {
                         TradeItemDisplayWidget display = ((TradeItemDisplayWidget) slot);
-                        return displayType == display.displayType && display.getDisplay() != null;
+                        return Config.display_type == display.displayType && display.getDisplay() != null;
                     }));
                 tradeList.child(row);
                 row = new TradeRow().height(LIST_ITEM_HEIGHT).width(TRADE_ROW_WIDTH).marginLeft(2);
