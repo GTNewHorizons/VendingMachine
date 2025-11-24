@@ -126,7 +126,7 @@ public class TradeMainPanel extends ModularPanel {
     public Map<TradeCategory, List<TradeItemDisplay>> formatTrades() {
         Map<TradeCategory, List<TradeItemDisplay>> trades = new HashMap<>();
         trades.put(TradeCategory.ALL, new ArrayList<>());
-        MTEVendingMachineGui.SortMode sortMode = MTEVendingMachineGui.sortMode;
+        MTEVendingMachineGui.SortMode sortMode = Config.sort_mode;
 
         for (TradeItemDisplay tid : TradeManager.INSTANCE.tradeData) {
             TradeGroup group = TradeDatabase.INSTANCE.getTradeGroupFromId(tid.tgID);
