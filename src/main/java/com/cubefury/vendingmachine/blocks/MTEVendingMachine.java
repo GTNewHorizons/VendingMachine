@@ -1,5 +1,6 @@
 package com.cubefury.vendingmachine.blocks;
 
+import static com.cubefury.vendingmachine.VendingMachine.AUTHOR_CUBEFURY;
 import static com.cubefury.vendingmachine.api.enums.Textures.VM_MACHINE_FRONT_OFF;
 import static com.cubefury.vendingmachine.api.enums.Textures.VM_MACHINE_FRONT_ON;
 import static com.cubefury.vendingmachine.api.enums.Textures.VM_MACHINE_FRONT_ON_GLOW;
@@ -370,7 +371,7 @@ public class MTEVendingMachine extends MTEMultiBlockBase
                 .addOtherStructurePart("Tin Item Pipe Casings", "Everything except the controller")
                 .addOtherStructurePart("ME Vending Uplink Hatch", "Any Pipe Casing, Optional")
                 .addStructureInfo("Cannot be flipped onto its side")
-                .toolTipFinisher();
+                .toolTipFinisher(AUTHOR_CUBEFURY);
         }
         return tooltipBuilder;
     }
