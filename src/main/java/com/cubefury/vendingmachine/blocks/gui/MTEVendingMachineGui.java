@@ -205,10 +205,10 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                         () -> displayType.getTexture()
                             .size(14)))
                 .stateCount(TradeItemDisplayWidget.DisplayType.values().length)
-                .value(
-                    new IntValue.Dynamic(
-                        () -> displayType.ordinal(),
-                        val -> { displayType = TradeItemDisplayWidget.DisplayType.values()[val]; }))
+                .value(new IntValue.Dynamic(() -> displayType.ordinal(), val -> {
+                    displayType = TradeItemDisplayWidget.DisplayType.values()[val];
+                    Config.setDisplayType(displayType);
+                }))
                 .tooltipDynamic(builder -> {
                     builder.clearText();
                     builder
@@ -223,7 +223,10 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                         () -> sortMode.getTexture()
                             .size(14)))
                 .stateCount(SortMode.values().length)
-                .value(new IntValue.Dynamic(() -> sortMode.ordinal(), val -> { sortMode = SortMode.values()[val]; }))
+                .value(new IntValue.Dynamic(() -> sortMode.ordinal(), val -> {
+                    sortMode = SortMode.values()[val];
+                    Config.setSortMode(sortMode);
+                }))
                 .tooltipDynamic(builder -> {
                     builder.clearText();
                     builder.addLine(IKey.lang("vendingmachine.gui.display_sort") + " " + sortMode.getLocalizedName());
