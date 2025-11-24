@@ -1,5 +1,7 @@
 package com.cubefury.vendingmachine;
 
+import net.minecraft.util.EnumChatFormatting;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -39,6 +41,12 @@ public class VendingMachine {
     public static final Logger LOG = LogManager.getLogger(MODID);
     public static final String CHANNEL = "VM_NET_CHAN";
     public static final String NAME = "Vending Machine";
+    public static final String AUTHOR_CUBEFURY = "Author: " + EnumChatFormatting.AQUA
+        + EnumChatFormatting.BOLD
+        + "Cube"
+        + EnumChatFormatting.BLUE
+        + EnumChatFormatting.BOLD
+        + "Fury";
 
     @Mod.Instance(MODID)
     public static VendingMachine instance;
