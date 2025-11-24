@@ -21,6 +21,9 @@ public class CommonProxy {
     // GameRegistry." (Remove if not needed)
     public void preInit(FMLPreInitializationEvent event) {
         VendingMachine.LOG.info("Loading Vending Machine " + Tags.VERSION);
+        FMLCommonHandler.instance()
+            .bus()
+            .register(new Config());
         Config.init(event.getSuggestedConfigurationFile());
     }
 

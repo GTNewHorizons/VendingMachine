@@ -3,6 +3,7 @@ package com.cubefury.vendingmachine;
 import java.io.File;
 
 import net.minecraftforge.common.config.Configuration;
+import net.minecraftforge.common.config.Property;
 
 import com.cubefury.vendingmachine.blocks.gui.MTEVendingMachineGui;
 import com.cubefury.vendingmachine.blocks.gui.TradeItemDisplayWidget.DisplayType;
@@ -26,16 +27,19 @@ public class Config {
     public static MTEVendingMachineGui.SortMode sort_mode = MTEVendingMachineGui.SortMode.SMART;
     public static boolean forceRewriteDatabase = false;
 
+    private static String DISPLAY_TYPE_COMMENT = "Default trade display format, either TILE or LIST. Case sensitive.";
+    private static String SORT_MODE_COMMENT = "Default sort mode, either SMART or ALPHABET. Case sensitive.";
+
     public static File worldDir = null;
 
     public static void init(File configFile) {
         if (configuration == null) {
             configuration = new Configuration(configFile);
-            loadConfiguration();
+            loadConfiguration(false);
         }
     }
 
-    private static void loadConfiguration() {
+    private static void loadConfiguration(boolean rewriteConfig) {
         data_dir = configuration
             .getString("data_dir", Configuration.CATEGORY_GENERAL, data_dir, "World vendingmachine data directory");
         config_dir = configuration
@@ -61,28 +65,28 @@ public class Config {
             forceRewriteDatabase,
             "Force rewrite database on load, for add/remove trades or change of format");
 
+        Property display_type_prop = configuration
+            .get(CONFIG_CATEGORY_VM, "display_type", "TILE", DISPLAY_TYPE_COMMENT);
         try {
-            display_type = DisplayType.valueOf(
-                configuration.getString(
-                    "display_type",
-                    CONFIG_CATEGORY_VM,
-                    "TILE",
-                    "Default trade display format, either TILE or LIST. Case sensitive."));
+            display_type = DisplayType.valueOf(display_type_prop.getString());
         } catch (IllegalArgumentException e) {
+            VendingMachine.LOG.warn("Invalid display type: {}, defaulting to TILE", display_type_prop.getString());
             display_type = DisplayType.TILE;
         }
+        display_type_prop.set(display_type.toString());
+        display_type_prop.comment = DISPLAY_TYPE_COMMENT;
+
+        Property sort_mode_prop = configuration.get(CONFIG_CATEGORY_VM, "sort_mode", "SMART", SORT_MODE_COMMENT);
         try {
-            sort_mode = MTEVendingMachineGui.SortMode.valueOf(
-                configuration.getString(
-                    "sort_mode",
-                    CONFIG_CATEGORY_VM,
-                    "SMART",
-                    "Default sort mode, either SMART or ALPHABET. Case sensitive."));
+            sort_mode = MTEVendingMachineGui.SortMode.valueOf(sort_mode_prop.getString());
         } catch (IllegalArgumentException e) {
+            VendingMachine.LOG.warn("Invalid sort mode: {}, defaulting to SMART", sort_mode_prop.getString());
             sort_mode = MTEVendingMachineGui.SortMode.SMART;
         }
+        sort_mode_prop.set(sort_mode.toString());
+        sort_mode_prop.comment = SORT_MODE_COMMENT;
 
-        if (configuration.hasChanged()) {
+        if (configuration.hasChanged() || rewriteConfig) {
             configuration.save();
         }
     }
@@ -90,7 +94,8 @@ public class Config {
     @SubscribeEvent
     public void onConfigChangeEvent(ConfigChangedEvent.OnConfigChangedEvent event) {
         if (event.modID.equalsIgnoreCase(VendingMachine.MODID)) {
-            loadConfiguration();
+            VendingMachine.LOG.info("config changed");
+            loadConfiguration(true);
         }
     }
 }
