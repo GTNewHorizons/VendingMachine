@@ -17,7 +17,7 @@ import com.cleanroommc.modularui.factory.PosGuiData;
 import com.cleanroommc.modularui.screen.ModularPanel;
 import com.cleanroommc.modularui.screen.ModularScreen;
 import com.cleanroommc.modularui.value.sync.PanelSyncManager;
-import com.cubefury.vendingmachine.Config;
+import com.cubefury.vendingmachine.VMConfig;
 import com.cubefury.vendingmachine.network.handlers.NetResetVMUser;
 import com.cubefury.vendingmachine.trade.TradeCategory;
 import com.cubefury.vendingmachine.trade.TradeDatabase;
@@ -107,7 +107,7 @@ public class TradeMainPanel extends ModularPanel {
             MTEVendingMachineGui.setForceRefresh();
         }
         if (
-            MTEVendingMachineGui.forceRefresh || (this.ticksOpen % Config.gui_refresh_interval == 0 && player != null)
+            MTEVendingMachineGui.forceRefresh || (this.ticksOpen % VMConfig.gui_refresh_interval == 0 && player != null)
         ) {
             updateGui();
             MTEVendingMachineGui.resetForceRefresh();

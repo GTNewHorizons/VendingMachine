@@ -21,7 +21,7 @@ public class CommonProxy {
     // GameRegistry." (Remove if not needed)
     public void preInit(FMLPreInitializationEvent event) {
         VendingMachine.LOG.info("Loading Vending Machine " + Tags.VERSION);
-        Config.init(event.getSuggestedConfigurationFile());
+        VMConfig.init(event.getSuggestedConfigurationFile());
     }
 
     // load "Do your mod setup. Build whatever data structures you care about. Register recipes." (Remove if not needed)

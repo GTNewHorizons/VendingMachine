@@ -7,7 +7,7 @@ import net.minecraftforge.common.config.Configuration;
 import com.cubefury.vendingmachine.blocks.gui.MTEVendingMachineGui;
 import com.cubefury.vendingmachine.blocks.gui.TradeItemDisplayWidget.DisplayType;
 
-public class Config {
+public class VMConfig {
 
     private static final String CONFIG_CATEGORY_VM = "Vending Machine Settings";
     private static final String CONFIG_CATEGORY_DEVELOPER = "Developer Settings";

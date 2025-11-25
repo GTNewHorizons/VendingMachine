@@ -34,7 +34,7 @@ import org.jetbrains.annotations.NotNull;
 import org.lwjgl.input.Keyboard;
 
 import com.cleanroommc.modularui.utils.item.ItemStackHandler;
-import com.cubefury.vendingmachine.Config;
+import com.cubefury.vendingmachine.VMConfig;
 import com.cubefury.vendingmachine.VendingMachine;
 import com.cubefury.vendingmachine.blocks.gui.MTEVendingMachineGui;
 import com.cubefury.vendingmachine.blocks.gui.TradeItemDisplay;
@@ -181,9 +181,9 @@ public class MTEVendingMachine extends MTEMultiBlockBase
         }
         if (
             this.newBufferedOutputs
-                || (!this.outputBuffer.isEmpty() && this.ticksSinceOutput % Config.dispense_frequency == 0)
+                || (!this.outputBuffer.isEmpty() && this.ticksSinceOutput % VMConfig.dispense_frequency == 0)
         ) {
-            int remainingDispensables = Config.dispense_amount;
+            int remainingDispensables = VMConfig.dispense_amount;
             while (!this.outputBuffer.isEmpty() && remainingDispensables > 0) {
                 ItemStack next = this.outputBuffer.peek();
 
@@ -552,7 +552,7 @@ public class MTEVendingMachine extends MTEMultiBlockBase
         }
         if (aBaseMetaTileEntity.isServerSide()) {
             dispenseItems();
-            if (this.getActive() && this.ticksSinceTradeUpdate++ >= Config.gui_refresh_interval) {
+            if (this.getActive() && this.ticksSinceTradeUpdate++ >= VMConfig.gui_refresh_interval) {
                 this.sendTradeUpdate();
             }
             if (this.mUpdate++ % STRUCTURE_CHECK_TICKS == 0) {
@@ -693,7 +693,7 @@ public class MTEVendingMachine extends MTEMultiBlockBase
         if (canUse(aPlayer)) {
             this.currentUser = aPlayer;
             // force trade state update now
-            this.ticksSinceTradeUpdate = Config.gui_refresh_interval;
+            this.ticksSinceTradeUpdate = VMConfig.gui_refresh_interval;
             openGui(aPlayer);
         } else {
             aPlayer.addChatComponentMessage(new ChatComponentTranslation("vendingmachine.gui.error.player_using"));

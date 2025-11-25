@@ -41,7 +41,7 @@ import com.cleanroommc.modularui.widgets.layout.Flow;
 import com.cleanroommc.modularui.widgets.layout.Row;
 import com.cleanroommc.modularui.widgets.slot.ItemSlot;
 import com.cleanroommc.modularui.widgets.slot.ModularSlot;
-import com.cubefury.vendingmachine.Config;
+import com.cubefury.vendingmachine.VMConfig;
 import com.cubefury.vendingmachine.VendingMachine;
 import com.cubefury.vendingmachine.blocks.MTEVendingMachine;
 import com.cubefury.vendingmachine.gui.GuiTextures;
@@ -80,8 +80,8 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
 
     public static String lastSearch = "";
     public static int lastPage = 0;
-    public static TradeItemDisplayWidget.DisplayType displayType = Config.display_type;
-    public static SortMode sortMode = Config.sort_mode;
+    public static TradeItemDisplayWidget.DisplayType displayType = VMConfig.display_type;
+    public static SortMode sortMode = VMConfig.sort_mode;
 
     public static final int CUSTOM_UI_HEIGHT = 320;
 
