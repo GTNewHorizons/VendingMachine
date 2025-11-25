@@ -55,6 +55,7 @@ import com.cubefury.vendingmachine.trade.TradeDatabase;
 import com.cubefury.vendingmachine.trade.TradeManager;
 import com.cubefury.vendingmachine.util.BigItemStack;
 import com.cubefury.vendingmachine.util.Translator;
+import com.gtnewhorizon.gtnhlib.config.ConfigurationManager;
 
 import gregtech.api.modularui2.GTGuiTextures;
 import gregtech.api.modularui2.GTWidgetThemes;
@@ -80,7 +81,6 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
 
     public static String lastSearch = "";
     public static int lastPage = 0;
-    public static TradeItemDisplayWidget.DisplayType displayType = VMConfig.gui.display_type;
     public static SortMode sortMode = VMConfig.gui.sort_mode;
 
     public static final int CUSTOM_UI_HEIGHT = 320;
@@ -202,17 +202,18 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
             new CycleButtonWidget().size(14)
                 .overlay(
                     new DynamicDrawable(
-                        () -> displayType.getTexture()
+                        () -> VMConfig.gui.display_type.getTexture()
                             .size(14)))
                 .stateCount(TradeItemDisplayWidget.DisplayType.values().length)
-                .value(
-                    new IntValue.Dynamic(
-                        () -> displayType.ordinal(),
-                        val -> { displayType = TradeItemDisplayWidget.DisplayType.values()[val]; }))
+                .value(new IntValue.Dynamic(() -> VMConfig.gui.display_type.ordinal(), val -> {
+                    VMConfig.gui.display_type = TradeItemDisplayWidget.DisplayType.values()[val];
+                    ConfigurationManager.save(VMConfig.class);
+                }))
                 .tooltipDynamic(builder -> {
                     builder.clearText();
-                    builder
-                        .addLine(IKey.lang("vendingmachine.gui.display_mode") + " " + displayType.getLocalizedName());
+                    builder.addLine(
+                        IKey.lang("vendingmachine.gui.display_mode") + " "
+                            + VMConfig.gui.display_type.getLocalizedName());
                 })
                 .tooltipAutoUpdate(true));
         buttonColumn.child(
@@ -220,13 +221,17 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                 .top(17)
                 .overlay(
                     new DynamicDrawable(
-                        () -> sortMode.getTexture()
+                        () -> VMConfig.gui.sort_mode.getTexture()
                             .size(14)))
                 .stateCount(SortMode.values().length)
-                .value(new IntValue.Dynamic(() -> sortMode.ordinal(), val -> { sortMode = SortMode.values()[val]; }))
+                .value(new IntValue.Dynamic(() -> VMConfig.gui.sort_mode.ordinal(), val -> {
+                    VMConfig.gui.sort_mode = SortMode.values()[val];
+                    ConfigurationManager.save(VMConfig.class);
+                }))
                 .tooltipDynamic(builder -> {
                     builder.clearText();
-                    builder.addLine(IKey.lang("vendingmachine.gui.display_sort") + " " + sortMode.getLocalizedName());
+                    builder.addLine(
+                        IKey.lang("vendingmachine.gui.display_sort") + " " + VMConfig.gui.sort_mode.getLocalizedName());
                     setForceRefresh();
                 })
                 .tooltipAutoUpdate(true));
@@ -536,7 +541,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                     .tooltipAutoUpdate(true)
                     .setEnabledIf(slot -> {
                         TradeItemDisplayWidget display = ((TradeItemDisplayWidget) slot);
-                        return displayType == display.displayType && display.getDisplay() != null;
+                        return VMConfig.gui.display_type == display.displayType && display.getDisplay() != null;
                     })
                     .margin(2));
                 if (i % TILE_ITEMS_PER_ROW == TILE_ITEMS_PER_ROW - 1) {
@@ -566,7 +571,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                     .tooltipAutoUpdate(true)
                     .setEnabledIf(slot -> {
                         TradeItemDisplayWidget display = ((TradeItemDisplayWidget) slot);
-                        return displayType == display.displayType && display.getDisplay() != null;
+                        return VMConfig.gui.display_type == display.displayType && display.getDisplay() != null;
                     }));
                 tradeList.child(row);
                 row = new TradeRow().height(LIST_ITEM_HEIGHT).width(TRADE_ROW_WIDTH).marginLeft(2);
