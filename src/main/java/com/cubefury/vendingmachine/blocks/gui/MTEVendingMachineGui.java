@@ -80,8 +80,8 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
 
     public static String lastSearch = "";
     public static int lastPage = 0;
-    public static TradeItemDisplayWidget.DisplayType displayType = VMConfig.display_type;
-    public static SortMode sortMode = VMConfig.sort_mode;
+    public static TradeItemDisplayWidget.DisplayType displayType = VMConfig.gui.display_type;
+    public static SortMode sortMode = VMConfig.gui.sort_mode;
 
     public static final int CUSTOM_UI_HEIGHT = 320;
 

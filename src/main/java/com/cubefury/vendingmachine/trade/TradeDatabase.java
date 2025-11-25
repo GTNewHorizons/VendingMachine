@@ -98,7 +98,7 @@ public class TradeDatabase {
 
             tradeGroups.put(tg.getId(), tg);
         }
-        if (isFileLoad && (VMConfig.forceRewriteDatabase || newMetadataCount > 0)) {
+        if (isFileLoad && (VMConfig.developer.force_rewrite_database || newMetadataCount > 0)) {
             VendingMachine.LOG.info("Appended metadata to {} new trades", newMetadataCount);
             DirtyDbMarker.markDirty();
         }

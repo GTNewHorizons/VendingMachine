@@ -37,15 +37,15 @@ public class SaveLoadHandler {
 
     public void init(MinecraftServer server) {
         if (VendingMachine.proxy.isClient()) {
-            VMConfig.worldDir = server.getFile("saves/" + server.getFolderName() + "/" + VMConfig.data_dir);
+            VMConfig.world_dir = server.getFile("saves/" + server.getFolderName() + "/" + VMConfig.developer.data_dir);
         } else {
-            VMConfig.worldDir = server.getFile(server.getFolderName() + "/" + VMConfig.data_dir);
+            VMConfig.world_dir = server.getFile(server.getFolderName() + "/" + VMConfig.developer.data_dir);
         }
 
-        fileDatabase = new File(VMConfig.config_dir, "tradeDatabase.json");
-        dirTradeState = new File(VMConfig.worldDir, "tradeState");
-        dirBackupTradeState = new File(VMConfig.worldDir, "backup/tradeState");
-        fileNames = new File(VMConfig.worldDir, "names.json");
+        fileDatabase = new File(VMConfig.developer.trade_db_dir, "tradeDatabase.json");
+        dirTradeState = new File(VMConfig.world_dir, "tradeState");
+        dirBackupTradeState = new File(VMConfig.world_dir, "backup/tradeState");
+        fileNames = new File(VMConfig.world_dir, "names.json");
 
         createFilesAndDirectories();
 
@@ -76,7 +76,7 @@ public class SaveLoadHandler {
     }
 
     public Future<Void> writeDatabase() {
-        CopyPaste(fileDatabase, new File(VMConfig.config_dir + "/backup", "tradeDatabase.json"));
+        CopyPaste(fileDatabase, new File(VMConfig.developer.trade_db_dir + "/backup", "tradeDatabase.json"));
         return FileIO.WriteToFile(
             fileDatabase,
             out -> NBTConverter.NBTtoJSON_Compound(TradeDatabase.INSTANCE.writeToNBT(new NBTTagCompound()), out, true));

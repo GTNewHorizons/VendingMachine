@@ -107,7 +107,8 @@ public class TradeMainPanel extends ModularPanel {
             MTEVendingMachineGui.setForceRefresh();
         }
         if (
-            MTEVendingMachineGui.forceRefresh || (this.ticksOpen % VMConfig.gui_refresh_interval == 0 && player != null)
+            MTEVendingMachineGui.forceRefresh
+                || (this.ticksOpen % VMConfig.vendingMachineSettings.gui_refresh_interval == 0 && player != null)
         ) {
             updateGui();
             MTEVendingMachineGui.resetForceRefresh();
