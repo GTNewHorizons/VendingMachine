@@ -12,6 +12,8 @@ import com.cubefury.vendingmachine.network.PacketTypeRegistry;
 import com.cubefury.vendingmachine.network.SerializedPacket;
 import com.cubefury.vendingmachine.storage.NameCache;
 import com.cubefury.vendingmachine.util.ItemPlaceholder;
+import com.gtnewhorizon.gtnhlib.config.ConfigException;
+import com.gtnewhorizon.gtnhlib.config.ConfigurationManager;
 
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.Mod;
@@ -34,8 +36,17 @@ import cpw.mods.fml.relauncher.Side;
     modid = VendingMachine.MODID,
     version = Tags.VERSION,
     name = VendingMachine.NAME,
+    guiFactory = "com.cubefury.vendingmachine.gui.client.VMGuiFactory",
     acceptedMinecraftVersions = "[1.7.10]")
 public class VendingMachine {
+
+    static {
+        try {
+            ConfigurationManager.registerConfig(VMConfig.class);
+        } catch (ConfigException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     public static final String MODID = "vendingmachine";
     public static final Logger LOG = LogManager.getLogger(MODID);

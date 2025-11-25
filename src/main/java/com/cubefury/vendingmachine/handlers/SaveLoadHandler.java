@@ -16,7 +16,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.server.MinecraftServer;
 
-import com.cubefury.vendingmachine.Config;
+import com.cubefury.vendingmachine.VMConfig;
 import com.cubefury.vendingmachine.VendingMachine;
 import com.cubefury.vendingmachine.storage.NameCache;
 import com.cubefury.vendingmachine.trade.TradeDatabase;
@@ -37,15 +37,15 @@ public class SaveLoadHandler {
 
     public void init(MinecraftServer server) {
         if (VendingMachine.proxy.isClient()) {
-            Config.worldDir = server.getFile("saves/" + server.getFolderName() + "/" + Config.data_dir);
+            VMConfig.world_dir = server.getFile("saves/" + server.getFolderName() + "/" + VMConfig.developer.data_dir);
         } else {
-            Config.worldDir = server.getFile(server.getFolderName() + "/" + Config.data_dir);
+            VMConfig.world_dir = server.getFile(server.getFolderName() + "/" + VMConfig.developer.data_dir);
         }
 
-        fileDatabase = new File(Config.config_dir, "tradeDatabase.json");
-        dirTradeState = new File(Config.worldDir, "tradeState");
-        dirBackupTradeState = new File(Config.worldDir, "backup/tradeState");
-        fileNames = new File(Config.worldDir, "names.json");
+        fileDatabase = new File(VMConfig.developer.trade_db_dir, "tradeDatabase.json");
+        dirTradeState = new File(VMConfig.world_dir, "tradeState");
+        dirBackupTradeState = new File(VMConfig.world_dir, "backup/tradeState");
+        fileNames = new File(VMConfig.world_dir, "names.json");
 
         createFilesAndDirectories();
 
@@ -76,7 +76,7 @@ public class SaveLoadHandler {
     }
 
     public Future<Void> writeDatabase() {
-        CopyPaste(fileDatabase, new File(Config.config_dir + "/backup", "tradeDatabase.json"));
+        CopyPaste(fileDatabase, new File(VMConfig.developer.trade_db_dir + "/backup", "tradeDatabase.json"));
         return FileIO.WriteToFile(
             fileDatabase,
             out -> NBTConverter.NBTtoJSON_Compound(TradeDatabase.INSTANCE.writeToNBT(new NBTTagCompound()), out, true));
