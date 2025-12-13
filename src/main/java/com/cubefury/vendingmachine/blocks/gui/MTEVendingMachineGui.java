@@ -1,8 +1,5 @@
 package com.cubefury.vendingmachine.blocks.gui;
 
-import static com.cubefury.vendingmachine.gui.GuiTextures.SORT_ALPHABET;
-import static com.cubefury.vendingmachine.gui.GuiTextures.SORT_SMART;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -18,8 +15,6 @@ import net.minecraft.item.ItemStack;
 import com.cleanroommc.modularui.api.drawable.IKey;
 import com.cleanroommc.modularui.api.widget.IWidget;
 import com.cleanroommc.modularui.drawable.DynamicDrawable;
-import com.cleanroommc.modularui.drawable.Icon;
-import com.cleanroommc.modularui.drawable.UITexture;
 import com.cleanroommc.modularui.factory.PosGuiData;
 import com.cleanroommc.modularui.screen.ModularPanel;
 import com.cleanroommc.modularui.screen.RichTooltip;
@@ -96,29 +91,6 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
     private static final int COIN_COLUMN_WIDTH = 40;
     private static final int COIN_COLUMN_ROW_COUNT = 4;
 
-    public enum SortMode {
-
-        SMART("smart", SORT_SMART),
-        ALPHABET("alphabet", SORT_ALPHABET);
-
-        private String mode;
-        private Icon texture;
-
-        SortMode(String mode, UITexture texture) {
-            this.mode = mode;
-            this.texture = texture.asIcon();
-        }
-
-        public String getLocalizedName() {
-            return IKey.lang("vendingmachine.gui.display_sort_" + this.mode)
-                .toString();
-        }
-
-        public Icon getTexture() {
-            return this.texture;
-        }
-    }
-
     public MTEVendingMachineGui(MTEVendingMachine base) {
         super(base);
         this.base = base;
@@ -134,12 +106,12 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
             displayedTradesTiles.put(c, new ArrayList<>(MTEVendingMachine.MAX_TRADES));
             for (int i = 0; i < MTEVendingMachine.MAX_TRADES; i++) {
                 displayedTradesTiles.get(c)
-                    .add(new TradeItemDisplayWidget(null, this.base, TradeItemDisplayWidget.DisplayType.TILE));
+                    .add(new TradeItemDisplayWidget(null, this.base, DisplayType.TILE));
             }
             displayedTradesList.put(c, new ArrayList<>(MTEVendingMachine.MAX_TRADES));
             for (int i = 0; i < MTEVendingMachine.MAX_TRADES; i++) {
                 displayedTradesList.get(c)
-                    .add(new TradeItemDisplayWidget(null, this.base, TradeItemDisplayWidget.DisplayType.LIST));
+                    .add(new TradeItemDisplayWidget(null, this.base, DisplayType.LIST));
             }
         }
 
@@ -204,9 +176,9 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                     new DynamicDrawable(
                         () -> VMConfig.gui.display_type.getTexture()
                             .size(14)))
-                .stateCount(TradeItemDisplayWidget.DisplayType.values().length)
+                .stateCount(DisplayType.values().length)
                 .value(new IntValue.Dynamic(() -> VMConfig.gui.display_type.ordinal(), val -> {
-                    VMConfig.gui.display_type = TradeItemDisplayWidget.DisplayType.values()[val];
+                    VMConfig.gui.display_type = DisplayType.values()[val];
                     ConfigurationManager.save(VMConfig.class);
                 }))
                 .tooltipDynamic(builder -> {

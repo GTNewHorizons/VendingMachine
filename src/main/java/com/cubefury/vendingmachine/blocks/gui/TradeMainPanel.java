@@ -127,7 +127,7 @@ public class TradeMainPanel extends ModularPanel {
     public Map<TradeCategory, List<TradeItemDisplay>> formatTrades() {
         Map<TradeCategory, List<TradeItemDisplay>> trades = new HashMap<>();
         trades.put(TradeCategory.ALL, new ArrayList<>());
-        MTEVendingMachineGui.SortMode sortMode = VMConfig.gui.sort_mode;
+        SortMode sortMode = VMConfig.gui.sort_mode;
 
         for (TradeItemDisplay tid : TradeManager.INSTANCE.tradeData) {
             TradeGroup group = TradeDatabase.INSTANCE.getTradeGroupFromId(tid.tgID);
@@ -159,10 +159,10 @@ public class TradeMainPanel extends ModularPanel {
                 if (a.display.getItem() == null) return 1;
                 if (b.display.getItem() == null) return -1;
 
-                if (sortMode == MTEVendingMachineGui.SortMode.ALPHABET) {
+                if (sortMode == SortMode.ALPHABET) {
                     return (a.display.getDisplayName()
                         .compareTo(b.display.getDisplayName()));
-                } else if (sortMode == MTEVendingMachineGui.SortMode.SMART) {
+                } else if (sortMode == SortMode.SMART) {
                     // enabled or has cooldown
                     int rankA = getRank(a);
                     int rankB = getRank(b);

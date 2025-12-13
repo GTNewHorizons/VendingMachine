@@ -2,8 +2,8 @@ package com.cubefury.vendingmachine;
 
 import java.io.File;
 
-import com.cubefury.vendingmachine.blocks.gui.MTEVendingMachineGui;
-import com.cubefury.vendingmachine.blocks.gui.TradeItemDisplayWidget.DisplayType;
+import com.cubefury.vendingmachine.blocks.gui.DisplayType;
+import com.cubefury.vendingmachine.blocks.gui.SortMode;
 import com.gtnewhorizon.gtnhlib.config.Config;
 
 @Config(modid = VendingMachine.MODID, category = "vendingmachine", filename = "vendingmachine")
@@ -44,7 +44,7 @@ public class VMConfig {
 
         @Config.Comment("Default sort mode, either SMART or ALPHABET. Case sensitive.")
         @Config.DefaultEnum("SMART")
-        public MTEVendingMachineGui.SortMode sort_mode = MTEVendingMachineGui.SortMode.SMART;
+        public SortMode sort_mode = SortMode.SMART;
     }
 
     public static class Developer {
