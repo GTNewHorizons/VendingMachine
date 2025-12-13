@@ -134,12 +134,12 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
             displayedTradesTiles.put(c, new ArrayList<>(MTEVendingMachine.MAX_TRADES));
             for (int i = 0; i < MTEVendingMachine.MAX_TRADES; i++) {
                 displayedTradesTiles.get(c)
-                    .add(new TradeItemDisplayWidget(null, this.base, TradeItemDisplayWidget.DisplayType.TILE));
+                    .add(new TradeItemDisplayWidget(null, this.base, DisplayType.TILE));
             }
             displayedTradesList.put(c, new ArrayList<>(MTEVendingMachine.MAX_TRADES));
             for (int i = 0; i < MTEVendingMachine.MAX_TRADES; i++) {
                 displayedTradesList.get(c)
-                    .add(new TradeItemDisplayWidget(null, this.base, TradeItemDisplayWidget.DisplayType.LIST));
+                    .add(new TradeItemDisplayWidget(null, this.base, DisplayType.LIST));
             }
         }
 
@@ -204,9 +204,9 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                     new DynamicDrawable(
                         () -> VMConfig.gui.display_type.getTexture()
                             .size(14)))
-                .stateCount(TradeItemDisplayWidget.DisplayType.values().length)
+                .stateCount(DisplayType.values().length)
                 .value(new IntValue.Dynamic(() -> VMConfig.gui.display_type.ordinal(), val -> {
-                    VMConfig.gui.display_type = TradeItemDisplayWidget.DisplayType.values()[val];
+                    VMConfig.gui.display_type = DisplayType.values()[val];
                     ConfigurationManager.save(VMConfig.class);
                 }))
                 .tooltipDynamic(builder -> {

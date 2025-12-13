@@ -3,7 +3,7 @@ package com.cubefury.vendingmachine;
 import java.io.File;
 
 import com.cubefury.vendingmachine.blocks.gui.MTEVendingMachineGui;
-import com.cubefury.vendingmachine.blocks.gui.TradeItemDisplayWidget.DisplayType;
+import com.cubefury.vendingmachine.blocks.gui.DisplayType;
 import com.gtnewhorizon.gtnhlib.config.Config;
 
 @Config(modid = VendingMachine.MODID, category = "vendingmachine", filename = "vendingmachine")
