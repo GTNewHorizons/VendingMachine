@@ -1,11 +1,11 @@
 package com.cubefury.vendingmachine.blocks.gui;
 
+import static com.cubefury.vendingmachine.gui.GuiTextures.MODE_LIST;
+import static com.cubefury.vendingmachine.gui.GuiTextures.MODE_TILE;
+
 import com.cleanroommc.modularui.api.drawable.IKey;
 import com.cleanroommc.modularui.drawable.Icon;
 import com.cleanroommc.modularui.drawable.UITexture;
-
-import static com.cubefury.vendingmachine.gui.GuiTextures.MODE_LIST;
-import static com.cubefury.vendingmachine.gui.GuiTextures.MODE_TILE;
 
 public enum DisplayType {
 
