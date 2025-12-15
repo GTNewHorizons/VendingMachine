@@ -18,6 +18,7 @@ import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.stream.IntStream;
 
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
@@ -29,6 +30,7 @@ import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraftforge.oredict.OreDictionary;
 
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.input.Keyboard;
@@ -289,7 +291,7 @@ public class MTEVendingMachine extends MTEMultiBlockBase
             requiredStack.setTagCompound(null);
             requiredStack.stackSize = 1; // just in case it's not pulled as 1 for some reason
             int requiredAmount = stack.stackSize;
-            // Remove Items from last stacks if possible
+            // Remove items from last stacks if possible (exact matches)
             for (int i = MTEVendingMachine.INPUT_SLOTS - 1; i >= 0 && requiredAmount > 0; i--) {
                 if (inputSlots[i] == null) {
                     continue;
@@ -306,8 +308,36 @@ public class MTEVendingMachine extends MTEMultiBlockBase
                     }
                 }
             }
+            // Remove items from last stacks if possible (oredict matches)
+            if (stack.hasOreDict()) {
+                String ore = stack.getOreDict();
+                for (int i = MTEVendingMachine.INPUT_SLOTS - 1; i >= 0 && requiredAmount > 0; i--) {
+                    if (inputSlots[i] == null) {
+                        continue;
+                    }
+                    ItemStack tmp = inputSlots[i].copy();
+                    tmp.stackSize = 1;
+                    if (
+                        IntStream.of(OreDictionary.getOreIDs(tmp))
+                            .mapToObj(OreDictionary::getOreName)
+                            .anyMatch(s -> s.equals(ore))
+                    ) {
+                        if (requiredAmount >= inputSlots[i].stackSize) {
+                            requiredAmount -= inputSlots[i].stackSize;
+                            inputSlots[i] = null;
+                        } else {
+                            inputSlots[i].stackSize -= requiredAmount;
+                            requiredAmount = 0;
+                        }
+                    }
+                }
+            }
+
             requiredStack.stackSize = requiredAmount;
-            if (requiredAmount > 0 && !fetchItemFromAE(requiredStack, false)) {
+            if (
+                requiredAmount > 0
+                    && !fetchItemFromAE(requiredStack, false, stack.hasOreDict() ? stack.getOreDict() : null)
+            ) {
                 return false;
             }
         }
@@ -337,9 +367,9 @@ public class MTEVendingMachine extends MTEMultiBlockBase
         return true;
     }
 
-    public boolean fetchItemFromAE(ItemStack requiredStack, boolean simulate) {
+    public boolean fetchItemFromAE(ItemStack requiredStack, boolean simulate, String ore) {
         for (MTEVendingUplinkHatch hatch : this.uplinkHatches) {
-            if (hatch.removeItem(requiredStack, simulate)) {
+            if (hatch.removeItem(requiredStack, simulate, ore)) {
                 return true;
             }
         }
@@ -590,6 +620,7 @@ public class MTEVendingMachine extends MTEMultiBlockBase
     public boolean inputItemsSatisfied(List<BigItemStack> fromItems) {
         for (BigItemStack bis : fromItems) {
             BigItemStack base = bis.copy();
+            boolean hasOreDict = bis.hasOreDict();
             bis.setTagCompound(null);
             base.stackSize = 1; // shouldn't need this, but just in case
 
@@ -598,11 +629,25 @@ public class MTEVendingMachine extends MTEMultiBlockBase
             if (this.inputSlotCache.get(base) != null) {
                 aeStackSearch.stackSize = Math
                     .max(aeStackSearch.stackSize - this.inputSlotCache.getOrDefault(base, 0), 0);
+            } else if (hasOreDict) {
+                String ore = bis.getOreDict();
+                for (Map.Entry<BigItemStack, Integer> item : this.inputSlotCache.entrySet()) {
+                    if (
+                        IntStream.of(
+                            OreDictionary.getOreIDs(
+                                item.getKey()
+                                    .getBaseStack()))
+                            .mapToObj(OreDictionary::getOreName)
+                            .anyMatch(s -> s.equals(ore))
+                    ) {
+                        aeStackSearch.stackSize = Math.max(aeStackSearch.stackSize - item.getValue(), 0);
+                    }
+                }
             }
             if (aeStackSearch.stackSize == 0) {
                 continue;
             }
-            if (!this.fetchItemFromAE(aeStackSearch, true)) {
+            if (!this.fetchItemFromAE(aeStackSearch, true, hasOreDict ? bis.getOreDict() : null)) {
                 return false;
             }
         }

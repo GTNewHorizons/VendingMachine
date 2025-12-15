@@ -3,14 +3,16 @@ package com.cubefury.vendingmachine.blocks;
 import static com.cubefury.vendingmachine.api.enums.Textures.VUPLINK_OVERLAY_ACTIVE;
 import static com.cubefury.vendingmachine.api.enums.Textures.VUPLINK_OVERLAY_INACTIVE;
 
-import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.IntStream;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ChatComponentTranslation;
 import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraftforge.oredict.OreDictionary;
 
 import com.cubefury.vendingmachine.VendingMachine;
 import com.cubefury.vendingmachine.items.VMItems;
@@ -192,13 +194,15 @@ public class MTEVendingUplinkHatch extends MTEHatch implements IGridProxyable, I
             .getStorageList();
     }
 
-    public boolean removeItem(ItemStack remove, boolean simulate) {
+    public boolean removeItem(ItemStack remove, boolean simulate, String ore) {
         if (remove == null || remove.stackSize <= 0) return true;
         IStorageGrid storage = accessStorage();
         if (storage == null) return false;
 
         MachineSource source = new MachineSource(this);
-        if (!remove.isItemStackDamageable()) {
+
+        // shortcut for exact item matches to save compute for majority of trades
+        if (!remove.isItemStackDamageable() && ore == null) {
             IAEItemStack stack = storage.getItemInventory()
                 .extractItems(AEItemStack.create(remove), simulate ? Actionable.SIMULATE : Actionable.MODULATE, source);
             return stack != null && stack.getStackSize() >= remove.stackSize;
@@ -208,41 +212,46 @@ public class MTEVendingUplinkHatch extends MTEHatch implements IGridProxyable, I
             return false;
         }
 
-        List<IAEItemStack> outputList = new ArrayList<>();
-        for (IAEItemStack stack : cachedItems) {
-            if (stack.getItem() == remove.getItem() && stack.getItemDamage() == remove.getItemDamage()) {
-                outputList.add(stack);
-            }
-        }
+        List<IAEItemStack> modulateList = new LinkedList<>();
 
-        long numMatch = outputList.stream()
-            .mapToLong(stack -> stack.getStackSize())
-            .sum();
-        if (simulate || numMatch < remove.stackSize) {
-            return numMatch >= remove.stackSize;
-        }
-
-        // Simulate removing the needed count first, and add successful to modulateList for actual removal,
-        // due to possible view-only items that can't be actually extracted
         long remain = remove.stackSize;
-        List<IAEItemStack> modulateList = new ArrayList<>();
-        for (IAEItemStack removable : outputList) {
-            long toRemove = Math.min(removable.getStackSize(), remain);
-            removable.setStackSize(toRemove);
-            IAEItemStack stack = storage.getItemInventory()
-                .extractItems(removable, Actionable.SIMULATE, source);
-            if (stack != null && stack.getItemDamage() == remove.getItemDamage()) {
-                modulateList.add(stack);
-            } else {
+        for (IAEItemStack stack : cachedItems) {
+            if (
+                ore == null && stack.getItem() != remove.getItem()
+                    || ore != null && IntStream.of(OreDictionary.getOreIDs(stack.getItemStack()))
+                        .mapToObj(OreDictionary::getOreName)
+                        .noneMatch(s -> s.equals(ore))
+            ) {
                 continue;
             }
-            remain -= toRemove;
+
+            if (stack.getItemDamage() != remove.getItemDamage()) {
+                continue;
+            }
+
+            IAEItemStack copy = stack.copy();
+            copy.setStackSize(Math.min(stack.getStackSize(), remain));
+            if (
+                storage.getItemInventory()
+                    .extractItems(copy, Actionable.SIMULATE, source) == null
+            ) {
+                continue;
+            }
+            remain -= copy.getStackSize();
+
+            if (stack.getItem() == remove.getItem()) {
+                modulateList.add(0, copy);
+            } else {
+                modulateList.add(stack);
+            }
+
             if (remain <= 0) {
                 break;
             }
         }
-        if (remain > 0) {
-            return false;
+
+        if (simulate || remain > 0) {
+            return remain <= 0;
         }
 
         for (IAEItemStack modulate : modulateList) {
