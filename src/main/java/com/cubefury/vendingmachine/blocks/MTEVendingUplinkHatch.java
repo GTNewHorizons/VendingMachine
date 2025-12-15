@@ -225,7 +225,7 @@ public class MTEVendingUplinkHatch extends MTEHatch implements IGridProxyable, I
                 continue;
             }
 
-            if (stack.getItemDamage() != remove.getItemDamage()) {
+            if (remove.isItemStackDamageable() && stack.getItemDamage() != remove.getItemDamage()) {
                 continue;
             }
 
@@ -242,7 +242,7 @@ public class MTEVendingUplinkHatch extends MTEHatch implements IGridProxyable, I
             if (stack.getItem() == remove.getItem()) {
                 modulateList.add(0, copy);
             } else {
-                modulateList.add(stack);
+                modulateList.add(copy);
             }
 
             if (remain <= 0) {

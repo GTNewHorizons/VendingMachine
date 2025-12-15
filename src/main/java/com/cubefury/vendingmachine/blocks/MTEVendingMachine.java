@@ -286,19 +286,14 @@ public class MTEVendingMachine extends MTEMultiBlockBase
         }
 
         for (BigItemStack stack : trade.fromItems) {
-            ItemStack requiredStack = stack.getBaseStack()
-                .copy();
-            requiredStack.setTagCompound(null);
-            requiredStack.stackSize = 1; // just in case it's not pulled as 1 for some reason
+            ItemStack requiredStack = stack.getBaseStack();
             int requiredAmount = stack.stackSize;
             // Remove items from last stacks if possible (exact matches)
             for (int i = MTEVendingMachine.INPUT_SLOTS - 1; i >= 0 && requiredAmount > 0; i--) {
                 if (inputSlots[i] == null) {
                     continue;
                 }
-                ItemStack tmp = inputSlots[i].copy();
-                tmp.stackSize = 1;
-                if (ItemStack.areItemStacksEqual(requiredStack, tmp)) {
+                if (requiredStack.isItemEqual(inputSlots[i])) {
                     if (requiredAmount >= inputSlots[i].stackSize) {
                         requiredAmount -= inputSlots[i].stackSize;
                         inputSlots[i] = null;
@@ -309,19 +304,23 @@ public class MTEVendingMachine extends MTEMultiBlockBase
                 }
             }
             // Remove items from last stacks if possible (oredict matches)
-            if (stack.hasOreDict()) {
+            if (requiredAmount > 0 && stack.hasOreDict()) {
                 String ore = stack.getOreDict();
                 for (int i = MTEVendingMachine.INPUT_SLOTS - 1; i >= 0 && requiredAmount > 0; i--) {
                     if (inputSlots[i] == null) {
                         continue;
                     }
-                    ItemStack tmp = inputSlots[i].copy();
-                    tmp.stackSize = 1;
                     if (
-                        IntStream.of(OreDictionary.getOreIDs(tmp))
+                        IntStream.of(OreDictionary.getOreIDs(inputSlots[i]))
                             .mapToObj(OreDictionary::getOreName)
                             .anyMatch(s -> s.equals(ore))
                     ) {
+                        if (
+                            requiredStack.isItemStackDamageable()
+                                && requiredStack.getItemDamage() != inputSlots[i].getItemDamage()
+                        ) {
+                            continue;
+                        }
                         if (requiredAmount >= inputSlots[i].stackSize) {
                             requiredAmount -= inputSlots[i].stackSize;
                             inputSlots[i] = null;
@@ -629,7 +628,9 @@ public class MTEVendingMachine extends MTEMultiBlockBase
             if (this.inputSlotCache.get(base) != null) {
                 aeStackSearch.stackSize = Math
                     .max(aeStackSearch.stackSize - this.inputSlotCache.getOrDefault(base, 0), 0);
-            } else if (hasOreDict) {
+            }
+
+            if (aeStackSearch.stackSize > 0 && hasOreDict) {
                 String ore = bis.getOreDict();
                 for (Map.Entry<BigItemStack, Integer> item : this.inputSlotCache.entrySet()) {
                     if (
@@ -640,6 +641,13 @@ public class MTEVendingMachine extends MTEMultiBlockBase
                             .mapToObj(OreDictionary::getOreName)
                             .anyMatch(s -> s.equals(ore))
                     ) {
+                        if (
+                            aeStackSearch.isItemStackDamageable() && aeStackSearch.getItemDamage() != item.getKey()
+                                .getBaseStack()
+                                .getItemDamage()
+                        ) {
+                            continue;
+                        }
                         aeStackSearch.stackSize = Math.max(aeStackSearch.stackSize - item.getValue(), 0);
                     }
                 }
