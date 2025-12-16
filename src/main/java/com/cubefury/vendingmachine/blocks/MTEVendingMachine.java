@@ -620,7 +620,7 @@ public class MTEVendingMachine extends MTEMultiBlockBase
         for (BigItemStack bis : fromItems) {
             BigItemStack base = bis.copy();
             boolean hasOreDict = bis.hasOreDict();
-            bis.setTagCompound(null);
+            base.setTagCompound(null);
             base.stackSize = 1; // shouldn't need this, but just in case
 
             ItemStack aeStackSearch = base.getBaseStack();
