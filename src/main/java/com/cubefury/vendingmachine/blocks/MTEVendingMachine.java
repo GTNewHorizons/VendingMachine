@@ -97,8 +97,8 @@ public class MTEVendingMachine extends MTEMultiBlockBase
 
     private final ArrayList<MTEVendingUplinkHatch> uplinkHatches = new ArrayList<>();
 
-    public static final int INPUT_SLOTS = 6;
-    public static final int OUTPUT_SLOTS = 6;
+    public static final int INPUT_SLOTS = 8;
+    public static final int OUTPUT_SLOTS = 8;
 
     public static final int MAX_TRADES = 300;
 
@@ -500,15 +500,53 @@ public class MTEVendingMachine extends MTEMultiBlockBase
     @Override
     public void loadNBTData(NBTTagCompound aNBT) {
         super.loadNBTData(aNBT);
-        if (inputItems != null) {
-            inputItems.deserializeNBT(aNBT.getCompoundTag("inputs"));
-        }
-        if (outputItems != null) {
-            outputItems.deserializeNBT(aNBT.getCompoundTag("outputs"));
-        }
+        boolean loadedLegacyData = false;
+
         NBTTagList pendingOutputs = aNBT.getTagList("outputBuffer", Constants.NBT.TAG_COMPOUND);
         for (int i = 0; i < pendingOutputs.tagCount(); i++) {
             outputBuffer.add(GTUtility.loadItem(pendingOutputs.getCompoundTagAt(i)));
+        }
+
+        if (inputItems != null) {
+            inputItems.deserializeNBT(aNBT.getCompoundTag("inputs"));
+            if (inputItems.getSlots() != MTEVendingMachine.INPUT_SLOTS) {
+                loadedLegacyData = true;
+                List<ItemStack> oldStacks = new ArrayList<>();
+                for (int i = 0; i < inputItems.getSlots(); i++) {
+                    oldStacks.add(inputItems.getStackInSlot(i));
+                }
+                inputItems.setSize(MTEVendingMachine.INPUT_SLOTS);
+                for (int i = 0; i < oldStacks.size(); i++) {
+                    if (i >= MTEVendingMachine.INPUT_SLOTS) {
+                        outputBuffer.add(oldStacks.get(i));
+                    } else {
+                        inputItems.setStackInSlot(i, oldStacks.get(i));
+                    }
+                }
+            }
+        }
+
+        if (outputItems != null) {
+            outputItems.deserializeNBT(aNBT.getCompoundTag("outputs"));
+            if (outputItems.getSlots() != MTEVendingMachine.OUTPUT_SLOTS) {
+                loadedLegacyData = true;
+                List<ItemStack> oldStacks = new ArrayList<>();
+                for (int i = 0; i < outputItems.getSlots(); i++) {
+                    oldStacks.add(outputItems.getStackInSlot(i));
+                }
+                outputItems.setSize(MTEVendingMachine.OUTPUT_SLOTS);
+                for (int i = 0; i < oldStacks.size(); i++) {
+                    if (i >= MTEVendingMachine.OUTPUT_SLOTS) {
+                        outputBuffer.add(oldStacks.get(i));
+                    } else {
+                        outputItems.setStackInSlot(i, oldStacks.get(i));
+                    }
+                }
+            }
+        }
+
+        if (loadedLegacyData) {
+            this.markDirty();
         }
     }
 

@@ -335,7 +335,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
     private IWidget createIOColumn() {
         return new ParentWidget<>().excludeAreaInRecipeViewer()
             .width(50)
-            .height(178)
+            .height(214)
             .right(-48)
             .top(40)
             .widgetTheme(WidgetThemes.BACKGROUND_SIDEPANEL)
@@ -349,7 +349,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                     .child(
                         new Row().child(createInputSlots().center())
                             .top(20)
-                            .height(18 * 3))
+                            .height(18 * 4))
                     .child(
                         new Row().child(
                             new ToggleButton().overlay(GTGuiTextures.OVERLAY_BUTTON_CYCLIC)
@@ -363,24 +363,24 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                                     .tooltipBuilder(t -> t.addLine(IKey.lang("vendingmachine.gui.coin_eject")))
                                     .syncHandler("ejectCoins")
                                     .left(6))
-                            .top(80)
+                            .top(98)
                             .height(18))
                     .child(
                         GuiTextures.OUTPUT_SPRITE.asWidget()
                             .leftRel(0.5f)
-                            .bottom(52)
+                            .bottom(70)
                             .width(30)
                             .height(20))
                     .child(
                         new Row().child(createOutputSlots().center())
                             .bottom(6)
-                            .height(18 * 3))
+                            .height(18 * 4))
                     .right(1));
     }
 
     private SlotGroupWidget createInputSlots() {
         return SlotGroupWidget.builder()
-            .matrix("II", "II", "II")
+            .matrix("II", "II", "II", "II")
             .key('I', index -> {
                 InterceptingSlot slot = new InterceptingSlot(base.inputItems, index, this.base);
                 this.inputSlots.add(slot);
@@ -414,7 +414,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
 
     private SlotGroupWidget createOutputSlots() {
         return SlotGroupWidget.builder()
-            .matrix("II", "II", "II")
+            .matrix("II", "II", "II", "II")
             .key('I', index -> {
                 return new ItemSlot().slot(
                     new ModularSlot(base.outputItems, index).accessibility(false, true)
