@@ -511,10 +511,7 @@ public class MTEVendingMachine extends MTEMultiBlockBase
             inputItems.deserializeNBT(aNBT.getCompoundTag("inputs"));
             if (inputItems.getSlots() != MTEVendingMachine.INPUT_SLOTS) {
                 loadedLegacyData = true;
-                List<ItemStack> oldStacks = new ArrayList<>();
-                for (int i = 0; i < inputItems.getSlots(); i++) {
-                    oldStacks.add(inputItems.getStackInSlot(i));
-                }
+                List<ItemStack> oldStacks = inputItems.getStacks();
                 inputItems.setSize(MTEVendingMachine.INPUT_SLOTS);
                 for (int i = 0; i < oldStacks.size(); i++) {
                     if (i >= MTEVendingMachine.INPUT_SLOTS) {
@@ -530,10 +527,7 @@ public class MTEVendingMachine extends MTEMultiBlockBase
             outputItems.deserializeNBT(aNBT.getCompoundTag("outputs"));
             if (outputItems.getSlots() != MTEVendingMachine.OUTPUT_SLOTS) {
                 loadedLegacyData = true;
-                List<ItemStack> oldStacks = new ArrayList<>();
-                for (int i = 0; i < outputItems.getSlots(); i++) {
-                    oldStacks.add(outputItems.getStackInSlot(i));
-                }
+                List<ItemStack> oldStacks = outputItems.getStacks();
                 outputItems.setSize(MTEVendingMachine.OUTPUT_SLOTS);
                 for (int i = 0; i < oldStacks.size(); i++) {
                     if (i >= MTEVendingMachine.OUTPUT_SLOTS) {
