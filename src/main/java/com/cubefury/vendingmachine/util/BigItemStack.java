@@ -72,7 +72,7 @@ public class BigItemStack {
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean hasOreDict() {
-        return !StringUtils.isNullOrEmpty(this.oreDict) && this.oreIng.getMatchingStacks().length > 0;
+        return !StringUtils.isNullOrEmpty(this.oreDict);
     }
 
     @Nonnull
