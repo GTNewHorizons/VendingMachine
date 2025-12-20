@@ -18,6 +18,7 @@ import org.apache.commons.lang3.Validate;
 
 import com.cleanroommc.modularui.factory.PosGuiData;
 import com.cleanroommc.modularui.screen.ModularContainer;
+import com.cubefury.vendingmachine.VMConfig;
 import com.cubefury.vendingmachine.VendingMachine;
 import com.cubefury.vendingmachine.blocks.MTEVendingMachine;
 import com.cubefury.vendingmachine.events.MarkDirtyDbEvent;
@@ -25,6 +26,7 @@ import com.cubefury.vendingmachine.events.MarkDirtyNamesEvent;
 import com.cubefury.vendingmachine.network.handlers.NetBulkSync;
 import com.cubefury.vendingmachine.network.handlers.NetTradeDbSync;
 import com.cubefury.vendingmachine.storage.NameCache;
+import com.cubefury.vendingmachine.trade.TradeDatabase;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListenableFutureTask;
@@ -140,6 +142,21 @@ public class EventHandler {
                 NameCache.INSTANCE.updateName(playerMP);
             }
         }
+
+        for (EntityPlayerMP player : server.getConfigurationManager().playerEntityList) {
+            livingPlayerTick(player);
+        }
+    }
+
+    private void livingPlayerTick(@Nonnull EntityPlayerMP player) {
+        if (
+            !VMConfig.vendingMachineSettings.restock_notifications_enabled
+                || player.ticksExisted % VMConfig.vendingMachineSettings.restock_notifications_interval != 0
+        ) {
+            return;
+        }
+
+        TradeDatabase.INSTANCE.sendTradeNotifications(player);
     }
 
     private void terminateVendingSession(@Nonnull EntityPlayer player) {

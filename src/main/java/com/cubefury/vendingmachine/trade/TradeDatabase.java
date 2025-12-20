@@ -11,8 +11,11 @@ import java.util.UUID;
 
 import javax.annotation.Nonnull;
 
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.util.ChatComponentTranslation;
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.common.util.Constants;
 
 import com.cubefury.vendingmachine.VMConfig;
@@ -154,6 +157,14 @@ public class TradeDatabase {
         nbt.setTag("tradeState", tradeStateList);
         TradeManager.INSTANCE.writeCurrencyToNBT(nbt, player);
         return nbt;
+    }
+
+    public void sendTradeNotifications(EntityPlayerMP player) {
+        String refreshedTrades = "a";
+        player.addChatComponentMessage(
+            new ChatComponentTranslation(
+                "vendingmachine.chat.trade_restock",
+                EnumChatFormatting.YELLOW + refreshedTrades));
     }
 
     @SideOnly(Side.CLIENT)

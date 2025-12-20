@@ -25,6 +25,16 @@ public class VMConfig {
         @Config.RequiresWorldRestart
         public int gui_refresh_interval;
 
+        @Config.Comment("Enable restock notifications")
+        @Config.DefaultBoolean(true)
+        @Config.RequiresWorldRestart
+        public boolean restock_notifications_enabled;
+
+        @Config.Comment("How often the server checks for restocked trades, in number of ticks")
+        @Config.DefaultInt(200)
+        @Config.RequiresWorldRestart
+        public int restock_notifications_interval;
+
         @Config.Comment("How often items items are ejected, in number of ticks")
         @Config.DefaultInt(10)
         @Config.RequiresWorldRestart
