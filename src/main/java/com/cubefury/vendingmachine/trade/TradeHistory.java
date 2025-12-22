@@ -16,10 +16,10 @@ public class TradeHistory {
         this.notificationQueued = notificationQueued;
     }
 
-    public void executeTrade() {
+    public void executeTrade(int maxTrades, boolean hasCooldown) {
         lastTrade = System.currentTimeMillis();
         tradeCount += 1;
-        notificationQueued = true;
+        notificationQueued = hasCooldown && maxTrades > -1 && tradeCount < maxTrades;
     }
 
     public void setNotified() {

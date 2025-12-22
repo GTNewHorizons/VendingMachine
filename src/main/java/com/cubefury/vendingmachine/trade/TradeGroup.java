@@ -9,8 +9,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import javax.annotation.Nonnull;
-
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraftforge.common.util.Constants;
@@ -168,18 +166,11 @@ public class TradeGroup {
 
     public void executeTrade(UUID player) {
         TradeHistory newTradeHistory = getTradeState(player);
-        newTradeHistory.executeTrade();
+        newTradeHistory.executeTrade(maxTrades, this.cooldown != -1);
         setTradeState(player, newTradeHistory);
         SaveLoadHandler.INSTANCE.writeTradeState(Collections.singleton(player));
-        TradeManager.INSTANCE.addNotification(player, this);
-    }
-
-    public void resetNotification(@Nonnull UUID player) {
-        synchronized (tradeState) {
-            TradeHistory history = tradeState.get(player);
-            if (history != null) {
-                history.setNotified();
-            }
+        if (newTradeHistory.notificationQueued) {
+            TradeManager.INSTANCE.addNotification(player, this);
         }
     }
 

@@ -195,23 +195,6 @@ public class TradeManager {
     }
 
     public void clearNotificationQueue(UUID playerOrNull) {
-        Set<UUID> playerList = playerOrNull == null ? this.notificationQueue.keySet()
-            : Collections.singleton(playerOrNull);
-        for (UUID player : playerList) {
-            Set<UUID> tradeGroups = this.notificationQueue.get(player);
-            if (tradeGroups == null) {
-                continue;
-            }
-            for (UUID tgId : tradeGroups) {
-                TradeGroup tradeGroup = TradeDatabase.INSTANCE.getTradeGroupFromId(tgId);
-                if (tradeGroup == null) {
-                    continue;
-                }
-                tradeGroup.resetNotification(player);
-            }
-        }
-
-        SaveLoadHandler.INSTANCE.writeTradeState(playerList);
         if (playerOrNull == null) {
             this.notificationQueue.clear();
         } else {
@@ -231,7 +214,29 @@ public class TradeManager {
         if (tradeGroups == null) {
             return;
         }
-        NetTradeNotification.sendNotification(player, tradeGroups);
-        this.clearNotificationQueue(playerId);
+
+        long currentTimestamp = System.currentTimeMillis();
+
+        List<UUID> notifList = new ArrayList<>();
+        for (UUID tgId : tradeGroups) {
+            TradeGroup tradeGroup = TradeDatabase.INSTANCE.getTradeGroupFromId(tgId);
+            if (tradeGroup == null) {
+                continue;
+            }
+            TradeHistory th = tradeGroup.getTradeState(playerId);
+            if ((currentTimestamp - th.lastTrade) / 1000 > tradeGroup.cooldown) {
+                notifList.add(tgId);
+                th.setNotified();
+            }
+        }
+
+        if (!notifList.isEmpty()) {
+            NetTradeNotification.sendNotification(player, tradeGroups);
+            SaveLoadHandler.INSTANCE.writeTradeState(Collections.singleton(playerId));
+        }
+
+        for (UUID tg : notifList) {
+            tradeGroups.remove(tg);
+        }
     }
 }
