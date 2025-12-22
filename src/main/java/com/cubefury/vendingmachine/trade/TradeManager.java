@@ -1,6 +1,7 @@
 package com.cubefury.vendingmachine.trade;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -10,12 +11,16 @@ import java.util.UUID;
 
 import javax.annotation.Nonnull;
 
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraftforge.common.util.Constants;
 
 import com.cubefury.vendingmachine.VendingMachine;
 import com.cubefury.vendingmachine.blocks.gui.TradeItemDisplay;
+import com.cubefury.vendingmachine.handlers.SaveLoadHandler;
+import com.cubefury.vendingmachine.network.handlers.NetTradeNotification;
+import com.cubefury.vendingmachine.storage.NameCache;
 
 // This is a cache of available trades, maintained server-side
 // so we don't have to recompute what trades are available every time we send it
@@ -27,6 +32,7 @@ public class TradeManager {
     private final List<UUID> noConditionTrades = new ArrayList<>();
 
     public final Map<UUID, Map<CurrencyType, Integer>> playerCurrency = new HashMap<>();
+    public final Map<UUID, Set<UUID>> notificationQueue = new HashMap<>();
 
     // For writeback to file in original format, to prevent data loss
     private final Map<UUID, List<NBTTagCompound>> invalidCurrency = new HashMap<>();
@@ -186,5 +192,46 @@ public class TradeManager {
             this.playerCurrency.remove(player);
             this.invalidCurrency.remove(player);
         }
+    }
+
+    public void clearNotificationQueue(UUID playerOrNull) {
+        Set<UUID> playerList = playerOrNull == null ? this.notificationQueue.keySet()
+            : Collections.singleton(playerOrNull);
+        for (UUID player : playerList) {
+            Set<UUID> tradeGroups = this.notificationQueue.get(player);
+            if (tradeGroups == null) {
+                continue;
+            }
+            for (UUID tgId : tradeGroups) {
+                TradeGroup tradeGroup = TradeDatabase.INSTANCE.getTradeGroupFromId(tgId);
+                if (tradeGroup == null) {
+                    continue;
+                }
+                tradeGroup.resetNotification(player);
+            }
+        }
+
+        SaveLoadHandler.INSTANCE.writeTradeState(playerList);
+        if (playerOrNull == null) {
+            this.notificationQueue.clear();
+        } else {
+            this.notificationQueue.remove(playerOrNull);
+        }
+    }
+
+    public void addNotification(UUID player, TradeGroup tg) {
+        this.notificationQueue.putIfAbsent(player, new HashSet<>());
+        this.notificationQueue.get(player)
+            .add(tg.getId());
+    }
+
+    public void sendTradeNotifications(EntityPlayerMP player) {
+        UUID playerId = NameCache.INSTANCE.getUUIDFromPlayer(player);
+        Set<UUID> tradeGroups = this.notificationQueue.get(playerId);
+        if (tradeGroups == null) {
+            return;
+        }
+        NetTradeNotification.sendNotification(player, tradeGroups);
+        this.clearNotificationQueue(playerId);
     }
 }

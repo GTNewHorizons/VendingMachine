@@ -9,6 +9,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import javax.annotation.Nonnull;
+
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraftforge.common.util.Constants;
@@ -169,6 +171,16 @@ public class TradeGroup {
         newTradeHistory.executeTrade();
         setTradeState(player, newTradeHistory);
         SaveLoadHandler.INSTANCE.writeTradeState(Collections.singleton(player));
+        TradeManager.INSTANCE.addNotification(player, this);
+    }
+
+    public void resetNotification(@Nonnull UUID player) {
+        synchronized (tradeState) {
+            TradeHistory history = tradeState.get(player);
+            if (history != null) {
+                history.setNotified();
+            }
+        }
     }
 
     public boolean readFromNBT(NBTTagCompound nbt) {

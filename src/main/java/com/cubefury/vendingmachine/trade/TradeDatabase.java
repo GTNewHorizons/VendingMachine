@@ -11,11 +11,8 @@ import java.util.UUID;
 
 import javax.annotation.Nonnull;
 
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.util.ChatComponentTranslation;
-import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.common.util.Constants;
 
 import com.cubefury.vendingmachine.VMConfig;
@@ -45,6 +42,7 @@ public class TradeDatabase {
     public void clearTradeState(UUID player) {
         tradeGroups.forEach((k, v) -> v.clearTradeState(player));
         TradeManager.INSTANCE.clearCurrency(player);
+        TradeManager.INSTANCE.clearNotificationQueue(player);
     }
 
     public TradeGroup getTradeGroupFromId(UUID tgId) {
@@ -133,9 +131,19 @@ public class TradeDatabase {
             NBTTagCompound state = tradeStateList.getCompoundTagAt(i);
             UUID tgId = NBTConverter.UuidValueType.TRADEGROUP.readId(state);
             TradeGroup tg = TradeDatabase.INSTANCE.getTradeGroupFromId(tgId);
-            TradeHistory th = new TradeHistory(state.getLong("lastTrade"), state.getInteger("tradeCount"));
+            boolean notificationQueued = false;
+            if (state.hasKey("notificationQueued")) {
+                notificationQueued = state.getBoolean("notificationQueued");
+            }
+            TradeHistory th = new TradeHistory(
+                state.getLong("lastTrade"),
+                state.getInteger("tradeCount"),
+                notificationQueued);
             if (tg != null) {
                 tg.setTradeState(player, th);
+                if (notificationQueued) {
+                    TradeManager.INSTANCE.addNotification(player, tg);
+                }
             }
         }
         TradeManager.INSTANCE.populateCurrencyFromNBT(nbt, player, merge);
@@ -151,20 +159,13 @@ public class TradeDatabase {
                 NBTConverter.UuidValueType.TRADEGROUP.writeId(entry.getKey(), state);
                 state.setLong("lastTrade", history.lastTrade);
                 state.setInteger("tradeCount", history.tradeCount);
+                state.setBoolean("notificationQueued", history.notificationQueued);
                 tradeStateList.appendTag(state);
             }
         }
         nbt.setTag("tradeState", tradeStateList);
         TradeManager.INSTANCE.writeCurrencyToNBT(nbt, player);
         return nbt;
-    }
-
-    public void sendTradeNotifications(EntityPlayerMP player) {
-        String refreshedTrades = "a";
-        player.addChatComponentMessage(
-            new ChatComponentTranslation(
-                "vendingmachine.chat.trade_restock",
-                EnumChatFormatting.YELLOW + refreshedTrades));
     }
 
     @SideOnly(Side.CLIENT)

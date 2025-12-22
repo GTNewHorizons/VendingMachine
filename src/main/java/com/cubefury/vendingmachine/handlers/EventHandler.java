@@ -26,7 +26,7 @@ import com.cubefury.vendingmachine.events.MarkDirtyNamesEvent;
 import com.cubefury.vendingmachine.network.handlers.NetBulkSync;
 import com.cubefury.vendingmachine.network.handlers.NetTradeDbSync;
 import com.cubefury.vendingmachine.storage.NameCache;
-import com.cubefury.vendingmachine.trade.TradeDatabase;
+import com.cubefury.vendingmachine.trade.TradeManager;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListenableFutureTask;
@@ -156,7 +156,7 @@ public class EventHandler {
             return;
         }
 
-        TradeDatabase.INSTANCE.sendTradeNotifications(player);
+        TradeManager.INSTANCE.sendTradeNotifications(player);
     }
 
     private void terminateVendingSession(@Nonnull EntityPlayer player) {
