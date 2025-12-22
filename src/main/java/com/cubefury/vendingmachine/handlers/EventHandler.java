@@ -150,7 +150,7 @@ public class EventHandler {
 
     private void livingPlayerTick(@Nonnull EntityPlayerMP player) {
         if (
-            !VMConfig.vendingMachineSettings.restock_notifications_enabled
+            !VMConfig.vendingMachineSettings.restock_notifications_enabled || player.ticksExisted == 0
                 || player.ticksExisted % VMConfig.vendingMachineSettings.restock_notifications_interval != 0
         ) {
             return;

@@ -19,7 +19,7 @@ public class TradeHistory {
     public void executeTrade(int maxTrades, boolean hasCooldown) {
         lastTrade = System.currentTimeMillis();
         tradeCount += 1;
-        notificationQueued = hasCooldown && maxTrades > -1 && tradeCount < maxTrades;
+        notificationQueued = hasCooldown && (maxTrades == -1 || tradeCount < maxTrades);
     }
 
     public void setNotified() {

@@ -210,15 +210,15 @@ public class TradeManager {
 
     public void sendTradeNotifications(EntityPlayerMP player) {
         UUID playerId = NameCache.INSTANCE.getUUIDFromPlayer(player);
-        Set<UUID> tradeGroups = this.notificationQueue.get(playerId);
-        if (tradeGroups == null) {
+        Set<UUID> notifGroups = this.notificationQueue.get(playerId);
+        if (notifGroups == null) {
             return;
         }
 
         long currentTimestamp = System.currentTimeMillis();
 
         List<UUID> notifList = new ArrayList<>();
-        for (UUID tgId : tradeGroups) {
+        for (UUID tgId : notifGroups) {
             TradeGroup tradeGroup = TradeDatabase.INSTANCE.getTradeGroupFromId(tgId);
             if (tradeGroup == null) {
                 continue;
@@ -231,12 +231,12 @@ public class TradeManager {
         }
 
         if (!notifList.isEmpty()) {
-            NetTradeNotification.sendNotification(player, tradeGroups);
+            NetTradeNotification.sendNotification(player, notifList);
             SaveLoadHandler.INSTANCE.writeTradeState(Collections.singleton(playerId));
         }
 
         for (UUID tg : notifList) {
-            tradeGroups.remove(tg);
+            notifGroups.remove(tg);
         }
     }
 }

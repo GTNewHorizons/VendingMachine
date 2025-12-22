@@ -2,7 +2,6 @@ package com.cubefury.vendingmachine.network.handlers;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Nonnull;
@@ -13,6 +12,7 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.util.Constants;
 
+import com.cubefury.vendingmachine.VMConfig;
 import com.cubefury.vendingmachine.VendingMachine;
 import com.cubefury.vendingmachine.api.network.UnserializedPacket;
 import com.cubefury.vendingmachine.handlers.NotificationHandler;
@@ -33,7 +33,7 @@ public class NetTradeNotification {
         }
     }
 
-    public static void sendNotification(@Nonnull EntityPlayerMP player, Set<UUID> tradeGroups) {
+    public static void sendNotification(@Nonnull EntityPlayerMP player, List<UUID> tradeGroups) {
         NBTTagCompound payload = new NBTTagCompound();
         NBTTagList notifications = new NBTTagList();
         for (UUID tgId : tradeGroups) {
@@ -45,6 +45,10 @@ public class NetTradeNotification {
 
     @SideOnly(Side.CLIENT)
     public static void onClient(NBTTagCompound message) {
+        if (!VMConfig.vendingMachineSettings.restock_notifications_enabled) {
+            return;
+        }
+
         List<UUID> tradeNotifications = new ArrayList<>();
 
         NBTTagList notifNbt = message.getTagList("notifications", Constants.NBT.TAG_COMPOUND);
