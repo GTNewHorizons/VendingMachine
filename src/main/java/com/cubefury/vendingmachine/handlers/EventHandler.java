@@ -11,7 +11,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.integrated.IntegratedServer;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 
 import org.apache.commons.lang3.Validate;
@@ -163,13 +162,10 @@ public class EventHandler {
         }
         if (
             !(player.openContainer instanceof ModularContainer container
-                && container.getGuiData() instanceof PosGuiData guiData)
+                && container.getGuiData() instanceof PosGuiData guiData
+                && guiData.getTileEntity() instanceof IGregTechTileEntity gte
+                && gte.getMetaTileEntity() instanceof MTEVendingMachine vm)
         ) {
-            return;
-        }
-        TileEntity te = guiData.getTileEntity();
-
-        if (te instanceof IGregTechTileEntity gte && gte.getMetaTileEntity() instanceof MTEVendingMachine vm) {
             VendingMachine.LOG.info("Force terminating VM session for {}", player);
             vm.resetCurrentUser(player);
             SaveLoadHandler.INSTANCE

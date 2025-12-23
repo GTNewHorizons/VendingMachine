@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.UUID;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.util.EnumChatFormatting;
 
@@ -36,11 +35,10 @@ public class NotificationHandler {
         if (
             mc.thePlayer.openContainer instanceof ModularContainer container
                 && container.getGuiData() instanceof PosGuiData guiData
+                && guiData.getTileEntity() instanceof IGregTechTileEntity gte
+                && gte.getMetaTileEntity() instanceof MTEVendingMachine
         ) {
-            TileEntity te = guiData.getTileEntity();
-            if (te instanceof IGregTechTileEntity gte && gte.getMetaTileEntity() instanceof MTEVendingMachine) {
-                return;
-            }
+            return;
         }
 
         List<String> refreshedTrades = new ArrayList<>();
