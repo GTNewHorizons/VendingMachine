@@ -60,10 +60,8 @@ public class EventHandler {
     public void onPlayerJoin(PlayerEvent.PlayerLoggedInEvent event) {
         if (
             event.player.worldObj.isRemote || MinecraftServer.getServer() == null
-                || !(event.player instanceof EntityPlayerMP)
+                || !(event.player instanceof EntityPlayerMP mpPlayer)
         ) return;
-
-        EntityPlayerMP mpPlayer = (EntityPlayerMP) event.player;
 
         if (
             VendingMachine.proxy.isClient() && !MinecraftServer.getServer()
@@ -130,7 +128,7 @@ public class EventHandler {
 
         if (!server.isDedicatedServer()) {
             boolean tmp = openToLAN;
-            openToLAN = server instanceof IntegratedServer && ((IntegratedServer) server).getPublic();
+            openToLAN = server instanceof IntegratedServer iServer && iServer.getPublic();
             if (openToLAN && !tmp) opQueue.addAll(server.getConfigurationManager().playerEntityList);
         } else if (!openToLAN) {
             openToLAN = true;
@@ -164,19 +162,16 @@ public class EventHandler {
             return;
         }
         if (
-            !(player.openContainer instanceof ModularContainer
-                && ((ModularContainer) player.openContainer).getGuiData() instanceof PosGuiData)
+            !(player.openContainer instanceof ModularContainer container
+                && container.getGuiData() instanceof PosGuiData guiData)
         ) {
             return;
         }
-        TileEntity te = ((PosGuiData) ((ModularContainer) player.openContainer).getGuiData()).getTileEntity();
+        TileEntity te = guiData.getTileEntity();
 
-        if (
-            te instanceof IGregTechTileEntity
-                && ((IGregTechTileEntity) te).getMetaTileEntity() instanceof MTEVendingMachine
-        ) {
+        if (te instanceof IGregTechTileEntity gte && gte.getMetaTileEntity() instanceof MTEVendingMachine vm) {
             VendingMachine.LOG.info("Force terminating VM session for {}", player);
-            ((MTEVendingMachine) ((IGregTechTileEntity) te).getMetaTileEntity()).resetCurrentUser(player);
+            vm.resetCurrentUser(player);
             SaveLoadHandler.INSTANCE
                 .writeTradeState(Collections.singleton(NameCache.INSTANCE.getUUIDFromPlayer(player)));
         }

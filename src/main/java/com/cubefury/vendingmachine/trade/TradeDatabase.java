@@ -131,10 +131,7 @@ public class TradeDatabase {
             NBTTagCompound state = tradeStateList.getCompoundTagAt(i);
             UUID tgId = NBTConverter.UuidValueType.TRADEGROUP.readId(state);
             TradeGroup tg = TradeDatabase.INSTANCE.getTradeGroupFromId(tgId);
-            boolean notificationQueued = false;
-            if (state.hasKey("notificationQueued")) {
-                notificationQueued = state.getBoolean("notificationQueued");
-            }
+            boolean notificationQueued = state.getBoolean("notificationQueued");
             TradeHistory th = new TradeHistory(
                 state.getLong("lastTrade"),
                 state.getInteger("tradeCount"),

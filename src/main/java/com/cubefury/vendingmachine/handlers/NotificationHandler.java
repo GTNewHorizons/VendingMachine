@@ -34,14 +34,11 @@ public class NotificationHandler {
 
         // If player is already accessing a vending machine, don't send notifications
         if (
-            mc.thePlayer.openContainer instanceof ModularContainer
-                && ((ModularContainer) mc.thePlayer.openContainer).getGuiData() instanceof PosGuiData
+            mc.thePlayer.openContainer instanceof ModularContainer container
+                && container.getGuiData() instanceof PosGuiData guiData
         ) {
-            TileEntity te = ((PosGuiData) ((ModularContainer) mc.thePlayer.openContainer).getGuiData()).getTileEntity();
-            if (
-                te instanceof IGregTechTileEntity
-                    && ((IGregTechTileEntity) te).getMetaTileEntity() instanceof MTEVendingMachine
-            ) {
+            TileEntity te = guiData.getTileEntity();
+            if (te instanceof IGregTechTileEntity gte && gte.getMetaTileEntity() instanceof MTEVendingMachine) {
                 return;
             }
         }
