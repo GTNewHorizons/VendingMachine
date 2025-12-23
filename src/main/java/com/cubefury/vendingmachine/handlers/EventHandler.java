@@ -161,10 +161,10 @@ public class EventHandler {
             return;
         }
         if (
-            !(player.openContainer instanceof ModularContainer container
+            player.openContainer instanceof ModularContainer container
                 && container.getGuiData() instanceof PosGuiData guiData
                 && guiData.getTileEntity() instanceof IGregTechTileEntity gte
-                && gte.getMetaTileEntity() instanceof MTEVendingMachine vm)
+                && gte.getMetaTileEntity() instanceof MTEVendingMachine vm
         ) {
             VendingMachine.LOG.info("Force terminating VM session for {}", player);
             vm.resetCurrentUser(player);
