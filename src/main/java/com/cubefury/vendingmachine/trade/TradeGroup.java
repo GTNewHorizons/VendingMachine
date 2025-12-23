@@ -166,9 +166,12 @@ public class TradeGroup {
 
     public void executeTrade(UUID player) {
         TradeHistory newTradeHistory = getTradeState(player);
-        newTradeHistory.executeTrade();
+        newTradeHistory.executeTrade(maxTrades, this.cooldown != -1);
         setTradeState(player, newTradeHistory);
         SaveLoadHandler.INSTANCE.writeTradeState(Collections.singleton(player));
+        if (newTradeHistory.notificationQueued) {
+            TradeManager.INSTANCE.addNotification(player, this);
+        }
     }
 
     public boolean readFromNBT(NBTTagCompound nbt) {
