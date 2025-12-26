@@ -32,9 +32,12 @@ public class TradeDatabase {
     private final Map<UUID, TradeGroup> tradeGroups = new HashMap<>();
     private final Map<TradeCategory, Set<UUID>> tradeCategories = new HashMap<>();
 
+    public final List<TradeGroup> noConditionTrades = new ArrayList<>();
+
     private TradeDatabase() {}
 
     public void clear() {
+        noConditionTrades.clear();
         tradeGroups.clear();
         tradeCategories.clear();
     }
@@ -92,6 +95,9 @@ public class TradeDatabase {
             if (tradeGroups.containsKey(tg.getId())) {
                 VendingMachine.LOG.error("Multiple trade groups with id {} exist in the file!", tg);
                 continue;
+            }
+            if (tg.hasNoConditions()) {
+                noConditionTrades.add(tg);
             }
             tradeCategories.computeIfAbsent(tg.getCategory(), k -> new HashSet<>());
             tradeCategories.get(tg.getCategory())

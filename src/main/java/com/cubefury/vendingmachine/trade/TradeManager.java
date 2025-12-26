@@ -36,7 +36,6 @@ public class TradeManager {
     // for gui display is more expensive so we cache it here
     // only the available trades + currency data is sent to player
     private final Map<UUID, Set<UUID>> availableTrades = new HashMap<>();
-    private final List<UUID> noConditionTrades = new ArrayList<>();
 
     // Map for tradegroup id -> player trade states and unlock status
     public final Map<UUID, TradeGroupState> tradeGroupStates = new HashMap<>();
@@ -100,12 +99,11 @@ public class TradeManager {
     public List<TradeGroup> getAvailableTradeGroups(UUID player) {
         synchronized (availableTrades) {
             availableTrades.computeIfAbsent(player, k -> new HashSet<>());
-            availableTrades.get(player)
-                .addAll(noConditionTrades);
             ArrayList<TradeGroup> tradeList = new ArrayList<>();
             for (UUID tgId : availableTrades.get(player)) {
                 tradeList.add(TradeDatabase.INSTANCE.getTradeGroupFromId(tgId));
             }
+            tradeList.addAll(TradeDatabase.INSTANCE.noConditionTrades);
             return tradeList;
         }
     }
