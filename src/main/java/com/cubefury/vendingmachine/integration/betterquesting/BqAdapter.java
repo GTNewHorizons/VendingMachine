@@ -10,6 +10,7 @@ import javax.annotation.Nullable;
 
 import com.cubefury.vendingmachine.trade.TradeDatabase;
 import com.cubefury.vendingmachine.trade.TradeGroup;
+import com.cubefury.vendingmachine.trade.TradeManager;
 import com.google.common.collect.ImmutableMap;
 
 import cpw.mods.fml.relauncher.Side;
@@ -63,7 +64,7 @@ public class BqAdapter {
             return;
         }
         for (TradeGroup tradeGroup : questUpdateTriggers.get(quest)) {
-            tradeGroup.addSatisfiedCondition(player, new BqCondition(quest));
+            TradeManager.INSTANCE.addSatisfiedCondition(tradeGroup, player, new BqCondition(quest));
         }
         synchronized (playerSatisfiedCache) {
             playerSatisfiedCache.computeIfAbsent(player, k -> new HashSet<>());
@@ -74,7 +75,7 @@ public class BqAdapter {
 
     public void setQuestUnfinished(UUID player, UUID quest) {
         for (TradeGroup tradeGroup : questUpdateTriggers.get(quest)) {
-            tradeGroup.removeSatisfiedCondition(player, new BqCondition(quest));
+            TradeManager.INSTANCE.removeSatisfiedCondition(tradeGroup, player, new BqCondition(quest));
             synchronized (playerSatisfiedCache) {
                 if (playerSatisfiedCache.get(player) != null) {
                     playerSatisfiedCache.get(player)
@@ -85,7 +86,14 @@ public class BqAdapter {
     }
 
     public void resetQuests(UUID player) {
-        TradeDatabase.INSTANCE.removeAllSatisfiedBqConditions(player);
+        for (Map.Entry<UUID, Set<TradeGroup>> entry : questUpdateTriggers.entrySet()) {
+            if (entry.getValue() == null) {
+                continue;
+            }
+            for (TradeGroup tg : entry.getValue()) {
+                TradeManager.INSTANCE.removeSatisfiedCondition(tg, player, new BqCondition(entry.getKey()));
+            }
+        }
         synchronized (playerSatisfiedCache) {
             if (player == null) {
                 playerSatisfiedCache.clear();

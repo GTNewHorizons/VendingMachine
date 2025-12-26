@@ -10,7 +10,9 @@ import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
+import com.cubefury.vendingmachine.api.trade.ICondition;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -22,16 +24,27 @@ import com.cubefury.vendingmachine.handlers.SaveLoadHandler;
 import com.cubefury.vendingmachine.network.handlers.NetTradeNotification;
 import com.cubefury.vendingmachine.storage.NameCache;
 
-// This is a cache of available trades, maintained server-side
-// so we don't have to recompute what trades are available every time we send it
+// Sync the following objects to the client every GUI refresh cycle:
+// Available trades, No-condition trades and currency
+// Everything else is stored server-side
 public class TradeManager {
 
     public static TradeManager INSTANCE = new TradeManager();
 
+    // availableTrades and noCondition trades technically have information that
+    // is extractable from tradegroupStates, but querying that every second
+    // for gui display is more expensive so we cache it here
+    // only the available trades + currency data is sent to player
     private final Map<UUID, Set<UUID>> availableTrades = new HashMap<>();
     private final List<UUID> noConditionTrades = new ArrayList<>();
 
+    // Map for tradegroup id -> player trade states and unlock status
+    public final Map<UUID, TradeGroupState> tradeGroupStates = new HashMap<>();
+
+    // Map for player id -> currency data
     public final Map<UUID, Map<CurrencyType, Integer>> playerCurrency = new HashMap<>();
+
+    // Map for player id -> trades with pending refresh notifications
     public final Map<UUID, Set<UUID>> notificationQueue = new HashMap<>();
 
     // For writeback to file in original format, to prevent data loss
@@ -43,55 +56,44 @@ public class TradeManager {
 
     private TradeManager() {}
 
-    public void addTradeGroup(UUID player, UUID tg) {
-        synchronized (availableTrades) {
-            if (!availableTrades.containsKey(player) || availableTrades.get(player) == null) {
-                availableTrades.put(player, new HashSet<>());
-            }
-            availableTrades.get(player)
-                .add(tg);
-        }
+    public void addTradeGroup(@Nonnull UUID player, UUID tg) {
+        availableTrades.putIfAbsent(player, new HashSet<>());
+        availableTrades.get(player).add(tg);
     }
 
     public void removeTradeGroup(UUID player, UUID tg) {
-        synchronized (availableTrades) {
-            if (availableTrades.get(player) != null) {
-                availableTrades.get(player)
-                    .remove(tg);
-            }
+        if (availableTrades.containsKey(player)) {
+            availableTrades.get(player).remove(tg);
         }
     }
 
-    public void recomputeAvailableTrades(UUID player) {
-        synchronized (availableTrades) {
-            availableTrades.clear();
-            if (player == null) { // only reset no condition trades for entire database reload
-                noConditionTrades.clear();
+    public void addSatisfiedCondition(TradeGroup tradeGroup, @Nonnull UUID player, ICondition c) {
+        UUID tradeGroupId = tradeGroup.getId();
+        tradeGroupStates.putIfAbsent(tradeGroupId, new TradeGroupState(tradeGroup));
+        tradeGroupStates.get(tradeGroupId).addConditionSatisfied(player, c);
+
+        updateAvailableTrades(tradeGroupId, player);
+    }
+
+    public void removeSatisfiedCondition(TradeGroup tradeGroup, @Nullable UUID player, ICondition c) {
+        UUID tradeGroupId = tradeGroup.getId();
+        tradeGroupStates.putIfAbsent(tradeGroupId, new TradeGroupState(tradeGroup));
+        tradeGroupStates.get(tradeGroupId).removeConditionSatisfied(player, c);
+
+        if (player == null) {
+            for (UUID p : tradeGroupStates.get(tradeGroupId).getPlayersWithConditionData()) {
+                updateAvailableTrades(tradeGroupId, p);
             }
-            for (Map.Entry<UUID, TradeGroup> entry : TradeDatabase.INSTANCE.getTradeGroups()
-                .entrySet()) {
-                if (
-                    entry.getValue()
-                        .hasNoConditions()
-                ) {
-                    noConditionTrades.add(entry.getKey());
-                }
-                if (player == null) {
-                    for (UUID p : entry.getValue()
-                        .getAllUnlockedPlayers()) {
-                        availableTrades.computeIfAbsent(p, k -> new HashSet<>());
-                        availableTrades.get(p)
-                            .add(entry.getKey());
-                    }
-                } else if (
-                    entry.getValue()
-                        .isUnlockedPlayer(player)
-                ) {
-                    availableTrades.computeIfAbsent(player, k -> new HashSet<>());
-                    availableTrades.get(player)
-                        .add(entry.getKey());
-                }
-            }
+        } else {
+            updateAvailableTrades(tradeGroupId, player);
+        }
+    }
+
+    private void updateAvailableTrades(UUID tradeGroupId, @Nullable UUID player) {
+        if (tradeGroupStates.get(tradeGroupId).satisfiesTrade(player)) {
+            TradeManager.INSTANCE.addTradeGroup(player, tradeGroupId);
+        } else {
+            TradeManager.INSTANCE.removeTradeGroup(player, tradeGroupId);
         }
     }
 

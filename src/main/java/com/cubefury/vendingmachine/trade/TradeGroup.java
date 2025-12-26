@@ -30,12 +30,7 @@ public class TradeGroup {
     public int maxTrades = -1;
     private TradeCategory category = TradeCategory.UNKNOWN;
     private String original_category_str = "";
-    private final Set<ICondition> requirementSet = new HashSet<>();
-
-    // List of completed conditions for each player
-    // This is only updated server-side, since players only need to know what trades
-    // they have and their status.
-    private final Map<UUID, Set<ICondition>> playerDone = new HashMap<>();
+    public final Set<ICondition> requirementSet = new HashSet<>();
 
     // List of players with trade history
     private final Map<UUID, TradeHistory> tradeState = new HashMap<>();
@@ -52,36 +47,6 @@ public class TradeGroup {
 
     public boolean hasNoConditions() {
         return this.requirementSet.isEmpty();
-    }
-
-    public void addSatisfiedCondition(UUID player, ICondition c) {
-        synchronized (playerDone) {
-            playerDone.computeIfAbsent(player, k -> new HashSet<>());
-            playerDone.get(player)
-                .add(c);
-            if (
-                playerDone.get(player)
-                    .equals(requirementSet)
-            ) {
-                TradeManager.INSTANCE.addTradeGroup(player, this.id);
-            }
-        }
-    }
-
-    public void removeSatisfiedCondition(UUID player, ICondition c) {
-        synchronized (playerDone) {
-            if (!playerDone.containsKey(player) || playerDone.get(player) == null) {
-                return;
-            }
-            playerDone.get(player)
-                .remove(c);
-            if (
-                !playerDone.get(player)
-                    .equals(requirementSet)
-            ) {
-                TradeManager.INSTANCE.removeTradeGroup(player, this.id);
-            }
-        }
     }
 
     public List<Trade> getTrades() {
@@ -104,23 +69,6 @@ public class TradeGroup {
                 tradeState.remove(player);
             }
         }
-    }
-
-    public boolean isUnlockedPlayer(UUID player) {
-        return requirementSet.equals(playerDone.getOrDefault(player, new HashSet<>()));
-    }
-
-    public Set<UUID> getAllUnlockedPlayers() {
-        Set<UUID> playerList = new HashSet<>();
-        for (Map.Entry<UUID, Set<ICondition>> entry : playerDone.entrySet()) {
-            if (
-                entry.getValue()
-                    .equals(requirementSet)
-            ) {
-                playerList.add(entry.getKey());
-            }
-        }
-        return playerList;
     }
 
     public TradeHistory getTradeState(UUID player) {
@@ -232,21 +180,4 @@ public class TradeGroup {
         return nbt;
     }
 
-    @Optional.Method(modid = "betterquesting")
-    public void removeAllSatisfiedBqConditions(UUID player) {
-        synchronized (tradeState) {
-            if (player == null) {
-                for (Map.Entry<UUID, Set<ICondition>> entry : playerDone.entrySet()) {
-                    if (entry.getValue() == null) { // just in case
-                        continue;
-                    }
-                    entry.getValue()
-                        .removeIf((condition) -> condition instanceof BqCondition);
-                }
-            } else if (playerDone.get(player) != null) {
-                playerDone.get(player)
-                    .removeIf((condition) -> condition instanceof BqCondition);
-            }
-        }
-    }
 }

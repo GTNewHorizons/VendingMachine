@@ -107,7 +107,6 @@ public class TradeDatabase {
             refreshNeiCache();
         }
 
-        TradeManager.INSTANCE.recomputeAvailableTrades(null);
         VendingMachine.LOG.info("Loaded {} trade groups containing {} trades.", getTradeGroupCount(), getTradeCount());
     }
 
@@ -170,11 +169,4 @@ public class TradeDatabase {
         NeiRecipeCache.refreshCache();
     }
 
-    @Optional.Method(modid = "betterquesting")
-    public void removeAllSatisfiedBqConditions(UUID player) {
-        for (TradeGroup tg : tradeGroups.values()) {
-            tg.removeAllSatisfiedBqConditions(player);
-        }
-        TradeManager.INSTANCE.recomputeAvailableTrades(player);
-    }
 }
