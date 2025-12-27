@@ -8,7 +8,6 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import com.cubefury.vendingmachine.trade.TradeDatabase;
 import com.cubefury.vendingmachine.trade.TradeGroup;
 import com.cubefury.vendingmachine.trade.TradeManager;
 import com.google.common.collect.ImmutableMap;
@@ -24,6 +23,7 @@ public class BqAdapter {
 
     // cache of quests that player has completed, for NEI integration not having
     // to look it up so much
+    // Server calculates this cache and syncs it directly to players
     private final Map<UUID, Set<UUID>> playerSatisfiedCache = new HashMap<>();
 
     private BqAdapter() {}
@@ -51,7 +51,7 @@ public class BqAdapter {
     }
 
     @SideOnly(Side.CLIENT)
-    public void setPlayerSatisifedCache(Map<UUID, Set<UUID>> newCache) {
+    public void setPlayerSatisfiedCache(Map<UUID, Set<UUID>> newCache) {
         // Player -> Set<QuestDone>
         synchronized (playerSatisfiedCache) {
             playerSatisfiedCache.clear();
@@ -67,7 +67,7 @@ public class BqAdapter {
             TradeManager.INSTANCE.addSatisfiedCondition(tradeGroup, player, new BqCondition(quest));
         }
         synchronized (playerSatisfiedCache) {
-            playerSatisfiedCache.computeIfAbsent(player, k -> new HashSet<>());
+            playerSatisfiedCache.putIfAbsent(player, new HashSet<>());
             playerSatisfiedCache.get(player)
                 .add(quest);
         }
