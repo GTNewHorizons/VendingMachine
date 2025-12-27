@@ -8,13 +8,13 @@ import java.util.function.Function;
 
 import javax.annotation.Nonnull;
 
-import com.cubefury.vendingmachine.trade.TradeManager;
 import net.minecraft.item.Item;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.util.Constants;
 
 import com.cubefury.vendingmachine.storage.NameCache;
 import com.cubefury.vendingmachine.trade.TradeDatabase;
+import com.cubefury.vendingmachine.trade.TradeManager;
 import com.google.gson.JsonObject;
 
 public class JsonHelper {

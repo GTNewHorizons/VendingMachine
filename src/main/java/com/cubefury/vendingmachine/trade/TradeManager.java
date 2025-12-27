@@ -12,18 +12,18 @@ import java.util.UUID;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import com.cubefury.vendingmachine.api.trade.ICondition;
-import com.cubefury.vendingmachine.util.NBTConverter;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraftforge.common.util.Constants;
 
 import com.cubefury.vendingmachine.VendingMachine;
+import com.cubefury.vendingmachine.api.trade.ICondition;
 import com.cubefury.vendingmachine.blocks.gui.TradeItemDisplay;
 import com.cubefury.vendingmachine.handlers.SaveLoadHandler;
 import com.cubefury.vendingmachine.network.handlers.NetTradeNotification;
 import com.cubefury.vendingmachine.storage.NameCache;
+import com.cubefury.vendingmachine.util.NBTConverter;
 
 // Sync the following objects to the client every GUI refresh cycle:
 // tradedata, No-condition trades and currency
@@ -58,19 +58,22 @@ public class TradeManager {
 
     public void addTradeGroup(@Nonnull UUID player, UUID tg) {
         availableTrades.putIfAbsent(player, new HashSet<>());
-        availableTrades.get(player).add(tg);
+        availableTrades.get(player)
+            .add(tg);
     }
 
     public void removeTradeGroup(UUID player, UUID tg) {
         if (availableTrades.containsKey(player)) {
-            availableTrades.get(player).remove(tg);
+            availableTrades.get(player)
+                .remove(tg);
         }
     }
 
     public void addSatisfiedCondition(TradeGroup tradeGroup, @Nonnull UUID player, ICondition c) {
         UUID tradeGroupId = tradeGroup.getId();
         tradeGroupStates.putIfAbsent(tradeGroupId, new TradeGroupState(tradeGroup));
-        tradeGroupStates.get(tradeGroupId).addConditionSatisfied(player, c);
+        tradeGroupStates.get(tradeGroupId)
+            .addConditionSatisfied(player, c);
 
         updateAvailableTrades(tradeGroupId, player);
     }
@@ -78,10 +81,12 @@ public class TradeManager {
     public void removeSatisfiedCondition(TradeGroup tradeGroup, @Nullable UUID player, ICondition c) {
         UUID tradeGroupId = tradeGroup.getId();
         tradeGroupStates.putIfAbsent(tradeGroupId, new TradeGroupState(tradeGroup));
-        tradeGroupStates.get(tradeGroupId).removeConditionSatisfied(player, c);
+        tradeGroupStates.get(tradeGroupId)
+            .removeConditionSatisfied(player, c);
 
         if (player == null) {
-            for (UUID p : tradeGroupStates.get(tradeGroupId).getPlayersWithConditionData()) {
+            for (UUID p : tradeGroupStates.get(tradeGroupId)
+                .getPlayersWithConditionData()) {
                 updateAvailableTrades(tradeGroupId, p);
             }
         } else {
@@ -90,7 +95,10 @@ public class TradeManager {
     }
 
     private void updateAvailableTrades(UUID tradeGroupId, @Nullable UUID player) {
-        if (tradeGroupStates.get(tradeGroupId).satisfiesTrade(player)) {
+        if (
+            tradeGroupStates.get(tradeGroupId)
+                .satisfiesTrade(player)
+        ) {
             addTradeGroup(player, tradeGroupId);
         } else {
             removeTradeGroup(player, tradeGroupId);
@@ -167,12 +175,14 @@ public class TradeManager {
 
     public TradeHistory getTradeState(@Nonnull UUID player, TradeGroup tg) {
         tradeGroupStates.putIfAbsent(tg.getId(), new TradeGroupState(tg));
-        return tradeGroupStates.get(tg.getId()).getTradeState(player);
+        return tradeGroupStates.get(tg.getId())
+            .getTradeState(player);
     }
 
     public void setTradeState(@Nonnull UUID player, TradeGroup tg, TradeHistory history) {
         tradeGroupStates.putIfAbsent(tg.getId(), new TradeGroupState(tg));
-        tradeGroupStates.get(tg.getId()).setTradeState(player, history);
+        tradeGroupStates.get(tg.getId())
+            .setTradeState(player, history);
     }
 
     public boolean canExecuteTrade(@Nonnull UUID player, TradeGroup tg) {
@@ -189,8 +199,8 @@ public class TradeManager {
 
         boolean enabled = tg.maxTrades == -1 || tradeCount < tg.maxTrades;
 
-        return availableTrades.getOrDefault(player, Collections.emptySet()).contains(tg.getId())
-            && enabled
+        return availableTrades.getOrDefault(player, Collections.emptySet())
+            .contains(tg.getId()) && enabled
             && cooldownRemaining < 0;
     }
 
@@ -220,7 +230,8 @@ public class TradeManager {
                 notificationQueued);
             if (tg != null) {
                 tradeGroupStates.putIfAbsent(tg.getId(), new TradeGroupState(tg));
-                tradeGroupStates.get(tg.getId()).setTradeState(player, th);
+                tradeGroupStates.get(tg.getId())
+                    .setTradeState(player, th);
                 if (notificationQueued) {
                     addNotification(player, tg);
                 }

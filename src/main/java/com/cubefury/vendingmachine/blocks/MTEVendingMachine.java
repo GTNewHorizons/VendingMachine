@@ -246,7 +246,8 @@ public class MTEVendingMachine extends MTEMultiBlockBase
         if (
             tradeRequest == null || !TradeManager.INSTANCE.canExecuteTrade(
                 tradeRequest.playerID,
-                TradeDatabase.INSTANCE.getTradeGroupFromId(tradeRequest.tradeGroup))) {
+                TradeDatabase.INSTANCE.getTradeGroupFromId(tradeRequest.tradeGroup))
+        ) {
             return false;
         }
         this.refreshInputSlotCache();
@@ -357,7 +358,8 @@ public class MTEVendingMachine extends MTEMultiBlockBase
             this.outputBuffer.addAll(toItem.getCombinedStacks());
             this.newBufferedOutputs = true;
         }
-        TradeManager.INSTANCE.executeTrade(tradeRequest.playerID,
+        TradeManager.INSTANCE.executeTrade(
+            tradeRequest.playerID,
             TradeDatabase.INSTANCE.getTradeGroups()
                 .get(tradeRequest.tradeGroup));
         this.sendTradeUpdate();

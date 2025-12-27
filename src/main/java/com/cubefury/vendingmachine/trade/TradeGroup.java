@@ -1,11 +1,8 @@
 package com.cubefury.vendingmachine.trade;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -15,12 +12,9 @@ import net.minecraftforge.common.util.Constants;
 
 import com.cubefury.vendingmachine.VendingMachine;
 import com.cubefury.vendingmachine.api.trade.ICondition;
-import com.cubefury.vendingmachine.handlers.SaveLoadHandler;
 import com.cubefury.vendingmachine.integration.betterquesting.BqAdapter;
 import com.cubefury.vendingmachine.integration.betterquesting.BqCondition;
 import com.cubefury.vendingmachine.util.NBTConverter;
-
-import cpw.mods.fml.common.Optional;
 
 public class TradeGroup {
 
