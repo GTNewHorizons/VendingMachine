@@ -35,7 +35,6 @@ public class TradeManager {
     // availableTrades and noCondition trades technically have information that
     // is extractable from tradegroupStates, but querying that every second
     // for gui display is more expensive so we cache it here
-    // only the available trades + currency data is sent to player
     private final Map<UUID, Set<UUID>> availableTrades = new HashMap<>();
 
     // Map for tradegroup id -> player trade states and unlock status
