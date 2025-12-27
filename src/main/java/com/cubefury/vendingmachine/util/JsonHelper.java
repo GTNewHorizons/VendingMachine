@@ -8,6 +8,7 @@ import java.util.function.Function;
 
 import javax.annotation.Nonnull;
 
+import com.cubefury.vendingmachine.trade.TradeManager;
 import net.minecraft.item.Item;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.util.Constants;
@@ -64,7 +65,7 @@ public class JsonHelper {
     public static void populateTradeStateFromFile(File file) {
         JsonObject json = FileIO.ReadFromFile(file);
         NBTTagCompound nbt = NBTConverter.JSONtoNBT_Object(json, new NBTTagCompound(), true);
-        TradeDatabase.INSTANCE.populateTradeStateFromNBT(nbt, UUID.fromString(FileIO.getFileName(file)), false);
+        TradeManager.INSTANCE.populateTradeStateFromNBT(nbt, UUID.fromString(FileIO.getFileName(file)), false);
     }
 
     public static void populateNameCacheFromFile(File file) {

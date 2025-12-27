@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import javax.annotation.Nonnull;
 
+import com.cubefury.vendingmachine.trade.TradeHistory;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -119,8 +120,9 @@ public class NetTradeDisplaySync {
         NBTTagCompound payload = new NBTTagCompound();
         NBTTagList trades = new NBTTagList();
         for (TradeGroup tg : availableGroups) {
-            long lastTradeTime = tg.getTradeState(playerId).lastTrade;
-            long tradeCount = tg.getTradeState(playerId).tradeCount;
+            TradeHistory history = TradeManager.INSTANCE.getTradeState(playerId, tg);
+            long lastTradeTime = history.lastTrade;
+            long tradeCount = history.tradeCount;
 
             long cooldownRemaining;
             if (tg.cooldown != -1 && lastTradeTime != -1 && (currentTimestamp - lastTradeTime) / 1000 < tg.cooldown) {

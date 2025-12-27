@@ -32,9 +32,6 @@ public class TradeGroup {
     private String original_category_str = "";
     public final Set<ICondition> requirementSet = new HashSet<>();
 
-    // List of players with trade history
-    private final Map<UUID, TradeHistory> tradeState = new HashMap<>();
-
     public TradeGroup() {}
 
     public UUID getId() {
@@ -59,67 +56,6 @@ public class TradeGroup {
 
     public List<ICondition> getRequirements() {
         return new ArrayList<>(requirementSet);
-    }
-
-    public void clearTradeState(UUID player) {
-        synchronized (tradeState) {
-            if (player == null) {
-                tradeState.clear();
-            } else {
-                tradeState.remove(player);
-            }
-        }
-    }
-
-    public TradeHistory getTradeState(UUID player) {
-        synchronized (tradeState) {
-            if (!tradeState.containsKey(player) || tradeState.get(player) == null) {
-                return new TradeHistory();
-            }
-            return tradeState.get(player);
-        }
-    }
-
-    public void setTradeState(UUID player, TradeHistory history) {
-        synchronized (tradeState) {
-            tradeState.put(player, history);
-
-        }
-    }
-
-    public boolean canExecuteTrade(UUID player) {
-        List<TradeGroup> availableTrades = TradeManager.INSTANCE.getAvailableTradeGroups(player);
-        long currentTimestamp = System.currentTimeMillis();
-        long lastTradeTime = this.getTradeState(player).lastTrade;
-        long tradeCount = this.getTradeState(player).tradeCount;
-        long cooldownRemaining;
-        if (this.cooldown != -1 && lastTradeTime != -1 && (currentTimestamp - lastTradeTime) / 1000 < this.cooldown) {
-            cooldownRemaining = this.cooldown - (currentTimestamp - lastTradeTime) / 1000;
-        } else {
-            cooldownRemaining = -1;
-        }
-
-        boolean enabled = this.maxTrades == -1 || tradeCount < this.maxTrades;
-
-        for (TradeGroup trade : availableTrades) {
-            if (trade == null) { // shouldn't happen
-                continue;
-            }
-            if (trade.id.equals(this.id) && enabled && cooldownRemaining < 0) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public void executeTrade(UUID player) {
-        TradeHistory newTradeHistory = getTradeState(player);
-        newTradeHistory.executeTrade(maxTrades, this.cooldown != -1);
-        setTradeState(player, newTradeHistory);
-        SaveLoadHandler.INSTANCE.writeTradeState(Collections.singleton(player));
-        if (newTradeHistory.notificationQueued) {
-            TradeManager.INSTANCE.addNotification(player, this);
-        }
     }
 
     public boolean readFromNBT(NBTTagCompound nbt) {

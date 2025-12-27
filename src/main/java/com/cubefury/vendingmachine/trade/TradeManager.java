@@ -13,6 +13,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.cubefury.vendingmachine.api.trade.ICondition;
+import com.cubefury.vendingmachine.util.NBTConverter;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -25,7 +26,7 @@ import com.cubefury.vendingmachine.network.handlers.NetTradeNotification;
 import com.cubefury.vendingmachine.storage.NameCache;
 
 // Sync the following objects to the client every GUI refresh cycle:
-// Available trades, No-condition trades and currency
+// tradedata, No-condition trades and currency
 // Everything else is stored server-side
 public class TradeManager {
 
@@ -90,9 +91,9 @@ public class TradeManager {
 
     private void updateAvailableTrades(UUID tradeGroupId, @Nullable UUID player) {
         if (tradeGroupStates.get(tradeGroupId).satisfiesTrade(player)) {
-            TradeManager.INSTANCE.addTradeGroup(player, tradeGroupId);
+            addTradeGroup(player, tradeGroupId);
         } else {
-            TradeManager.INSTANCE.removeTradeGroup(player, tradeGroupId);
+            removeTradeGroup(player, tradeGroupId);
         }
     }
 
@@ -155,6 +156,95 @@ public class TradeManager {
             }
         }
         nbt.setTag("playerCurrency", nbtCurrencyList);
+        return nbt;
+    }
+
+    public void clearTradeState(@Nullable UUID player) {
+        tradeGroupStates.forEach((uuid, tgs) -> tgs.clearTradeState(player));
+        clearCurrency(player);
+        clearNotificationQueue(player);
+    }
+
+    public TradeHistory getTradeState(@Nonnull UUID player, TradeGroup tg) {
+        tradeGroupStates.putIfAbsent(tg.getId(), new TradeGroupState(tg));
+        return tradeGroupStates.get(tg.getId()).getTradeState(player);
+    }
+
+    public void setTradeState(@Nonnull UUID player, TradeGroup tg, TradeHistory history) {
+        tradeGroupStates.putIfAbsent(tg.getId(), new TradeGroupState(tg));
+        tradeGroupStates.get(tg.getId()).setTradeState(player, history);
+    }
+
+    public boolean canExecuteTrade(@Nonnull UUID player, TradeGroup tg) {
+        long currentTimestamp = System.currentTimeMillis();
+        TradeHistory history = getTradeState(player, tg);
+        long lastTradeTime = history.lastTrade;
+        long tradeCount = history.tradeCount;
+        long cooldownRemaining;
+        if (tg.cooldown != -1 && lastTradeTime != -1 && (currentTimestamp - lastTradeTime) / 1000 < tg.cooldown) {
+            cooldownRemaining = tg.cooldown - (currentTimestamp - lastTradeTime) / 1000;
+        } else {
+            cooldownRemaining = -1;
+        }
+
+        boolean enabled = tg.maxTrades == -1 || tradeCount < tg.maxTrades;
+
+        return availableTrades.getOrDefault(player, Collections.emptySet()).contains(tg.getId())
+            && enabled
+            && cooldownRemaining < 0;
+    }
+
+    public void executeTrade(@Nonnull UUID player, TradeGroup tg) {
+        TradeHistory newTradeHistory = getTradeState(player, tg);
+        newTradeHistory.executeTrade(tg.maxTrades, tg.cooldown != -1);
+        setTradeState(player, tg, newTradeHistory);
+        SaveLoadHandler.INSTANCE.writeTradeState(Collections.singleton(player));
+        if (newTradeHistory.notificationQueued) {
+            addNotification(player, tg);
+        }
+    }
+
+    public void populateTradeStateFromNBT(NBTTagCompound nbt, UUID player, boolean merge) {
+        NBTTagList tradeStateList = nbt.getTagList("tradeState", Constants.NBT.TAG_COMPOUND);
+        if (!merge) {
+            clearTradeState(player);
+        }
+        for (int i = 0; i < tradeStateList.tagCount(); i++) {
+            NBTTagCompound state = tradeStateList.getCompoundTagAt(i);
+            UUID tgId = NBTConverter.UuidValueType.TRADEGROUP.readId(state);
+            TradeGroup tg = TradeDatabase.INSTANCE.getTradeGroupFromId(tgId);
+            boolean notificationQueued = state.getBoolean("notificationQueued");
+            TradeHistory th = new TradeHistory(
+                state.getLong("lastTrade"),
+                state.getInteger("tradeCount"),
+                notificationQueued);
+            if (tg != null) {
+                tradeGroupStates.putIfAbsent(tg.getId(), new TradeGroupState(tg));
+                tradeGroupStates.get(tg.getId()).setTradeState(player, th);
+                if (notificationQueued) {
+                    addNotification(player, tg);
+                }
+            }
+        }
+        populateCurrencyFromNBT(nbt, player, merge);
+    }
+
+    public NBTTagCompound writeTradeStateToNBT(NBTTagCompound nbt, @Nonnull UUID player) {
+        NBTTagList tradeStateList = new NBTTagList();
+        for (Map.Entry<UUID, TradeGroupState> entry : tradeGroupStates.entrySet()) {
+            TradeHistory history = entry.getValue()
+                .getTradeState(player);
+            if (!history.equals(TradeHistory.DEFAULT)) {
+                NBTTagCompound state = new NBTTagCompound();
+                NBTConverter.UuidValueType.TRADEGROUP.writeId(entry.getKey(), state);
+                state.setLong("lastTrade", history.lastTrade);
+                state.setInteger("tradeCount", history.tradeCount);
+                state.setBoolean("notificationQueued", history.notificationQueued);
+                tradeStateList.appendTag(state);
+            }
+        }
+        nbt.setTag("tradeState", tradeStateList);
+        writeCurrencyToNBT(nbt, player);
         return nbt;
     }
 
@@ -223,7 +313,7 @@ public class TradeManager {
             if (tradeGroup == null) {
                 continue;
             }
-            TradeHistory th = tradeGroup.getTradeState(playerId);
+            TradeHistory th = getTradeState(playerId, tradeGroup);
             if ((currentTimestamp - th.lastTrade) / 1000 > tradeGroup.cooldown) {
                 notifList.add(tgId);
                 th.setNotified();

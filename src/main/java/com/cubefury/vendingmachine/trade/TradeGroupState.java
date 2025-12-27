@@ -26,6 +26,22 @@ public class TradeGroupState {
         this.tradeGroup = tradeGroup;
     }
 
+    public void clearTradeState(@Nullable UUID player) {
+        if (player == null) {
+            tradeState.clear();
+        } else {
+            tradeState.remove(player);
+        }
+    }
+
+    public void setTradeState(@Nonnull UUID player, TradeHistory history) {
+        tradeState.put(player, history);
+    }
+
+    public TradeHistory getTradeState(@Nonnull UUID player) {
+        return tradeState.getOrDefault(player, new TradeHistory());
+    }
+
     public void addConditionSatisfied(@Nonnull UUID player, ICondition c) {
         playerSatisfied.putIfAbsent(player, new HashSet<>());
         playerSatisfied.get(player).add(c);

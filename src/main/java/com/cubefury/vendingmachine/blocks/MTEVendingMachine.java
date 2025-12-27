@@ -244,10 +244,9 @@ public class MTEVendingMachine extends MTEMultiBlockBase
 
     private boolean processTradeOnServer(TradeRequest tradeRequest) {
         if (
-            tradeRequest == null || !TradeDatabase.INSTANCE.getTradeGroups()
-                .get(tradeRequest.tradeGroup)
-                .canExecuteTrade(tradeRequest.playerID)
-        ) {
+            tradeRequest == null || !TradeManager.INSTANCE.canExecuteTrade(
+                tradeRequest.playerID,
+                TradeDatabase.INSTANCE.getTradeGroupFromId(tradeRequest.tradeGroup))) {
             return false;
         }
         this.refreshInputSlotCache();
@@ -358,9 +357,9 @@ public class MTEVendingMachine extends MTEMultiBlockBase
             this.outputBuffer.addAll(toItem.getCombinedStacks());
             this.newBufferedOutputs = true;
         }
-        TradeDatabase.INSTANCE.getTradeGroups()
-            .get(tradeRequest.tradeGroup)
-            .executeTrade(tradeRequest.playerID);
+        TradeManager.INSTANCE.executeTrade(tradeRequest.playerID,
+            TradeDatabase.INSTANCE.getTradeGroups()
+                .get(tradeRequest.tradeGroup));
         this.sendTradeUpdate();
         this.markDirty();
         return true;

@@ -42,12 +42,6 @@ public class TradeDatabase {
         tradeCategories.clear();
     }
 
-    public void clearTradeState(UUID player) {
-        tradeGroups.forEach((k, v) -> v.clearTradeState(player));
-        TradeManager.INSTANCE.clearCurrency(player);
-        TradeManager.INSTANCE.clearNotificationQueue(player);
-    }
-
     public TradeGroup getTradeGroupFromId(UUID tgId) {
         return tradeGroups.get(tgId);
     }
@@ -124,49 +118,6 @@ public class TradeDatabase {
             .sorted(Comparator.comparing(TradeGroup::getId))
             .forEach(tg -> tgList.appendTag(tg.writeToNBT(new NBTTagCompound())));
         nbt.setTag("tradeGroups", tgList);
-        return nbt;
-    }
-
-    public void populateTradeStateFromNBT(NBTTagCompound nbt, UUID player, boolean merge) {
-        NBTTagList tradeStateList = nbt.getTagList("tradeState", Constants.NBT.TAG_COMPOUND);
-        if (!merge) {
-            clearTradeState(player);
-        }
-        for (int i = 0; i < tradeStateList.tagCount(); i++) {
-            NBTTagCompound state = tradeStateList.getCompoundTagAt(i);
-            UUID tgId = NBTConverter.UuidValueType.TRADEGROUP.readId(state);
-            TradeGroup tg = TradeDatabase.INSTANCE.getTradeGroupFromId(tgId);
-            boolean notificationQueued = state.getBoolean("notificationQueued");
-            TradeHistory th = new TradeHistory(
-                state.getLong("lastTrade"),
-                state.getInteger("tradeCount"),
-                notificationQueued);
-            if (tg != null) {
-                tg.setTradeState(player, th);
-                if (notificationQueued) {
-                    TradeManager.INSTANCE.addNotification(player, tg);
-                }
-            }
-        }
-        TradeManager.INSTANCE.populateCurrencyFromNBT(nbt, player, merge);
-    }
-
-    public NBTTagCompound writeTradeStateToNBT(NBTTagCompound nbt, @Nonnull UUID player) {
-        NBTTagList tradeStateList = new NBTTagList();
-        for (Map.Entry<UUID, TradeGroup> entry : tradeGroups.entrySet()) {
-            TradeHistory history = entry.getValue()
-                .getTradeState(player);
-            if (!history.equals(TradeHistory.DEFAULT)) {
-                NBTTagCompound state = new NBTTagCompound();
-                NBTConverter.UuidValueType.TRADEGROUP.writeId(entry.getKey(), state);
-                state.setLong("lastTrade", history.lastTrade);
-                state.setInteger("tradeCount", history.tradeCount);
-                state.setBoolean("notificationQueued", history.notificationQueued);
-                tradeStateList.appendTag(state);
-            }
-        }
-        nbt.setTag("tradeState", tradeStateList);
-        TradeManager.INSTANCE.writeCurrencyToNBT(nbt, player);
         return nbt;
     }
 

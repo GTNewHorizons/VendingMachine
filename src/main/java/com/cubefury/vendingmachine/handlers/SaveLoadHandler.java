@@ -12,6 +12,7 @@ import java.util.UUID;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
+import com.cubefury.vendingmachine.trade.TradeManager;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.server.MinecraftServer;
@@ -104,12 +105,11 @@ public class SaveLoadHandler {
             CopyPaste(dirTradeState, dirBackupTradeState);
         }
 
-        TradeDatabase db = TradeDatabase.INSTANCE;
         List<Future<Void>> futures = new ArrayList<>();
         for (UUID player : players) {
             File playerFile = new File(dirTradeState, player.toString() + ".json");
             CopyPaste(playerFile, new File(dirBackupTradeState, player.toString() + ".json"));
-            NBTTagCompound state = db.writeTradeStateToNBT(new NBTTagCompound(), player);
+            NBTTagCompound state = TradeManager.INSTANCE.writeTradeStateToNBT(new NBTTagCompound(), player);
             futures.add(FileIO.WriteToFile(playerFile, out -> NBTConverter.NBTtoJSON_Compound(state, out, true)));
         }
         return futures;
@@ -128,7 +128,7 @@ public class SaveLoadHandler {
     public void unloadAll() {
         NameCache.INSTANCE.clear();
         TradeDatabase.INSTANCE.clear();
-        TradeDatabase.INSTANCE.clearTradeState(null);
+        TradeManager.INSTANCE.clearTradeState(null);
     }
 
 }
