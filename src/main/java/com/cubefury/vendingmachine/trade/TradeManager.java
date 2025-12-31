@@ -105,15 +105,13 @@ public class TradeManager {
     }
 
     public List<TradeGroup> getAvailableTradeGroups(UUID player) {
-        synchronized (availableTrades) {
-            availableTrades.computeIfAbsent(player, k -> new HashSet<>());
-            ArrayList<TradeGroup> tradeList = new ArrayList<>();
-            for (UUID tgId : availableTrades.get(player)) {
-                tradeList.add(TradeDatabase.INSTANCE.getTradeGroupFromId(tgId));
-            }
-            tradeList.addAll(TradeDatabase.INSTANCE.noConditionTrades);
-            return tradeList;
+        availableTrades.putIfAbsent(player, new HashSet<>());
+        ArrayList<TradeGroup> tradeList = new ArrayList<>();
+        for (UUID tgId : availableTrades.get(player)) {
+            tradeList.add(TradeDatabase.INSTANCE.getTradeGroupFromId(tgId));
         }
+        tradeList.addAll(TradeDatabase.INSTANCE.noConditionTrades);
+        return tradeList;
     }
 
     public void populateCurrencyFromNBT(NBTTagCompound nbt, UUID player, boolean merge) {

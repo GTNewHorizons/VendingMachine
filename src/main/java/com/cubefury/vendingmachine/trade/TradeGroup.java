@@ -48,8 +48,8 @@ public class TradeGroup {
         return category;
     }
 
-    public List<ICondition> getRequirements() {
-        return new ArrayList<>(requirementSet);
+    public Set<ICondition> getRequirements() {
+        return requirementSet;
     }
 
     public boolean readFromNBT(NBTTagCompound nbt) {
