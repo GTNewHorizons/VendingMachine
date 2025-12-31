@@ -83,7 +83,7 @@ public class TradeDatabase {
             TradeGroup tg = new TradeGroup();
             newMetadataCount += tg.readFromNBT(trades.getCompoundTagAt(i)) ? 1 : 0;
             if (tradeGroups.containsKey(tg.getId())) {
-                VendingMachine.LOG.error("Multiple trade groups with id {} exist in the file!", tg);
+                VendingMachine.LOG.error("Multiple trade groups with id {} exist in the file!", tg.getId());
                 continue;
             }
             if (tg.hasNoConditions()) {
