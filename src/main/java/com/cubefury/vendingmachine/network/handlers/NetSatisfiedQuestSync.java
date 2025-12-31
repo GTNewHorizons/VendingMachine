@@ -52,7 +52,7 @@ public class NetSatisfiedQuestSync {
                 if (cache != null && cache.get(playerId) != null) {
                     for (UUID quest : cache.get(playerId)) {
                         NBTTagCompound questInfo = new NBTTagCompound();
-                        NBTConverter.UuidValueType.QUEST.writeId(quest);
+                        NBTConverter.UuidValueType.QUEST.writeId(quest, questInfo);
                         questList.appendTag(questInfo);
                     }
                 }
