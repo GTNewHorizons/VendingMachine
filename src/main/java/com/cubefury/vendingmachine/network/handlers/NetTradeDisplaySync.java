@@ -22,6 +22,7 @@ import com.cubefury.vendingmachine.storage.NameCache;
 import com.cubefury.vendingmachine.trade.Trade;
 import com.cubefury.vendingmachine.trade.TradeDatabase;
 import com.cubefury.vendingmachine.trade.TradeGroup;
+import com.cubefury.vendingmachine.trade.TradeHistory;
 import com.cubefury.vendingmachine.trade.TradeManager;
 import com.cubefury.vendingmachine.util.NBTConverter;
 import com.cubefury.vendingmachine.util.Translator;
@@ -119,8 +120,9 @@ public class NetTradeDisplaySync {
         NBTTagCompound payload = new NBTTagCompound();
         NBTTagList trades = new NBTTagList();
         for (TradeGroup tg : availableGroups) {
-            long lastTradeTime = tg.getTradeState(playerId).lastTrade;
-            long tradeCount = tg.getTradeState(playerId).tradeCount;
+            TradeHistory history = TradeManager.INSTANCE.getTradeState(playerId, tg);
+            long lastTradeTime = history.lastTrade;
+            long tradeCount = history.tradeCount;
 
             long cooldownRemaining;
             if (tg.cooldown != -1 && lastTradeTime != -1 && (currentTimestamp - lastTradeTime) / 1000 < tg.cooldown) {

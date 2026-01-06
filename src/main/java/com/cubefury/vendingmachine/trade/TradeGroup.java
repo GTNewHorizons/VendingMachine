@@ -1,11 +1,8 @@
 package com.cubefury.vendingmachine.trade;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -15,12 +12,9 @@ import net.minecraftforge.common.util.Constants;
 
 import com.cubefury.vendingmachine.VendingMachine;
 import com.cubefury.vendingmachine.api.trade.ICondition;
-import com.cubefury.vendingmachine.handlers.SaveLoadHandler;
 import com.cubefury.vendingmachine.integration.betterquesting.BqAdapter;
 import com.cubefury.vendingmachine.integration.betterquesting.BqCondition;
 import com.cubefury.vendingmachine.util.NBTConverter;
-
-import cpw.mods.fml.common.Optional;
 
 public class TradeGroup {
 
@@ -30,15 +24,7 @@ public class TradeGroup {
     public int maxTrades = -1;
     private TradeCategory category = TradeCategory.UNKNOWN;
     private String original_category_str = "";
-    private final Set<ICondition> requirementSet = new HashSet<>();
-
-    // List of completed conditions for each player
-    // This is only updated server-side, since players only need to know what trades
-    // they have and their status.
-    private final Map<UUID, Set<ICondition>> playerDone = new HashMap<>();
-
-    // List of players with trade history
-    private final Map<UUID, TradeHistory> tradeState = new HashMap<>();
+    public final Set<ICondition> requirementSet = new HashSet<>();
 
     public TradeGroup() {}
 
@@ -54,36 +40,6 @@ public class TradeGroup {
         return this.requirementSet.isEmpty();
     }
 
-    public void addSatisfiedCondition(UUID player, ICondition c) {
-        synchronized (playerDone) {
-            playerDone.computeIfAbsent(player, k -> new HashSet<>());
-            playerDone.get(player)
-                .add(c);
-            if (
-                playerDone.get(player)
-                    .equals(requirementSet)
-            ) {
-                TradeManager.INSTANCE.addTradeGroup(player, this.id);
-            }
-        }
-    }
-
-    public void removeSatisfiedCondition(UUID player, ICondition c) {
-        synchronized (playerDone) {
-            if (!playerDone.containsKey(player) || playerDone.get(player) == null) {
-                return;
-            }
-            playerDone.get(player)
-                .remove(c);
-            if (
-                !playerDone.get(player)
-                    .equals(requirementSet)
-            ) {
-                TradeManager.INSTANCE.removeTradeGroup(player, this.id);
-            }
-        }
-    }
-
     public List<Trade> getTrades() {
         return trades;
     }
@@ -92,86 +48,8 @@ public class TradeGroup {
         return category;
     }
 
-    public List<ICondition> getRequirements() {
-        return new ArrayList<>(requirementSet);
-    }
-
-    public void clearTradeState(UUID player) {
-        synchronized (tradeState) {
-            if (player == null) {
-                tradeState.clear();
-            } else {
-                tradeState.remove(player);
-            }
-        }
-    }
-
-    public boolean isUnlockedPlayer(UUID player) {
-        return requirementSet.equals(playerDone.getOrDefault(player, new HashSet<>()));
-    }
-
-    public Set<UUID> getAllUnlockedPlayers() {
-        Set<UUID> playerList = new HashSet<>();
-        for (Map.Entry<UUID, Set<ICondition>> entry : playerDone.entrySet()) {
-            if (
-                entry.getValue()
-                    .equals(requirementSet)
-            ) {
-                playerList.add(entry.getKey());
-            }
-        }
-        return playerList;
-    }
-
-    public TradeHistory getTradeState(UUID player) {
-        synchronized (tradeState) {
-            if (!tradeState.containsKey(player) || tradeState.get(player) == null) {
-                return new TradeHistory();
-            }
-            return tradeState.get(player);
-        }
-    }
-
-    public void setTradeState(UUID player, TradeHistory history) {
-        synchronized (tradeState) {
-            tradeState.put(player, history);
-
-        }
-    }
-
-    public boolean canExecuteTrade(UUID player) {
-        List<TradeGroup> availableTrades = TradeManager.INSTANCE.getAvailableTradeGroups(player);
-        long currentTimestamp = System.currentTimeMillis();
-        long lastTradeTime = this.getTradeState(player).lastTrade;
-        long tradeCount = this.getTradeState(player).tradeCount;
-        long cooldownRemaining;
-        if (this.cooldown != -1 && lastTradeTime != -1 && (currentTimestamp - lastTradeTime) / 1000 < this.cooldown) {
-            cooldownRemaining = this.cooldown - (currentTimestamp - lastTradeTime) / 1000;
-        } else {
-            cooldownRemaining = -1;
-        }
-
-        boolean enabled = this.maxTrades == -1 || tradeCount < this.maxTrades;
-
-        for (TradeGroup trade : availableTrades) {
-            if (trade == null) { // shouldn't happen
-                continue;
-            }
-            if (trade.id.equals(this.id) && enabled && cooldownRemaining < 0) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public void executeTrade(UUID player) {
-        TradeHistory newTradeHistory = getTradeState(player);
-        newTradeHistory.executeTrade(maxTrades, this.cooldown != -1);
-        setTradeState(player, newTradeHistory);
-        SaveLoadHandler.INSTANCE.writeTradeState(Collections.singleton(player));
-        if (newTradeHistory.notificationQueued) {
-            TradeManager.INSTANCE.addNotification(player, this);
-        }
+    public Set<ICondition> getRequirements() {
+        return requirementSet;
     }
 
     public boolean readFromNBT(NBTTagCompound nbt) {
@@ -232,21 +110,4 @@ public class TradeGroup {
         return nbt;
     }
 
-    @Optional.Method(modid = "betterquesting")
-    public void removeAllSatisfiedBqConditions(UUID player) {
-        synchronized (tradeState) {
-            if (player == null) {
-                for (Map.Entry<UUID, Set<ICondition>> entry : playerDone.entrySet()) {
-                    if (entry.getValue() == null) { // just in case
-                        continue;
-                    }
-                    entry.getValue()
-                        .removeIf((condition) -> condition instanceof BqCondition);
-                }
-            } else if (playerDone.get(player) != null) {
-                playerDone.get(player)
-                    .removeIf((condition) -> condition instanceof BqCondition);
-            }
-        }
-    }
 }

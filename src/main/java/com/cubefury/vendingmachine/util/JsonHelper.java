@@ -14,6 +14,7 @@ import net.minecraftforge.common.util.Constants;
 
 import com.cubefury.vendingmachine.storage.NameCache;
 import com.cubefury.vendingmachine.trade.TradeDatabase;
+import com.cubefury.vendingmachine.trade.TradeManager;
 import com.google.gson.JsonObject;
 
 public class JsonHelper {
@@ -64,7 +65,7 @@ public class JsonHelper {
     public static void populateTradeStateFromFile(File file) {
         JsonObject json = FileIO.ReadFromFile(file);
         NBTTagCompound nbt = NBTConverter.JSONtoNBT_Object(json, new NBTTagCompound(), true);
-        TradeDatabase.INSTANCE.populateTradeStateFromNBT(nbt, UUID.fromString(FileIO.getFileName(file)), false);
+        TradeManager.INSTANCE.populateTradeStateFromNBT(nbt, UUID.fromString(FileIO.getFileName(file)), false);
     }
 
     public static void populateNameCacheFromFile(File file) {

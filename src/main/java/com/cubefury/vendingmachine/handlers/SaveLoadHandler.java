@@ -20,6 +20,7 @@ import com.cubefury.vendingmachine.VMConfig;
 import com.cubefury.vendingmachine.VendingMachine;
 import com.cubefury.vendingmachine.storage.NameCache;
 import com.cubefury.vendingmachine.trade.TradeDatabase;
+import com.cubefury.vendingmachine.trade.TradeManager;
 import com.cubefury.vendingmachine.util.FileIO;
 import com.cubefury.vendingmachine.util.JsonHelper;
 import com.cubefury.vendingmachine.util.NBTConverter;
@@ -104,12 +105,11 @@ public class SaveLoadHandler {
             CopyPaste(dirTradeState, dirBackupTradeState);
         }
 
-        TradeDatabase db = TradeDatabase.INSTANCE;
         List<Future<Void>> futures = new ArrayList<>();
         for (UUID player : players) {
             File playerFile = new File(dirTradeState, player.toString() + ".json");
             CopyPaste(playerFile, new File(dirBackupTradeState, player.toString() + ".json"));
-            NBTTagCompound state = db.writeTradeStateToNBT(new NBTTagCompound(), player);
+            NBTTagCompound state = TradeManager.INSTANCE.writeTradeStateToNBT(new NBTTagCompound(), player);
             futures.add(FileIO.WriteToFile(playerFile, out -> NBTConverter.NBTtoJSON_Compound(state, out, true)));
         }
         return futures;
@@ -128,7 +128,7 @@ public class SaveLoadHandler {
     public void unloadAll() {
         NameCache.INSTANCE.clear();
         TradeDatabase.INSTANCE.clear();
-        TradeDatabase.INSTANCE.clearTradeState(null);
+        TradeManager.INSTANCE.clearTradeState(null);
     }
 
 }

@@ -52,7 +52,7 @@ public class NetSatisfiedQuestSync {
                 if (cache != null && cache.get(playerId) != null) {
                     for (UUID quest : cache.get(playerId)) {
                         NBTTagCompound questInfo = new NBTTagCompound();
-                        NBTConverter.UuidValueType.QUEST.writeId(quest);
+                        NBTConverter.UuidValueType.QUEST.writeId(quest, questInfo);
                         questList.appendTag(questInfo);
                     }
                 }
@@ -68,6 +68,7 @@ public class NetSatisfiedQuestSync {
             Minecraft.getMinecraft()
                 .isIntegratedServerRunning()
         ) {
+            // Don't override in singleplayer or on LAN
             return;
         }
 
@@ -80,6 +81,6 @@ public class NetSatisfiedQuestSync {
             newCache.get(playerId)
                 .add(NBTConverter.UuidValueType.QUEST.readId(questList.getCompoundTagAt(i)));
         }
-        BqAdapter.INSTANCE.setPlayerSatisifedCache(newCache);
+        BqAdapter.INSTANCE.setPlayerSatisfiedCache(newCache);
     }
 }
