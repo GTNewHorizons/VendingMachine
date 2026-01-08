@@ -183,6 +183,9 @@ public class TradeManager {
     }
 
     public boolean canExecuteTrade(@Nonnull UUID player, TradeGroup tg) {
+        if (tg == null) {
+            return false;
+        }
         long currentTimestamp = System.currentTimeMillis();
         TradeHistory history = getTradeState(player, tg);
         long lastTradeTime = history.lastTrade;
