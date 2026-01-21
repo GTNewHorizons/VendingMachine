@@ -12,6 +12,7 @@ import java.util.UUID;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
+import com.cubefury.vendingmachine.network.handlers.NetTradeDbSync;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.server.MinecraftServer;
@@ -129,6 +130,14 @@ public class SaveLoadHandler {
         NameCache.INSTANCE.clear();
         TradeDatabase.INSTANCE.clear();
         TradeManager.INSTANCE.clearTradeState(null);
+    }
+
+    public void reloadDatabase() {
+        TradeDatabase.INSTANCE.clear();
+        TradeManager.INSTANCE.clearTradeState(null);
+
+        loadDatabase();
+        loadTradeState();
     }
 
 }

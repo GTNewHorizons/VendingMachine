@@ -36,7 +36,6 @@ public class SubCmdAdd implements IVendingSubcommand {
         boolean allCurrency = false;
         CurrencyType type = null;
         int amount = 0;
-        VendingMachine.LOG.info(args.length);
 
         switch (args.length) {
             case 2: {

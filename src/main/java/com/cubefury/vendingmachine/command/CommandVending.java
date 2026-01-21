@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.cubefury.vendingmachine.command.vending.SubCmdReload;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.util.ChatComponentText;
@@ -22,6 +23,7 @@ public class CommandVending extends CommandBase {
         register(new SubCmdAdd());
         register(new SubCmdSet());
         register(new SubCmdReset());
+        register(new SubCmdReload());
     }
 
     private static void register(IVendingSubcommand cmd) {
