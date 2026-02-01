@@ -25,7 +25,7 @@ public class SubCmdReload implements IVendingSubcommand {
 
     @Override
     public void execute(ICommandSender sender, String[] args) throws CommandException {
-        if (args.length != 1) {
+        if (args.length != 1 || args[0].compareTo("database") != 0) {
             sender.addChatMessage(new ChatComponentText("Usage: " + getUsage(sender)));
             return;
         }
@@ -39,7 +39,7 @@ public class SubCmdReload implements IVendingSubcommand {
     @Override
     public List<String> tabComplete(ICommandSender sender, String[] args) {
         switch (args.length) {
-            case 0: {
+            case 1: {
                 return CommandBase
                     .getListOfStringsFromIterableMatchingLastWord(args, Collections.singletonList("database"));
             }
