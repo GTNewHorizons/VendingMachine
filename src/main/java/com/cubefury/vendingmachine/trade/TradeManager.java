@@ -168,6 +168,11 @@ public class TradeManager {
         tradeGroupStates.forEach((uuid, tgs) -> tgs.clearTradeState(player));
         clearCurrency(player);
         clearNotificationQueue(player);
+        if (player == null) {
+            availableTrades.clear();
+        } else {
+            availableTrades.remove(player);
+        }
     }
 
     public TradeHistory getTradeState(@Nonnull UUID player, TradeGroup tg) {
