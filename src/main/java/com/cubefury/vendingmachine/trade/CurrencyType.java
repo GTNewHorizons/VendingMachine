@@ -9,20 +9,20 @@ import cpw.mods.fml.relauncher.SideOnly;
 
 public enum CurrencyType {
 
-    ADVENTURE("adventure", "dreamcraft:item.CoinAdventure", "gui/icons/itemCoinAdventure.png"),
-    BEES("bees", "dreamcraft:item.CoinBees", "gui/icons/itemCoinBees.png"),
-    BLOOD("blood", "dreamcraft:item.CoinBlood", "gui/icons/itemCoinBlood.png"),
-    CHEMIST("chemist", "dreamcraft:item.CoinChemist", "gui/icons/itemCoinChemist.png"),
-    COOK("cook", "dreamcraft:item.CoinCook", "gui/icons/itemCoinCook.png"),
-    DARK_WIZARD("darkWizard", "dreamcraft:item.CoinDarkWizard", "gui/icons/itemCoinDarkWizard.png"),
-    FARMER("farmer", "dreamcraft:item.CoinFarmer", "gui/icons/itemCoinFarmer.png"),
-    FLOWER("flower", "dreamcraft:item.CoinFlower", "gui/icons/itemCoinFlower.png"),
-    FORESTRY("forestry", "dreamcraft:item.CoinForestry", "gui/icons/itemCoinForestry.png"),
-    SMITH("smith", "dreamcraft:item.CoinSmith", "gui/icons/itemCoinSmith.png"),
-    SPACE("space", "dreamcraft:item.CoinSpace", "gui/icons/itemCoinSpace.png"),
-    SURVIVOR("survivor", "dreamcraft:item.CoinSurvivor", "gui/icons/itemCoinSurvivor.png"),
-    TECHNICIAN("technician", "dreamcraft:item.CoinTechnician", "gui/icons/itemCoinTechnician.png"),
-    WITCH("witch", "dreamcraft:item.CoinWitch", "gui/icons/itemCoinWitch.png"),
+    ADVENTURE("adventure", "dreamcraft:CoinAdventure", "gui/icons/itemCoinAdventure.png"),
+    BEES("bees", "dreamcraft:CoinBees", "gui/icons/itemCoinBees.png"),
+    BLOOD("blood", "dreamcraft:CoinBlood", "gui/icons/itemCoinBlood.png"),
+    CHEMIST("chemist", "dreamcraft:CoinChemist", "gui/icons/itemCoinChemist.png"),
+    COOK("cook", "dreamcraft:CoinCook", "gui/icons/itemCoinCook.png"),
+    DARK_WIZARD("darkWizard", "dreamcraft:CoinDarkWizard", "gui/icons/itemCoinDarkWizard.png"),
+    FARMER("farmer", "dreamcraft:CoinFarmer", "gui/icons/itemCoinFarmer.png"),
+    FLOWER("flower", "dreamcraft:CoinFlower", "gui/icons/itemCoinFlower.png"),
+    FORESTRY("forestry", "dreamcraft:CoinForestry", "gui/icons/itemCoinForestry.png"),
+    SMITH("smith", "dreamcraft:CoinSmith", "gui/icons/itemCoinSmith.png"),
+    SPACE("space", "dreamcraft:CoinSpace", "gui/icons/itemCoinSpace.png"),
+    SURVIVOR("survivor", "dreamcraft:CoinSurvivor", "gui/icons/itemCoinSurvivor.png"),
+    TECHNICIAN("technician", "dreamcraft:CoinTechnician", "gui/icons/itemCoinTechnician.png"),
+    WITCH("witch", "dreamcraft:CoinWitch", "gui/icons/itemCoinWitch.png"),
     // comment before semicolon to reduce merge conflicts
     ;
 
