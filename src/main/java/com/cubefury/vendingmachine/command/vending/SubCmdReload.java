@@ -1,14 +1,15 @@
 package com.cubefury.vendingmachine.command.vending;
 
-import com.cubefury.vendingmachine.handlers.SaveLoadHandler;
-import com.cubefury.vendingmachine.network.handlers.NetTradeDbSync;
+import java.util.Collections;
+import java.util.List;
+
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.util.ChatComponentText;
 
-import java.util.Collections;
-import java.util.List;
+import com.cubefury.vendingmachine.handlers.SaveLoadHandler;
+import com.cubefury.vendingmachine.network.handlers.NetTradeDbSync;
 
 public class SubCmdReload implements IVendingSubcommand {
 

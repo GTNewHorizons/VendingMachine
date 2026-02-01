@@ -5,13 +5,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.cubefury.vendingmachine.command.vending.SubCmdReload;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.util.ChatComponentText;
 
 import com.cubefury.vendingmachine.command.vending.IVendingSubcommand;
 import com.cubefury.vendingmachine.command.vending.SubCmdAdd;
+import com.cubefury.vendingmachine.command.vending.SubCmdReload;
 import com.cubefury.vendingmachine.command.vending.SubCmdReset;
 import com.cubefury.vendingmachine.command.vending.SubCmdSet;
 
