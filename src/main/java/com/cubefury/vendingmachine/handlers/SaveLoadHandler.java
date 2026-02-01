@@ -131,4 +131,12 @@ public class SaveLoadHandler {
         TradeManager.INSTANCE.clearTradeState(null);
     }
 
+    public void reloadDatabase() {
+        TradeDatabase.INSTANCE.clear();
+        TradeManager.INSTANCE.clearTradeState(null);
+
+        loadDatabase();
+        loadTradeState();
+    }
+
 }

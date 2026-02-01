@@ -12,7 +12,6 @@ import net.minecraft.command.PlayerNotFoundException;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.util.ChatComponentText;
 
-import com.cubefury.vendingmachine.VendingMachine;
 import com.cubefury.vendingmachine.command.Utils;
 import com.cubefury.vendingmachine.storage.NameCache;
 import com.cubefury.vendingmachine.trade.CurrencyType;
@@ -36,7 +35,6 @@ public class SubCmdAdd implements IVendingSubcommand {
         boolean allCurrency = false;
         CurrencyType type = null;
         int amount = 0;
-        VendingMachine.LOG.info(args.length);
 
         switch (args.length) {
             case 2: {

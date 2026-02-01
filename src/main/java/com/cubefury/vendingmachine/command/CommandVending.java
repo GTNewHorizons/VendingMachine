@@ -11,6 +11,7 @@ import net.minecraft.util.ChatComponentText;
 
 import com.cubefury.vendingmachine.command.vending.IVendingSubcommand;
 import com.cubefury.vendingmachine.command.vending.SubCmdAdd;
+import com.cubefury.vendingmachine.command.vending.SubCmdReload;
 import com.cubefury.vendingmachine.command.vending.SubCmdReset;
 import com.cubefury.vendingmachine.command.vending.SubCmdSet;
 
@@ -22,6 +23,7 @@ public class CommandVending extends CommandBase {
         register(new SubCmdAdd());
         register(new SubCmdSet());
         register(new SubCmdReset());
+        register(new SubCmdReload());
     }
 
     private static void register(IVendingSubcommand cmd) {
