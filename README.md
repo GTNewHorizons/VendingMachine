@@ -11,13 +11,16 @@ This mod adds a vending machine, unlocking trades based on questbook data. If yo
 
 ### Command
 
-**Note: All commands require OP to run**
+**Note: All commands require OP to run**.
+
+If your command still refuses to run, ensure your OP permission level in server.properties is set to 4.
 
 |Task| Command                                           |
 |--|---------------------------------------------------|
 |**Set coin**| `/vending set [player] <coin_type\|all> <amount>` |
 |**Add coin**| `/vending add [player] <coin_type\|all> <amount>` |
-|**Reset coins**| `/vending reset [player] <coin_type\|all>`
+|**Reset coins**| `/vending reset [player] <coin_type\|all>` |
+|**Reload database** | `/vending reload database` |
 
 ## Current Status
 
