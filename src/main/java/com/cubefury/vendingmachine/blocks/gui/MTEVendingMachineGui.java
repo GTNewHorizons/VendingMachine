@@ -30,6 +30,7 @@ import com.cleanroommc.modularui.widgets.CycleButtonWidget;
 import com.cleanroommc.modularui.widgets.ListWidget;
 import com.cleanroommc.modularui.widgets.PagedWidget;
 import com.cleanroommc.modularui.widgets.SlotGroupWidget;
+import com.cleanroommc.modularui.widgets.TextWidget;
 import com.cleanroommc.modularui.widgets.ToggleButton;
 import com.cleanroommc.modularui.widgets.layout.Column;
 import com.cleanroommc.modularui.widgets.layout.Flow;
@@ -500,6 +501,13 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                 .collapseDisabledChild(true);
 
             tradeList.child(new Row().height(2));
+
+            // Incomplete Structure status message
+            Flow statusRow = new Row().height(10).width(TRADE_ROW_WIDTH).marginLeft(2)
+                .child(new TextWidget(IKey.lang("vendingmachine.gui.error.incomplete_structure")))
+                .setEnabledIf(slot -> !this.getBase().getActive());
+            tradeList.child(statusRow);
+
             // Higher first row top margin
             Flow row = new TradeRow().height(TILE_ITEM_HEIGHT +2).width(TRADE_ROW_WIDTH).marginLeft(2);
 
@@ -518,6 +526,9 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                     })
                     .tooltipAutoUpdate(true)
                     .setEnabledIf(slot -> {
+                        if (!this.getBase().getActive()) {
+                            return false;
+                        }
                         TradeItemDisplayWidget display = ((TradeItemDisplayWidget) slot);
                         return VMConfig.gui.display_type == display.displayType && display.getDisplay() != null;
                     })
@@ -548,6 +559,9 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                     })
                     .tooltipAutoUpdate(true)
                     .setEnabledIf(slot -> {
+                        if (!this.getBase().getActive()) {
+                            return false;
+                        }
                         TradeItemDisplayWidget display = ((TradeItemDisplayWidget) slot);
                         return VMConfig.gui.display_type == display.displayType && display.getDisplay() != null;
                     }));
