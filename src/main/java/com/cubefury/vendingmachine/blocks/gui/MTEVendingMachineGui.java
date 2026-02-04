@@ -526,6 +526,9 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                     })
                     .tooltipAutoUpdate(true)
                     .setEnabledIf(slot -> {
+                        if (!this.getBase().getActive()) {
+                            return false;
+                        }
                         TradeItemDisplayWidget display = ((TradeItemDisplayWidget) slot);
                         return VMConfig.gui.display_type == display.displayType && display.getDisplay() != null;
                     })
@@ -556,6 +559,9 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                     })
                     .tooltipAutoUpdate(true)
                     .setEnabledIf(slot -> {
+                        if (!this.getBase().getActive()) {
+                            return false;
+                        }
                         TradeItemDisplayWidget display = ((TradeItemDisplayWidget) slot);
                         return VMConfig.gui.display_type == display.displayType && display.getDisplay() != null;
                     }));
