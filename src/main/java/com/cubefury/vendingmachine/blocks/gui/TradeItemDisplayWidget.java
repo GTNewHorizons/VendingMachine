@@ -149,7 +149,7 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
 
     public ItemDisplayWidget item(IValue<ItemStack> itemSupplier) {
         this.value = itemSupplier;
-        setSyncOrValue(itemSupplier);
+        setValue(itemSupplier);
         return this;
     }
 
