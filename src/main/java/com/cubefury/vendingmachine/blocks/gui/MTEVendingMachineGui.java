@@ -647,7 +647,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
             .bottom(5)
             .childIf(
                 base.doesBindPlayerInventory(),
-                SlotGroupWidget.playerInventory(false)
+                () -> SlotGroupWidget.playerInventory(false)
                     .marginLeft(4));
     }
 
