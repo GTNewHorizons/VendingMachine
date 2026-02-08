@@ -13,7 +13,7 @@ import com.cleanroommc.modularui.drawable.GuiDraw;
 import com.cleanroommc.modularui.screen.viewport.ModularGuiContext;
 import com.cleanroommc.modularui.theme.WidgetThemeEntry;
 import com.cleanroommc.modularui.utils.Platform;
-import com.cleanroommc.modularui.value.sync.GenericSyncValue;
+import com.cleanroommc.modularui.value.ObjectValue;
 import com.cleanroommc.modularui.widgets.ItemDisplayWidget;
 import com.cubefury.vendingmachine.blocks.MTEVendingMachine;
 import com.cubefury.vendingmachine.gui.GuiTextures;
@@ -136,11 +136,8 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
 
     @Override
     public boolean isValidSyncOrValue(@NotNull ISyncOrValue syncOrValue) {
-        if (
-            syncOrValue instanceof GenericSyncValue<?>genericSyncValue
-                && genericSyncValue.isValueOfType(ItemStack.class)
-        ) {
-            this.value = genericSyncValue.cast();
+        if (syncOrValue instanceof ObjectValue<?>syncValue && syncValue.isValueOfType(ItemStack.class)) {
+            this.value = syncValue.castValueNullable(ItemStack.class);
             return true;
 
         }
@@ -149,7 +146,7 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
 
     public ItemDisplayWidget item(IValue<ItemStack> itemSupplier) {
         this.value = itemSupplier;
-        setValue(itemSupplier);
+        setSyncOrValue(itemSupplier);
         return this;
     }
 
