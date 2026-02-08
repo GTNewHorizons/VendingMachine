@@ -5,6 +5,7 @@ import net.minecraft.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 import com.cleanroommc.modularui.api.drawable.IKey;
+import com.cleanroommc.modularui.api.value.ISyncOrValue;
 import com.cleanroommc.modularui.api.value.IValue;
 import com.cleanroommc.modularui.api.widget.Interactable;
 import com.cleanroommc.modularui.drawable.DynamicDrawable;
@@ -12,8 +13,7 @@ import com.cleanroommc.modularui.drawable.GuiDraw;
 import com.cleanroommc.modularui.screen.viewport.ModularGuiContext;
 import com.cleanroommc.modularui.theme.WidgetThemeEntry;
 import com.cleanroommc.modularui.utils.Platform;
-import com.cleanroommc.modularui.value.sync.GenericSyncValue;
-import com.cleanroommc.modularui.value.sync.SyncHandler;
+import com.cleanroommc.modularui.value.ObjectValue;
 import com.cleanroommc.modularui.widgets.ItemDisplayWidget;
 import com.cubefury.vendingmachine.blocks.MTEVendingMachine;
 import com.cubefury.vendingmachine.gui.GuiTextures;
@@ -83,7 +83,7 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
                 GuiDraw.drawText(" " + this.display.display.stackSize, 4, 9, 1.0f, textColor, false);
                 GuiDraw.drawItem(item, 26, 4, 16, 16, context.getCurrentDrawingZ());
                 if (this.display.tradeableNow) {
-                    GuiDraw.drawOutline(1, 1, 45, 23, 0x883CFF00, 2);
+                    GuiDraw.drawBorderInsideLTRB(1, 1, 45, 23, 2, 0x883CFF00);
                 }
                 if (!this.checkVmActive() || this.display.hasCooldown || !this.display.enabled) {
                     GuiDraw.drawRoundedRect(
@@ -135,17 +135,18 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
     }
 
     @Override
-    public boolean isValidSyncHandler(SyncHandler syncHandler) {
-        if (syncHandler instanceof GenericSyncValue<?>genericSyncValue && genericSyncValue.isOfType(ItemStack.class)) {
-            this.value = genericSyncValue.cast();
+    public boolean isValidSyncOrValue(@NotNull ISyncOrValue syncOrValue) {
+        if (syncOrValue instanceof ObjectValue<?>syncValue && syncValue.isValueOfType(ItemStack.class)) {
+            this.value = syncValue.castValueNullable(ItemStack.class);
             return true;
+
         }
         return false;
     }
 
     public ItemDisplayWidget item(IValue<ItemStack> itemSupplier) {
         this.value = itemSupplier;
-        setValue(itemSupplier);
+        setSyncOrValue(itemSupplier);
         return this;
     }
 
