@@ -93,7 +93,7 @@ public class TradeManager {
         }
     }
 
-    private void updateAvailableTrades(UUID tradeGroupId, @Nullable UUID player) {
+    private void updateAvailableTrades(UUID tradeGroupId, @Nonnull UUID player) {
         if (
             tradeGroupStates.get(tradeGroupId)
                 .satisfiesTrade(player)
