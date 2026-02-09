@@ -219,7 +219,7 @@ public class TradeManager {
         }
     }
 
-    public void populateTradeStateFromNBT(NBTTagCompound nbt, UUID player, boolean merge) {
+    public void populateTradeStateFromNBT(NBTTagCompound nbt, @Nonnull UUID player, boolean merge) {
         NBTTagList tradeStateList = nbt.getTagList("tradeState", Constants.NBT.TAG_COMPOUND);
         if (!merge) {
             clearTradeState(player);
