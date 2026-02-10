@@ -102,6 +102,8 @@ public class MTEVendingMachine extends MTEMultiBlockBase
 
     public static final int MAX_TRADES = 300;
 
+    public static final int STRUCTURE_CHECK_TICKS = 20;
+
     private static final ITexture[] FACING_SIDE = {
         TextureFactory.of(Textures.BlockIcons.MACHINE_CASING_ITEM_PIPE_TIN) };
     private static final ITexture[] FACING_FRONT = { TextureFactory.of(VM_MACHINE_FRONT_OFF) };
@@ -112,6 +114,8 @@ public class MTEVendingMachine extends MTEMultiBlockBase
     protected final List<RenderOverlay.OverlayTicket> overlayTickets = new ArrayList<>();
 
     private MultiblockTooltipBuilder tooltipBuilder;
+
+    public int mUpdate = 0;
 
     private final boolean mIsAnimated;
 
@@ -611,6 +615,8 @@ public class MTEVendingMachine extends MTEMultiBlockBase
                 OverlayHelper.clearVMOverlay(overlayTickets);
             }
             return;
+        } else if (this.mUpdate++ % STRUCTURE_CHECK_TICKS == 0) {
+            this.mMachine = checkMachine(aBaseMetaTileEntity, null);
         }
         aBaseMetaTileEntity.setActive(this.mMachine);
         if (!this.mMachine) return;
