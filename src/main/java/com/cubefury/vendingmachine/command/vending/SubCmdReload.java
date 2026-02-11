@@ -28,12 +28,12 @@ public class SubCmdReload implements IVendingSubcommand {
 
     @Override
     public void execute(ICommandSender sender, String[] args) throws CommandException {
-        if (args.length == 1 && args[0].compareTo("database") == 0) {
+        if (args.length == 1 && args[0].equals("database")) {
             SaveLoadHandler.INSTANCE.reloadDatabase();
             NetTradeDbSync.sendDatabase(null, false);
 
             sender.addChatMessage(new ChatComponentText("Reloaded Trade Database"));
-        } else if ((args.length == 1 || args.length == 2) && args[0].compareTo("tradestate") == 0) {
+        } else if ((args.length == 1 || args.length == 2) && args[0].equals("tradestate")) {
             UUID target = args.length == 1
                 ? NameCache.INSTANCE.getUUIDFromPlayer(CommandBase.getCommandSenderAsPlayer(sender))
                 : NameCache.INSTANCE.getUUID(args[1]);
@@ -58,7 +58,7 @@ public class SubCmdReload implements IVendingSubcommand {
                     .getListOfStringsFromIterableMatchingLastWord(args, Arrays.asList("database", "tradestate"));
             }
             case 2: {
-                return args[0].compareTo("tradestate") == 0
+                return args[0].equals("tradestate")
                     ? CommandBase.getListOfStringsFromIterableMatchingLastWord(args, NameCache.INSTANCE.getAllNames())
                     : null;
             }
