@@ -21,6 +21,7 @@ If your command still refuses to run, ensure your OP permission level in server.
 |**Add coin**| `/vending add [player] <coin_type\|all> <amount>` |
 |**Reset coins**| `/vending reset [player] <coin_type\|all>` |
 |**Reload database** | `/vending reload database` |
+|**Reload trade state**| `/vending reload tradestate [player]` |
 
 ## Current Status
 

@@ -93,7 +93,7 @@ public class TradeManager {
         }
     }
 
-    private void updateAvailableTrades(UUID tradeGroupId, @Nullable UUID player) {
+    private void updateAvailableTrades(UUID tradeGroupId, @Nonnull UUID player) {
         if (
             tradeGroupStates.get(tradeGroupId)
                 .satisfiesTrade(player)
@@ -219,7 +219,7 @@ public class TradeManager {
         }
     }
 
-    public void populateTradeStateFromNBT(NBTTagCompound nbt, UUID player, boolean merge) {
+    public void populateTradeStateFromNBT(NBTTagCompound nbt, @Nonnull UUID player, boolean merge) {
         NBTTagList tradeStateList = nbt.getTagList("tradeState", Constants.NBT.TAG_COMPOUND);
         if (!merge) {
             clearTradeState(player);

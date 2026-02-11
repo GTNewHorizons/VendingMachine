@@ -12,6 +12,8 @@ import java.util.UUID;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
+import javax.annotation.Nullable;
+
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.server.MinecraftServer;
@@ -53,7 +55,7 @@ public class SaveLoadHandler {
         unloadAll();
 
         loadDatabase();
-        loadTradeState();
+        loadTradeState(null);
         loadNames();
     }
 
@@ -83,8 +85,13 @@ public class SaveLoadHandler {
             out -> NBTConverter.NBTtoJSON_Compound(TradeDatabase.INSTANCE.writeToNBT(new NBTTagCompound()), out, true));
     }
 
-    public void loadTradeState() {
-        if (dirTradeState.exists()) {
+    public void loadTradeState(@Nullable UUID player) {
+        if (!dirTradeState.exists()) {
+            JsonHelper.populateTradeStateFromFiles(Collections.emptyList());
+            return;
+        }
+
+        if (player == null) {
             File[] fileList = dirTradeState.listFiles();
 
             if (fileList != null) {
@@ -97,6 +104,15 @@ public class SaveLoadHandler {
             } else {
                 JsonHelper.populateTradeStateFromFiles(Collections.emptyList());
             }
+            return;
+        }
+
+        File playerFile = new File(dirTradeState, player + ".json");
+
+        if (playerFile.exists() && playerFile.isFile()) {
+            JsonHelper.populateTradeStateFromFiles(Collections.singletonList(playerFile));
+        } else {
+            JsonHelper.populateTradeStateFromFiles(Collections.emptyList());
         }
     }
 
@@ -136,7 +152,7 @@ public class SaveLoadHandler {
         TradeManager.INSTANCE.clearTradeState(null);
 
         loadDatabase();
-        loadTradeState();
+        loadTradeState(null);
     }
 
 }
