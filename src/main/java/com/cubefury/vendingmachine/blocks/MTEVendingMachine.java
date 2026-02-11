@@ -116,8 +116,8 @@ public class MTEVendingMachine extends MTEMultiBlockBase
     private MultiblockTooltipBuilder tooltipBuilder;
 
     public int mUpdate = 0;
-    public boolean mMachine = false;
-    private boolean mIsAnimated;
+
+    private final boolean mIsAnimated;
 
     public ItemStackHandler inputItems = new ItemStackHandler(INPUT_SLOTS);
     public ItemStackHandler outputItems = new ItemStackHandler(OUTPUT_SLOTS);
@@ -609,20 +609,20 @@ public class MTEVendingMachine extends MTEMultiBlockBase
 
     @Override
     public void onPostTick(IGregTechTileEntity aBaseMetaTileEntity, long aTimer) {
-        if (aBaseMetaTileEntity.isClientSide() && !aBaseMetaTileEntity.isActive()) {
-            OverlayHelper.clearVMOverlay(overlayTickets);
+        super.onPostTick(aBaseMetaTileEntity, aTimer);
+        if (aBaseMetaTileEntity.isClientSide()) {
+            if (!aBaseMetaTileEntity.isActive()) {
+                OverlayHelper.clearVMOverlay(overlayTickets);
+            }
+            return;
+        } else if (this.mUpdate++ % STRUCTURE_CHECK_TICKS == 0) {
+            this.mMachine = checkMachine(aBaseMetaTileEntity, null);
         }
-        if (aBaseMetaTileEntity.isServerSide()) {
-            dispenseItems();
-            if (
-                this.getActive() && this.ticksSinceTradeUpdate++ >= VMConfig.vendingMachineSettings.gui_refresh_interval
-            ) {
-                this.sendTradeUpdate();
-            }
-            if (this.mUpdate++ % STRUCTURE_CHECK_TICKS == 0) {
-                this.mMachine = checkMachine(aBaseMetaTileEntity, null);
-                aBaseMetaTileEntity.setActive(this.mMachine);
-            }
+        aBaseMetaTileEntity.setActive(this.mMachine);
+        if (!this.mMachine) return;
+        dispenseItems();
+        if (this.ticksSinceTradeUpdate++ >= VMConfig.vendingMachineSettings.gui_refresh_interval) {
+            this.sendTradeUpdate();
         }
     }
 
