@@ -60,7 +60,7 @@ public class SubCmdReload implements IVendingSubcommand {
                 ) {
                     sender.addChatMessage(
                         new ChatComponentText(
-                            "Cannot reload trade state for player currently accessing vending machine."));
+                            "Cannot reload trade state for a player currently accessing a vending machine."));
                     return;
                 }
             }
