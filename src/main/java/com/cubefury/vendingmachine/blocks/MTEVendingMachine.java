@@ -815,22 +815,19 @@ public class MTEVendingMachine extends MTEMultiBlockBase
             .getYCoord();
         int posZ = this.getBaseMetaTileEntity()
             .getZCoord();
-        int offsetX = this.getExtendedFacing()
-            .getDirection().offsetX;
-        int offsetY = this.getExtendedFacing()
-            .getDirection().offsetY;
-        int offsetZ = this.getExtendedFacing()
-            .getDirection().offsetZ;
+
+        ForgeDirection frontFacing = this.getBaseMetaTileEntity()
+            .getFrontFacing();
         final EntityItem itemEntity = new EntityItem(
             world,
-            posX + offsetX * 0.5,
-            posY + offsetY * 0.5,
-            posZ + offsetZ * 0.5,
+            posX + 0.5 + frontFacing.offsetX * 0.7,
+            posY + 0.5 + frontFacing.offsetY * 0.7,
+            posZ + 0.5 + frontFacing.offsetZ * 0.7,
             stack);
         itemEntity.delayBeforeCanPickup = 0;
-        itemEntity.motionX = 0.05f * offsetX;
-        itemEntity.motionY = 0.05f * offsetY;
-        itemEntity.motionZ = 0.05f * offsetZ;
+        itemEntity.motionX = 0.1f * frontFacing.offsetX;
+        itemEntity.motionY = 0.1f * frontFacing.offsetY;
+        itemEntity.motionZ = 0.1f * frontFacing.offsetZ;
         world.spawnEntityInWorld(itemEntity);
     }
 
