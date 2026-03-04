@@ -6,9 +6,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import com.cubefury.vendingmachine.trade.FavouritesTracker;
+import com.cubefury.vendingmachine.trade.Trade;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 
@@ -73,6 +76,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
 
     private PosGuiData guiData;
     private final PagedWidget.Controller tabController;
+    private IWidget favouritesTabWidget;
     private final SearchBar searchBar;
 
     public static String lastSearch = "";
@@ -100,6 +104,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
             ejectSingleCoin.put(type, false);
         }
 
+        this.tradeCategories.add(TradeCategory.FAVOURITES);
         this.tradeCategories.add(TradeCategory.ALL);
         this.tradeCategories.addAll(TradeDatabase.INSTANCE.getTradeCategories());
 
@@ -136,6 +141,11 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
         ModularPanel panel = new TradeMainPanel("MTEMultiBlockBase", this, guiData, syncManager)
             .size(178, CUSTOM_UI_HEIGHT)
             .padding(4);
+        panel.onCloseAction(() -> {
+            if (VendingMachine.proxy.isClient()) {
+                FavouritesTracker.INSTANCE.saveFavourites();
+            }
+        });
         panel.child(createCategoryTabs(this.tabController));
         Flow mainColumn = new Column().width(170);
         if (VendingMachine.proxy.isClient()) { // client side sort and filtering
@@ -213,7 +223,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
 
     public IWidget createCategoryTabs(PagedWidget.Controller tabController) {
         Flow tabColumn = new Column().width(40)
-            .height(100)
+            .height(300)
             .left(-29)
             .top(40)
             .coverChildren();
@@ -235,6 +245,10 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                                 this.tradeCategories.get(index)
                                     .getUnlocalized_name()));
                     }));
+
+            if (tradeCategories.get(i) == TradeCategory.FAVOURITES) {
+                favouritesTabWidget = tabColumn.getChildren().get(tabColumn.getChildren().size()-1);
+            }
         }
         return tabColumn;
     }
@@ -708,6 +722,10 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
         forceRefresh = false;
     }
 
+    private List<TradeItemDisplay> filterFavouritedTrades(List<TradeItemDisplay> trades) {
+        return FavouritesTracker.INSTANCE.filterTrades(trades);
+    }
+
     private void updateTradeDisplay(Map<TradeCategory, List<TradeItemDisplay>> trades,
         Map<TradeCategory, List<TradeItemDisplayWidget>> display) {
         synchronized (display) {
@@ -733,6 +751,11 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
     }
 
     public void updateTradeDisplay(Map<TradeCategory, List<TradeItemDisplay>> trades) {
+        List<TradeItemDisplay> favouritedTrades = filterFavouritedTrades(trades.get(TradeCategory.ALL));
+        if (favouritesTabWidget != null) {
+            favouritesTabWidget.setEnabled(!favouritedTrades.isEmpty());
+        }
+        trades.put(TradeCategory.FAVOURITES, favouritedTrades);
         this.updateTradeDisplay(trades, displayedTradesTiles);
         this.updateTradeDisplay(trades, displayedTradesList);
     }

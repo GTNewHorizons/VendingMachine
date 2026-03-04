@@ -40,6 +40,7 @@ gt.blockmachines.multimachine.vendingmachine.name=Vending Machine
 gt.blockmachines.multimachine.vendingmachine.name.gui=Vending Machine
 hatch.vendinguplink.me.name=ME Vending Uplink Hatch
 
+vendingmachine.category.favourites=Favourites
 vendingmachine.category.unknown=Unknown Category
 vendingmachine.category.all=All Items
 vendingmachine.category.components=Components

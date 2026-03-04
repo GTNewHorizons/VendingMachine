@@ -1,5 +1,6 @@
 package com.cubefury.vendingmachine.blocks.gui;
 
+import com.cubefury.vendingmachine.trade.FavouritesTracker;
 import net.minecraft.item.ItemStack;
 
 import org.jetbrains.annotations.NotNull;
@@ -66,10 +67,15 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
     }
 
     public @NotNull Interactable.Result onMousePressed(int mouseButton) {
-        if (rootPanel.shiftHeld) {
+        if (!rootPanel.shiftHeld) {
+            return Result.IGNORE;
+        }
+        if (mouseButton == 0) {
             rootPanel.attemptPurchase(this.display);
             pressed = true;
             return Result.SUCCESS;
+        } else if (mouseButton == 1) {
+            FavouritesTracker.INSTANCE.toggleFavourites(this.display.tgID, this.display.tradeGroupOrder);
         }
         return Result.IGNORE;
     }
