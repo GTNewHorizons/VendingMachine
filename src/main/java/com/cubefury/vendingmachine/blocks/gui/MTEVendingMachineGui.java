@@ -248,7 +248,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
             .child(
                 IKey.str(title)
                     .asWidget()
-                    .alignment(Alignment.Center)
+                    .textAlign(Alignment.Center)
                     .widgetTheme(GTWidgetThemes.TEXT_TITLE)
                     .marginLeft(5)
                     .marginRight(5)
