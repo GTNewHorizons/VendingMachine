@@ -1,6 +1,5 @@
 package com.cubefury.vendingmachine.blocks.gui;
 
-import com.cubefury.vendingmachine.trade.FavouritesTracker;
 import net.minecraft.item.ItemStack;
 
 import org.jetbrains.annotations.NotNull;
@@ -19,6 +18,7 @@ import com.cleanroommc.modularui.widgets.ItemDisplayWidget;
 import com.cubefury.vendingmachine.blocks.MTEVendingMachine;
 import com.cubefury.vendingmachine.gui.GuiTextures;
 import com.cubefury.vendingmachine.gui.WidgetThemes;
+import com.cubefury.vendingmachine.trade.FavouritesTracker;
 import com.cubefury.vendingmachine.util.Translator;
 
 public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interactable {

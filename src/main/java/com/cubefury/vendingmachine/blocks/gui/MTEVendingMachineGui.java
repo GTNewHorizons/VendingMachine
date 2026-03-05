@@ -6,12 +6,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import com.cubefury.vendingmachine.trade.FavouritesTracker;
-import com.cubefury.vendingmachine.trade.Trade;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 
@@ -49,6 +46,7 @@ import com.cubefury.vendingmachine.network.handlers.NetTradeDisplaySync;
 import com.cubefury.vendingmachine.storage.NameCache;
 import com.cubefury.vendingmachine.trade.CurrencyItem;
 import com.cubefury.vendingmachine.trade.CurrencyType;
+import com.cubefury.vendingmachine.trade.FavouritesTracker;
 import com.cubefury.vendingmachine.trade.TradeCategory;
 import com.cubefury.vendingmachine.trade.TradeDatabase;
 import com.cubefury.vendingmachine.trade.TradeManager;
@@ -247,7 +245,10 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                     }));
 
             if (tradeCategories.get(i) == TradeCategory.FAVOURITES) {
-                favouritesTabWidget = tabColumn.getChildren().get(tabColumn.getChildren().size()-1);
+                favouritesTabWidget = tabColumn.getChildren()
+                    .get(
+                        tabColumn.getChildren()
+                            .size() - 1);
             }
         }
         return tabColumn;

@@ -7,6 +7,7 @@ import java.util.concurrent.FutureTask;
 
 import javax.annotation.Nonnull;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
@@ -25,6 +26,7 @@ import com.cubefury.vendingmachine.events.MarkDirtyNamesEvent;
 import com.cubefury.vendingmachine.network.handlers.NetBulkSync;
 import com.cubefury.vendingmachine.network.handlers.NetTradeDbSync;
 import com.cubefury.vendingmachine.storage.NameCache;
+import com.cubefury.vendingmachine.trade.FavouritesTracker;
 import com.cubefury.vendingmachine.trade.TradeManager;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -33,6 +35,7 @@ import com.google.common.util.concurrent.ListenableFutureTask;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.PlayerEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
+import cpw.mods.fml.common.network.FMLNetworkEvent;
 import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
 
 public class EventHandler {
@@ -40,6 +43,7 @@ public class EventHandler {
     public static final EventHandler INSTANCE = new EventHandler();
 
     private static final ArrayDeque<FutureTask> serverTasks = new ArrayDeque<>();
+    private static boolean pendingWorldInit = false;
     private static Thread serverThread = null;
     private final ArrayDeque<EntityPlayerMP> opQueue = new ArrayDeque<>();
     private boolean openToLAN = false;
@@ -76,6 +80,11 @@ public class EventHandler {
         }
 
         NetBulkSync.sendReset(mpPlayer, true, true);
+    }
+
+    @SubscribeEvent
+    public void onClientConnect(FMLNetworkEvent.ClientConnectedToServerEvent event) {
+        pendingWorldInit = true;
     }
 
     @SubscribeEvent
@@ -142,6 +151,22 @@ public class EventHandler {
 
         for (EntityPlayerMP player : server.getConfigurationManager().playerEntityList) {
             livingPlayerTick(player);
+        }
+    }
+
+    @SubscribeEvent
+    public void onClientTick(TickEvent.ClientTickEvent event) {
+        if (event.phase != TickEvent.Phase.END) return;
+
+        if (pendingWorldInit) {
+            Minecraft mc = Minecraft.getMinecraft();
+
+            if (mc.theWorld != null) {
+                SaveLoadHandler.INSTANCE.readFavourites(
+                    NameCache.INSTANCE.getUUIDFromPlayer(mc.thePlayer),
+                    FavouritesTracker.INSTANCE.computeWorldKey());
+                pendingWorldInit = false;
+            }
         }
     }
 

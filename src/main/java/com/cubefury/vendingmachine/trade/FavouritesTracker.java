@@ -1,19 +1,27 @@
 package com.cubefury.vendingmachine.trade;
 
-import com.cubefury.vendingmachine.blocks.gui.TradeItemDisplay;
-import com.cubefury.vendingmachine.util.NBTConverter;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
-
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ServerData;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+import net.minecraftforge.common.util.Constants;
+
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
+
+import com.cubefury.vendingmachine.blocks.gui.TradeItemDisplay;
+import com.cubefury.vendingmachine.handlers.SaveLoadHandler;
+import com.cubefury.vendingmachine.storage.NameCache;
+import com.cubefury.vendingmachine.util.NBTConverter;
+
 public class FavouritesTracker {
+
     public static final FavouritesTracker INSTANCE = new FavouritesTracker();
     private boolean dirty = false;
 
@@ -31,14 +39,54 @@ public class FavouritesTracker {
         dirty = true;
     }
 
+    private static boolean isPrivateAddress(String host) {
+        return host.equalsIgnoreCase("localhost") || host.equals("127.0.0.1")
+            || host.startsWith("192.168")
+            || host.startsWith("10.")
+            || host.matches("^172\\.(1[6-9]|2\\d|3[0-1])\\..*");
+    }
+
+    public String computeWorldKey() {
+        Minecraft mc = Minecraft.getMinecraft();
+
+        if (mc.isSingleplayer()) {
+            return "SP_" + mc.getIntegratedServer()
+                .getFolderName();
+        }
+
+        ServerData data = mc.func_147104_D();
+        if (data == null) {
+            return null;
+        }
+
+        String ip = data.serverIP;
+        String host = ip;
+        String port = "";
+
+        int colon = ip.indexOf(':');
+        if (colon >= 0) {
+            host = ip.substring(0, colon);
+            port = ip.substring(colon);
+        }
+
+        if (isPrivateAddress(host)) {
+            // Because open to lan does not have a constant port, we don't include port for LAN saves
+            return "LAN_" + host;
+        }
+
+        return "MP_" + host + port;
+    }
+
     public void saveFavourites() {
         if (dirty) {
-            NBTTagList nbt = writeToNBT();
+            SaveLoadHandler.INSTANCE.writeFavourites(
+                NameCache.INSTANCE.getUUIDFromPlayer(Minecraft.getMinecraft().thePlayer),
+                computeWorldKey());
         }
         dirty = false;
     }
 
-    private NBTTagList writeToNBT() {
+    public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
         NBTTagList favouritesNbt = new NBTTagList();
         for (Pair<UUID, Integer> fave : favourites) {
             NBTTagCompound faveNbt = new NBTTagCompound();
@@ -46,17 +94,19 @@ public class FavouritesTracker {
             faveNbt.setInteger("tgOrder", fave.getRight());
             favouritesNbt.appendTag(faveNbt);
         }
-        return favouritesNbt;
+        nbt.setTag("favourites", favouritesNbt);
+        return nbt;
     }
 
-    public void readFromNBT(NBTTagList nbt) {
+    public void readFromNBT(NBTTagCompound nbt) {
         favourites.clear();
-        for (int i = 0; i < nbt.tagCount(); i++) {
-            NBTTagCompound faveNbt = nbt.getCompoundTagAt(i);
-            favourites.add(new ImmutablePair<>(
-                NBTConverter.UuidValueType.TRADEGROUP.readId(faveNbt),
-                faveNbt.getInteger("tgOrder")
-            ));
+        NBTTagList faveListNbt = nbt.getTagList("favourites", Constants.NBT.TAG_COMPOUND);
+        for (int i = 0; i < faveListNbt.tagCount(); i++) {
+            NBTTagCompound faveNbt = faveListNbt.getCompoundTagAt(i);
+            favourites.add(
+                new ImmutablePair<>(
+                    NBTConverter.UuidValueType.TRADEGROUP.readId(faveNbt),
+                    faveNbt.getInteger("tgOrder")));
         }
     }
 
