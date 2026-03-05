@@ -27,10 +27,12 @@ import com.cubefury.vendingmachine.util.BigItemStack;
 
 import codechicken.nei.SearchField;
 import codechicken.nei.api.ItemFilter;
+import org.lwjgl.input.Keyboard;
 
 public class TradeMainPanel extends ModularPanel {
 
     public boolean shiftHeld = false;
+    public boolean ctrlHeld = false;
     private final MTEVendingMachineGui gui;
     private final PanelSyncManager syncManager;
     private final PosGuiData guiData;
@@ -48,8 +50,11 @@ public class TradeMainPanel extends ModularPanel {
     @Override
     public boolean onKeyPressed(char typedChar, int keyCode) {
         // left or right shift
-        if (keyCode == 0x2A || keyCode == 0x36) {
+        if (keyCode == Keyboard.KEY_LSHIFT || keyCode == Keyboard.KEY_RSHIFT) {
             shiftHeld = true;
+        }
+        if (keyCode == Keyboard.KEY_LCONTROL || keyCode == Keyboard.KEY_RCONTROL) {
+            ctrlHeld = true;
         }
         return super.onKeyPressed(typedChar, keyCode);
     }
@@ -57,14 +62,17 @@ public class TradeMainPanel extends ModularPanel {
     @Override
     public boolean onKeyRelease(char typedChar, int keyCode) {
         // left or right shift
-        if (keyCode == 0x2A || keyCode == 0x36) {
+        if (keyCode == Keyboard.KEY_LSHIFT || keyCode == Keyboard.KEY_RSHIFT) {
             shiftHeld = false;
+        }
+        if (keyCode == Keyboard.KEY_LCONTROL || keyCode == Keyboard.KEY_RCONTROL) {
+            ctrlHeld = false;
         }
         return super.onKeyRelease(typedChar, keyCode);
     }
 
     public void updateGui() {
-        if (shiftHeld) {
+        if (shiftHeld || ctrlHeld) {
             this.updateTradeInformation(gui.getCurrentTradeDisplayData());
         } else {
             Map<TradeCategory, List<TradeItemDisplay>> trades = formatTrades();

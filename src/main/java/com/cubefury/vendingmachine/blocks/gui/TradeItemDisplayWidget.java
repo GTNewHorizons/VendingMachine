@@ -67,15 +67,18 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
     }
 
     public @NotNull Interactable.Result onMousePressed(int mouseButton) {
-        if (!rootPanel.shiftHeld) {
+        // Only do something if either shift or control is held exclusively
+        if (rootPanel.shiftHeld == rootPanel.ctrlHeld) {
             return Result.IGNORE;
         }
-        if (mouseButton == 0) {
+        if (rootPanel.shiftHeld) {
             rootPanel.attemptPurchase(this.display);
             pressed = true;
             return Result.SUCCESS;
-        } else if (mouseButton == 1) {
+        }
+        if (rootPanel.ctrlHeld) {
             FavouritesTracker.INSTANCE.toggleFavourites(this.display.tgID, this.display.tradeGroupOrder);
+            return Result.SUCCESS;
         }
         return Result.IGNORE;
     }
