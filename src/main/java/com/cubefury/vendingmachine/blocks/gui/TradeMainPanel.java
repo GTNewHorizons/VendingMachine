@@ -175,6 +175,9 @@ public class TradeMainPanel extends ModularPanel {
                 if (b.display.getItem() == null) return -1;
 
                 if (sortMode == SortMode.ALPHABET) {
+                    if (a.isFavourite != b.isFavourite) {
+                        return Boolean.compare(b.isFavourite, a.isFavourite);
+                    }
                     return (a.display.getDisplayName()
                         .compareTo(b.display.getDisplayName()));
                 } else if (sortMode == SortMode.SMART) {
