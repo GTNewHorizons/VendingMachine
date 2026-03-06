@@ -527,7 +527,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
             tradeList.child(statusRow);
 
             // Higher first row top margin
-            Flow row = new TradeRow().height(TILE_ITEM_HEIGHT +4).width(TRADE_ROW_WIDTH).marginLeft(2);
+            Flow row = new TradeRow().height(TILE_ITEM_HEIGHT + 4).width(TRADE_ROW_WIDTH).marginLeft(2);
 
             // Tiles Display
             for (int i = 0; i < MTEVendingMachine.MAX_TRADES; i++) {
@@ -554,7 +554,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                 if (i % TILE_ITEMS_PER_ROW == TILE_ITEMS_PER_ROW - 1) {
                     tradeList.child(row);
 
-                    row = new TradeRow().height(TILE_ITEM_HEIGHT +4).width(TRADE_ROW_WIDTH).marginLeft(2);
+                    row = new TradeRow().height(TILE_ITEM_HEIGHT + 4).width(TRADE_ROW_WIDTH).marginLeft(2);
                 }
             }
             if (row.hasChildren()) {
