@@ -66,6 +66,7 @@ public class TradeMainPanel extends ModularPanel {
         }
         if (keyCode == Keyboard.KEY_LCONTROL || keyCode == Keyboard.KEY_RCONTROL) {
             ctrlHeld = false;
+            gui.setForceRefresh();
         }
         return super.onKeyRelease(typedChar, keyCode);
     }
