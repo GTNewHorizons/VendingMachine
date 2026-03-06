@@ -1,11 +1,13 @@
 package com.cubefury.vendingmachine.handlers;
 
+import net.minecraft.client.Minecraft;
+
 import com.cubefury.vendingmachine.storage.NameCache;
 import com.cubefury.vendingmachine.trade.FavouritesTracker;
+
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
 import cpw.mods.fml.common.network.FMLNetworkEvent;
-import net.minecraft.client.Minecraft;
 
 public class ClientEventHandler {
 

@@ -1,11 +1,11 @@
 package com.cubefury.vendingmachine;
 
-import com.cubefury.vendingmachine.handlers.ClientEventHandler;
-import cpw.mods.fml.common.FMLCommonHandler;
 import net.minecraftforge.common.MinecraftForge;
 
+import com.cubefury.vendingmachine.handlers.ClientEventHandler;
 import com.cubefury.vendingmachine.integration.nei.NEIConfig;
 
+import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 
