@@ -130,4 +130,12 @@ public final class GuiTextures {
         32,
         28,
         4);
+
+    public static final UITexture FAVOURITE_SPRITE = UITexture.builder()
+        .location(VendingMachine.MODID, "gui/icons/favourite_indicator")
+        .imageSize(16, 16)
+        .fullImage()
+        .name("favourite_indicator")
+        .build();
+
 }

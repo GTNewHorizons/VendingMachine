@@ -109,7 +109,7 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
                     IKey.str(display.hasCooldown ? this.display.cooldownText : "")
                         .style(IKey.WHITE));
                 if (this.display.isFavourite) {
-                    GuiDraw.drawCircle(5, 5, 4, 0xBB4CBB17, 12);
+                    GuiTextures.FAVOURITE_SPRITE.draw(context, 4, 4, 6, 6, widgetTheme.getTheme());
                 }
             } else if (this.displayType == DisplayType.LIST) {
                 GuiDraw.drawText("" + this.display.display.stackSize, 6, 4, 0.9f, textColor, false);
@@ -144,7 +144,7 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
                         .style(IKey.WHITE)
                         .scale(0.9f));
                 if (this.display.isFavourite) {
-                    GuiDraw.drawCircle(141, 4, 6, 0xBB4CBB17, 12);
+                    GuiTextures.FAVOURITE_SPRITE.draw(context, 139, 2, 10, 10, widgetTheme.getTheme());
                 }
             }
         }
