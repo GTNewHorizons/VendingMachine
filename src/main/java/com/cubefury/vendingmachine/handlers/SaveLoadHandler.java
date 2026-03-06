@@ -177,7 +177,7 @@ public class SaveLoadHandler {
         NBTTagCompound json = FavouritesTracker.INSTANCE.writeToNBT(new NBTTagCompound());
         File playerDir = new File(dirFavourites, player.toString());
         playerDir.mkdirs();
-        File worldFavourites = new File(playerDir, world_identifier);
+        File worldFavourites = new File(playerDir, world_identifier + ".json");
         return FileIO.WriteToFile(worldFavourites, out -> NBTConverter.NBTtoJSON_Compound(json, out, true));
     }
 
@@ -186,7 +186,7 @@ public class SaveLoadHandler {
         if (!playerDir.exists()) {
             return;
         }
-        File worldFavourites = new File(playerDir, world_identifier);
+        File worldFavourites = new File(playerDir, world_identifier + ".json");
         if (worldFavourites.exists()) {
             JsonHelper.populateFavouritesFromFile(worldFavourites);
         }

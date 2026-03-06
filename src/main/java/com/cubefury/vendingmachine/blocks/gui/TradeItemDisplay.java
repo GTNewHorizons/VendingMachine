@@ -24,6 +24,7 @@ public class TradeItemDisplay {
     public boolean hasCooldown;
     public boolean enabled;
     public boolean tradeableNow;
+    public boolean isFavourite;
 
     public TradeItemDisplay(List<CurrencyItem> fromCurrency, List<BigItemStack> fromItems, List<BigItemStack> ncItems,
         List<BigItemStack> toItems, ItemStack display, UUID tgID, int tradeGroupOrder, long cooldown,
@@ -40,6 +41,7 @@ public class TradeItemDisplay {
         this.hasCooldown = hasCooldown;
         this.enabled = enabled;
         this.tradeableNow = tradeableNow;
+        this.isFavourite = false;
     }
 
     public boolean satisfiesSearch(ItemFilter filter, String searchStringNoCase) {

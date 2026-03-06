@@ -15,6 +15,7 @@ import net.minecraftforge.common.util.Constants;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
+import com.cubefury.vendingmachine.VendingMachine;
 import com.cubefury.vendingmachine.blocks.gui.TradeItemDisplay;
 import com.cubefury.vendingmachine.handlers.SaveLoadHandler;
 import com.cubefury.vendingmachine.storage.NameCache;
@@ -108,6 +109,7 @@ public class FavouritesTracker {
                     NBTConverter.UuidValueType.TRADEGROUP.readId(faveNbt),
                     faveNbt.getInteger("tgOrder")));
         }
+        VendingMachine.LOG.info("Loaded {} favourited trades", favourites.size());
     }
 
     public List<TradeItemDisplay> filterTrades(List<TradeItemDisplay> trades) {

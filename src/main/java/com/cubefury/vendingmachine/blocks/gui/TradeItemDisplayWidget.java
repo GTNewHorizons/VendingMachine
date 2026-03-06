@@ -78,6 +78,7 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
         }
         if (rootPanel.ctrlHeld) {
             FavouritesTracker.INSTANCE.toggleFavourites(this.display.tgID, this.display.tradeGroupOrder);
+            rootPanel.forceGuiRefresh();
             return Result.SUCCESS;
         }
         return Result.IGNORE;
@@ -107,7 +108,7 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
                 this.overlay(
                     IKey.str(display.hasCooldown ? this.display.cooldownText : "")
                         .style(IKey.WHITE));
-                if (FavouritesTracker.INSTANCE.isFavourite(this.display)) {
+                if (this.display.isFavourite) {
                     GuiDraw.drawCircle(5, 5, 4, 0xBB4CBB17, 12);
                 }
             } else if (this.displayType == DisplayType.LIST) {
@@ -142,7 +143,7 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
                     IKey.str(display.hasCooldown && this.display.enabled ? this.display.cooldownText : "")
                         .style(IKey.WHITE)
                         .scale(0.9f));
-                if (FavouritesTracker.INSTANCE.isFavourite(this.display)) {
+                if (this.display.isFavourite) {
                     GuiDraw.drawCircle(141, 4, 6, 0xBB4CBB17, 12);
                 }
             }

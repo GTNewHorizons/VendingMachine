@@ -104,6 +104,7 @@ public class TradeMainPanel extends ModularPanel {
                 tid.cooldown = cur.cooldown;
                 tid.cooldownText = cur.cooldownText;
                 tid.tradeableNow = cur.tradeableNow;
+                tid.isFavourite = FavouritesTracker.INSTANCE.isFavourite(tid);
             }
         });
     }
@@ -149,6 +150,7 @@ public class TradeMainPanel extends ModularPanel {
             if (group == null) {
                 continue;
             }
+            tid.isFavourite = FavouritesTracker.INSTANCE.isFavourite(tid);
             TradeCategory category = group.getCategory();
             trades.putIfAbsent(category, new ArrayList<>());
             trades.get(category)
@@ -178,6 +180,11 @@ public class TradeMainPanel extends ModularPanel {
                     return (a.display.getDisplayName()
                         .compareTo(b.display.getDisplayName()));
                 } else if (sortMode == SortMode.SMART) {
+                    // favourited
+                    if (a.isFavourite != b.isFavourite) {
+                        return Boolean.compare(b.isFavourite, a.isFavourite);
+                    }
+
                     // enabled or has cooldown
                     int rankA = getRank(a);
                     int rankB = getRank(b);
@@ -206,6 +213,9 @@ public class TradeMainPanel extends ModularPanel {
             });
             trades.replace(category, filteredTrades);
         }
+        List<TradeItemDisplay> favouritedTrades = FavouritesTracker.INSTANCE
+            .filterTrades(trades.get(TradeCategory.ALL));
+        trades.put(TradeCategory.FAVOURITES, favouritedTrades);
         return trades;
     }
 
@@ -221,6 +231,10 @@ public class TradeMainPanel extends ModularPanel {
 
     public void attemptPurchase(TradeItemDisplay display) {
         gui.attemptPurchase(display);
+    }
+
+    public void forceGuiRefresh() {
+        gui.setForceRefresh();
     }
 
     @Override

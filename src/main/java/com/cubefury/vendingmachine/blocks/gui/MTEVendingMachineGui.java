@@ -751,15 +751,17 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
     }
 
     public void updateTradeDisplay(Map<TradeCategory, List<TradeItemDisplay>> trades) {
-        List<TradeItemDisplay> favouritedTrades = FavouritesTracker.INSTANCE
-            .filterTrades(trades.get(TradeCategory.ALL));
         if (favouritesTabWidget != null) {
-            favouritesTabWidget.setEnabled(!favouritedTrades.isEmpty());
-            if (favouritedTrades.isEmpty() && this.tabController.getActivePageIndex() == 0) {
+            favouritesTabWidget.setEnabled(
+                !trades.get(TradeCategory.FAVOURITES)
+                    .isEmpty());
+            if (
+                trades.get(TradeCategory.FAVOURITES)
+                    .isEmpty() && this.tabController.getActivePageIndex() == 0
+            ) {
                 this.tabController.setPage(1);
             }
         }
-        trades.put(TradeCategory.FAVOURITES, favouritedTrades);
         this.updateTradeDisplay(trades, displayedTradesTiles);
         this.updateTradeDisplay(trades, displayedTradesList);
     }
