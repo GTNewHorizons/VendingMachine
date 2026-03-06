@@ -182,6 +182,7 @@ public class SaveLoadHandler {
     }
 
     public void readFavourites(UUID player, String world_identifier) {
+        FavouritesTracker.INSTANCE.clearFavourites();
         File playerDir = new File(dirFavourites, player.toString());
         if (!playerDir.exists()) {
             return;

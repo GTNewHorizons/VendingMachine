@@ -99,8 +99,10 @@ public class FavouritesTracker {
         return nbt;
     }
 
-    public void readFromNBT(NBTTagCompound nbt) {
-        favourites.clear();
+    public void readFromNBT(NBTTagCompound nbt, boolean merge) {
+        if (!merge) {
+            favourites.clear();
+        }
         NBTTagList faveListNbt = nbt.getTagList("favourites", Constants.NBT.TAG_COMPOUND);
         for (int i = 0; i < faveListNbt.tagCount(); i++) {
             NBTTagCompound faveNbt = faveListNbt.getCompoundTagAt(i);
@@ -124,5 +126,9 @@ public class FavouritesTracker {
 
     public boolean isFavourite(TradeItemDisplay display) {
         return favourites.contains(new ImmutablePair<>(display.tgID, display.tradeGroupOrder));
+    }
+
+    public void clearFavourites() {
+        favourites.clear();
     }
 }

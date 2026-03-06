@@ -79,7 +79,7 @@ public class JsonHelper {
     public static void populateFavouritesFromFile(File file) {
         JsonObject json = FileIO.ReadFromFile(file);
         NBTTagCompound nbt = NBTConverter.JSONtoNBT_Object(json, new NBTTagCompound(), true);
-        FavouritesTracker.INSTANCE.readFromNBT(nbt);
+        FavouritesTracker.INSTANCE.readFromNBT(nbt, false);
     }
 
     @FunctionalInterface
