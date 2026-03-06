@@ -74,7 +74,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
 
     private PosGuiData guiData;
     private final PagedWidget.Controller tabController;
-    private IWidget favouritesTabWidget;
+    public IWidget favouritesTabWidget;
     private final SearchBar searchBar;
 
     public static String lastSearch = "";
@@ -726,10 +726,6 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
         forceRefresh = false;
     }
 
-    private List<TradeItemDisplay> filterFavouritedTrades(List<TradeItemDisplay> trades) {
-        return FavouritesTracker.INSTANCE.filterTrades(trades);
-    }
-
     private void updateTradeDisplay(Map<TradeCategory, List<TradeItemDisplay>> trades,
         Map<TradeCategory, List<TradeItemDisplayWidget>> display) {
         synchronized (display) {
@@ -755,9 +751,13 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
     }
 
     public void updateTradeDisplay(Map<TradeCategory, List<TradeItemDisplay>> trades) {
-        List<TradeItemDisplay> favouritedTrades = filterFavouritedTrades(trades.get(TradeCategory.ALL));
+        List<TradeItemDisplay> favouritedTrades = FavouritesTracker.INSTANCE
+            .filterTrades(trades.get(TradeCategory.ALL));
         if (favouritesTabWidget != null) {
             favouritesTabWidget.setEnabled(!favouritedTrades.isEmpty());
+            if (favouritedTrades.isEmpty() && this.tabController.getActivePageIndex() == 0) {
+                this.tabController.setPage(1);
+            }
         }
         trades.put(TradeCategory.FAVOURITES, favouritedTrades);
         this.updateTradeDisplay(trades, displayedTradesTiles);

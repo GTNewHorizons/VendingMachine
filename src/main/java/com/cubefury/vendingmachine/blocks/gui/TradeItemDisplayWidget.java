@@ -107,6 +107,9 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
                 this.overlay(
                     IKey.str(display.hasCooldown ? this.display.cooldownText : "")
                         .style(IKey.WHITE));
+                if (FavouritesTracker.INSTANCE.isFavourite(this.display)) {
+                    GuiDraw.drawCircle(5, 5, 4, 0xBB4CBB17, 12);
+                }
             } else if (this.displayType == DisplayType.LIST) {
                 GuiDraw.drawText("" + this.display.display.stackSize, 6, 4, 0.9f, textColor, false);
                 GuiDraw.drawItem(item, 24, 2, 9, 9, context.getCurrentDrawingZ());
@@ -139,6 +142,9 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
                     IKey.str(display.hasCooldown && this.display.enabled ? this.display.cooldownText : "")
                         .style(IKey.WHITE)
                         .scale(0.9f));
+                if (FavouritesTracker.INSTANCE.isFavourite(this.display)) {
+                    GuiDraw.drawCircle(141, 4, 6, 0xBB4CBB17, 12);
+                }
             }
         }
     }

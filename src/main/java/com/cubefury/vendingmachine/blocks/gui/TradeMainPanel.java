@@ -12,6 +12,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
 import org.jetbrains.annotations.NotNull;
+import org.lwjgl.input.Keyboard;
 
 import com.cleanroommc.modularui.factory.PosGuiData;
 import com.cleanroommc.modularui.screen.ModularPanel;
@@ -19,6 +20,7 @@ import com.cleanroommc.modularui.screen.ModularScreen;
 import com.cleanroommc.modularui.value.sync.PanelSyncManager;
 import com.cubefury.vendingmachine.VMConfig;
 import com.cubefury.vendingmachine.network.handlers.NetResetVMUser;
+import com.cubefury.vendingmachine.trade.FavouritesTracker;
 import com.cubefury.vendingmachine.trade.TradeCategory;
 import com.cubefury.vendingmachine.trade.TradeDatabase;
 import com.cubefury.vendingmachine.trade.TradeGroup;
@@ -27,7 +29,6 @@ import com.cubefury.vendingmachine.util.BigItemStack;
 
 import codechicken.nei.SearchField;
 import codechicken.nei.api.ItemFilter;
-import org.lwjgl.input.Keyboard;
 
 public class TradeMainPanel extends ModularPanel {
 
@@ -82,6 +83,12 @@ public class TradeMainPanel extends ModularPanel {
 
     private void updateTradeInformation(Map<TradeCategory, List<TradeItemDisplay>> currentData) {
         Map<UUID, Map<Integer, TradeItemDisplay>> tradeMap = new HashMap<>();
+        List<TradeItemDisplay> favouritedTrades = FavouritesTracker.INSTANCE
+            .filterTrades(currentData.get(TradeCategory.ALL));
+        if (gui.favouritesTabWidget != null) {
+            gui.favouritesTabWidget.setEnabled(!favouritedTrades.isEmpty());
+        }
+        currentData.put(TradeCategory.FAVOURITES, favouritedTrades);
         for (TradeItemDisplay tid : TradeManager.INSTANCE.tradeData) {
             tradeMap.putIfAbsent(tid.tgID, new HashMap<>());
             tradeMap.get(tid.tgID)

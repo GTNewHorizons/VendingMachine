@@ -1,6 +1,6 @@
 package com.cubefury.vendingmachine.trade;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -111,6 +111,16 @@ public class FavouritesTracker {
     }
 
     public List<TradeItemDisplay> filterTrades(List<TradeItemDisplay> trades) {
-        return Collections.EMPTY_LIST;
+        List<TradeItemDisplay> filteredTrades = new ArrayList<>();
+        for (TradeItemDisplay trade : trades) {
+            if (favourites.contains(new ImmutablePair<>(trade.tgID, trade.tradeGroupOrder))) {
+                filteredTrades.add(trade);
+            }
+        }
+        return filteredTrades;
+    }
+
+    public boolean isFavourite(TradeItemDisplay display) {
+        return favourites.contains(new ImmutablePair<>(display.tgID, display.tradeGroupOrder));
     }
 }
