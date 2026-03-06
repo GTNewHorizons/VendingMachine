@@ -82,10 +82,7 @@ public class EventHandler {
         NetBulkSync.sendReset(mpPlayer, true, true);
     }
 
-    @SubscribeEvent
-    public void onClientConnect(FMLNetworkEvent.ClientConnectedToServerEvent event) {
-        pendingWorldInit = true;
-    }
+
 
     @SubscribeEvent
     public void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
@@ -151,22 +148,6 @@ public class EventHandler {
 
         for (EntityPlayerMP player : server.getConfigurationManager().playerEntityList) {
             livingPlayerTick(player);
-        }
-    }
-
-    @SubscribeEvent
-    public void onClientTick(TickEvent.ClientTickEvent event) {
-        if (event.phase != TickEvent.Phase.END) return;
-
-        if (pendingWorldInit) {
-            Minecraft mc = Minecraft.getMinecraft();
-
-            if (mc.theWorld != null) {
-                SaveLoadHandler.INSTANCE.readFavourites(
-                    NameCache.INSTANCE.getUUIDFromPlayer(mc.thePlayer),
-                    FavouritesTracker.INSTANCE.computeWorldKey());
-                pendingWorldInit = false;
-            }
         }
     }
 

@@ -1,5 +1,7 @@
 package com.cubefury.vendingmachine;
 
+import com.cubefury.vendingmachine.handlers.ClientEventHandler;
+import cpw.mods.fml.common.FMLCommonHandler;
 import net.minecraftforge.common.MinecraftForge;
 
 import com.cubefury.vendingmachine.integration.nei.NEIConfig;
@@ -29,6 +31,10 @@ public class ClientProxy extends CommonProxy {
     @Override
     public void registerHandlers() {
         super.registerHandlers();
+        MinecraftForge.EVENT_BUS.register(ClientEventHandler.INSTANCE);
+        FMLCommonHandler.instance()
+            .bus()
+            .register(ClientEventHandler.INSTANCE);
     }
 
 }
