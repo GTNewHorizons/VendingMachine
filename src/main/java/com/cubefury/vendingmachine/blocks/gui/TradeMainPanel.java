@@ -50,7 +50,6 @@ public class TradeMainPanel extends ModularPanel {
 
     @Override
     public boolean onKeyPressed(char typedChar, int keyCode) {
-        // left or right shift
         if (keyCode == Keyboard.KEY_LSHIFT || keyCode == Keyboard.KEY_RSHIFT) {
             shiftHeld = true;
         }
@@ -62,7 +61,6 @@ public class TradeMainPanel extends ModularPanel {
 
     @Override
     public boolean onKeyRelease(char typedChar, int keyCode) {
-        // left or right shift
         if (keyCode == Keyboard.KEY_LSHIFT || keyCode == Keyboard.KEY_RSHIFT) {
             shiftHeld = false;
         }
