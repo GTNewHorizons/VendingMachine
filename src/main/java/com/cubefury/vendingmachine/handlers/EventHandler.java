@@ -40,7 +40,6 @@ public class EventHandler {
     public static final EventHandler INSTANCE = new EventHandler();
 
     private static final ArrayDeque<FutureTask> serverTasks = new ArrayDeque<>();
-    private static boolean pendingWorldInit = false;
     private static Thread serverThread = null;
     private final ArrayDeque<EntityPlayerMP> opQueue = new ArrayDeque<>();
     private boolean openToLAN = false;
