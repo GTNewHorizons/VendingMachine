@@ -47,6 +47,10 @@ public class FavouritesTracker {
             || host.matches("^172\\.(1[6-9]|2\\d|3[0-1])\\..*");
     }
 
+    private static String sanitizeFilename(String s) {
+        return s.replaceAll("[<>:\"/\\\\|?*]", "_");
+    }
+
     public String computeWorldKey() {
         Minecraft mc = Minecraft.getMinecraft();
 
@@ -72,10 +76,10 @@ public class FavouritesTracker {
 
         if (isPrivateAddress(host)) {
             // Because open to lan does not have a constant port, we don't include port for LAN saves
-            return "LAN_" + host;
+            return sanitizeFilename("LAN_" + host);
         }
 
-        return "MP_" + host + port;
+        return sanitizeFilename("MP_" + host + port);
     }
 
     public void saveFavourites() {
