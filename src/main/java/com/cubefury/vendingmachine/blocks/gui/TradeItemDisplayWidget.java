@@ -18,6 +18,7 @@ import com.cleanroommc.modularui.widgets.ItemDisplayWidget;
 import com.cubefury.vendingmachine.blocks.MTEVendingMachine;
 import com.cubefury.vendingmachine.gui.GuiTextures;
 import com.cubefury.vendingmachine.gui.WidgetThemes;
+import com.cubefury.vendingmachine.trade.FavouritesTracker;
 import com.cubefury.vendingmachine.util.Translator;
 
 public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interactable {
@@ -66,9 +67,18 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
     }
 
     public @NotNull Interactable.Result onMousePressed(int mouseButton) {
+        // Only do something if either shift or control is held exclusively
+        if (rootPanel.shiftHeld == rootPanel.ctrlHeld) {
+            return Result.IGNORE;
+        }
         if (rootPanel.shiftHeld) {
             rootPanel.attemptPurchase(this.display);
             pressed = true;
+            return Result.SUCCESS;
+        }
+        if (rootPanel.ctrlHeld) {
+            FavouritesTracker.INSTANCE.toggleFavourites(this.display.tgID, this.display.tradeGroupOrder);
+            rootPanel.forceGuiRefresh();
             return Result.SUCCESS;
         }
         return Result.IGNORE;
@@ -98,6 +108,9 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
                 this.overlay(
                     IKey.str(display.hasCooldown ? this.display.cooldownText : "")
                         .style(IKey.WHITE));
+                if (this.display.isFavourite) {
+                    GuiTextures.FAVOURITE_SPRITE.draw(context, 4, 4, 6, 6, widgetTheme.getTheme());
+                }
             } else if (this.displayType == DisplayType.LIST) {
                 GuiDraw.drawText("" + this.display.display.stackSize, 6, 4, 0.9f, textColor, false);
                 GuiDraw.drawItem(item, 24, 2, 9, 9, context.getCurrentDrawingZ());
@@ -130,6 +143,9 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
                     IKey.str(display.hasCooldown && this.display.enabled ? this.display.cooldownText : "")
                         .style(IKey.WHITE)
                         .scale(0.9f));
+                if (this.display.isFavourite) {
+                    GuiTextures.FAVOURITE_SPRITE.draw(context, 139, 2, 10, 10, widgetTheme.getTheme());
+                }
             }
         }
     }

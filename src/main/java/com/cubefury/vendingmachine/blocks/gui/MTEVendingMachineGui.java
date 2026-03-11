@@ -46,6 +46,7 @@ import com.cubefury.vendingmachine.network.handlers.NetTradeDisplaySync;
 import com.cubefury.vendingmachine.storage.NameCache;
 import com.cubefury.vendingmachine.trade.CurrencyItem;
 import com.cubefury.vendingmachine.trade.CurrencyType;
+import com.cubefury.vendingmachine.trade.FavouritesTracker;
 import com.cubefury.vendingmachine.trade.TradeCategory;
 import com.cubefury.vendingmachine.trade.TradeDatabase;
 import com.cubefury.vendingmachine.trade.TradeManager;
@@ -73,6 +74,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
 
     private PosGuiData guiData;
     private final PagedWidget.Controller tabController;
+    public IWidget favouritesTabWidget;
     private final SearchBar searchBar;
 
     public static String lastSearch = "";
@@ -100,6 +102,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
             ejectSingleCoin.put(type, false);
         }
 
+        this.tradeCategories.add(TradeCategory.FAVOURITES);
         this.tradeCategories.add(TradeCategory.ALL);
         this.tradeCategories.addAll(TradeDatabase.INSTANCE.getTradeCategories());
 
@@ -136,6 +139,11 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
         ModularPanel panel = new TradeMainPanel("MTEMultiBlockBase", this, guiData, syncManager)
             .size(178, CUSTOM_UI_HEIGHT)
             .padding(4);
+        panel.onCloseAction(() -> {
+            if (VendingMachine.proxy.isClient()) {
+                FavouritesTracker.INSTANCE.saveFavourites();
+            }
+        });
         panel.child(createCategoryTabs(this.tabController));
         Flow mainColumn = new Column().width(170);
         if (VendingMachine.proxy.isClient()) { // client side sort and filtering
@@ -213,7 +221,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
 
     public IWidget createCategoryTabs(PagedWidget.Controller tabController) {
         Flow tabColumn = new Column().width(40)
-            .height(100)
+            .height(300)
             .left(-29)
             .top(40)
             .coverChildren();
@@ -235,6 +243,13 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                                 this.tradeCategories.get(index)
                                     .getUnlocalized_name()));
                     }));
+
+            if (tradeCategories.get(i) == TradeCategory.FAVOURITES) {
+                favouritesTabWidget = tabColumn.getChildren()
+                    .get(
+                        tabColumn.getChildren()
+                            .size() - 1);
+            }
         }
         return tabColumn;
     }
@@ -248,7 +263,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
             .child(
                 IKey.str(title)
                     .asWidget()
-                    .alignment(Alignment.Center)
+                    .textAlign(Alignment.Center)
                     .widgetTheme(GTWidgetThemes.TEXT_TITLE)
                     .marginLeft(5)
                     .marginRight(5)
@@ -481,6 +496,9 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
             builder.addLine(
                 IKey.str(Translator.translate("vendingmachine.gui.trade_hint"))
                     .style(IKey.GRAY));
+            builder.addLine(
+                IKey.str(Translator.translate("vendingmachine.gui.favourite_hint"))
+                    .style(IKey.GRAY));
         }
     }
 
@@ -509,7 +527,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
             tradeList.child(statusRow);
 
             // Higher first row top margin
-            Flow row = new TradeRow().height(TILE_ITEM_HEIGHT +2).width(TRADE_ROW_WIDTH).marginLeft(2);
+            Flow row = new TradeRow().height(TILE_ITEM_HEIGHT + 4).width(TRADE_ROW_WIDTH).marginLeft(2);
 
             // Tiles Display
             for (int i = 0; i < MTEVendingMachine.MAX_TRADES; i++) {
@@ -536,7 +554,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                 if (i % TILE_ITEMS_PER_ROW == TILE_ITEMS_PER_ROW - 1) {
                     tradeList.child(row);
 
-                    row = new TradeRow().height(TILE_ITEM_HEIGHT +2).width(TRADE_ROW_WIDTH).marginLeft(2);
+                    row = new TradeRow().height(TILE_ITEM_HEIGHT + 4).width(TRADE_ROW_WIDTH).marginLeft(2);
                 }
             }
             if (row.hasChildren()) {
@@ -733,6 +751,17 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
     }
 
     public void updateTradeDisplay(Map<TradeCategory, List<TradeItemDisplay>> trades) {
+        if (favouritesTabWidget != null) {
+            favouritesTabWidget.setEnabled(
+                !trades.get(TradeCategory.FAVOURITES)
+                    .isEmpty());
+            if (
+                trades.get(TradeCategory.FAVOURITES)
+                    .isEmpty() && this.tabController.getActivePageIndex() == 0
+            ) {
+                this.tabController.setPage(1);
+            }
+        }
         this.updateTradeDisplay(trades, displayedTradesTiles);
         this.updateTradeDisplay(trades, displayedTradesList);
     }

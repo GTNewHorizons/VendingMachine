@@ -26,15 +26,10 @@ public class CoinButton extends ToggleButton {
         if (!panel.shiftHeld) {
             return Result.IGNORE;
         }
-        switch (mouseButton) {
-            case 0:
-                next();
-                Interactable.playButtonClickSound();
-                return Result.SUCCESS;
-            case 1:
-                prev();
-                Interactable.playButtonClickSound();
-                return Result.SUCCESS;
+        if (mouseButton == 0) {
+            next();
+            Interactable.playButtonClickSound();
+            return Result.SUCCESS;
         }
         return Result.IGNORE;
     }

@@ -12,6 +12,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
 import org.jetbrains.annotations.NotNull;
+import org.lwjgl.input.Keyboard;
 
 import com.cleanroommc.modularui.factory.PosGuiData;
 import com.cleanroommc.modularui.screen.ModularPanel;
@@ -19,6 +20,7 @@ import com.cleanroommc.modularui.screen.ModularScreen;
 import com.cleanroommc.modularui.value.sync.PanelSyncManager;
 import com.cubefury.vendingmachine.VMConfig;
 import com.cubefury.vendingmachine.network.handlers.NetResetVMUser;
+import com.cubefury.vendingmachine.trade.FavouritesTracker;
 import com.cubefury.vendingmachine.trade.TradeCategory;
 import com.cubefury.vendingmachine.trade.TradeDatabase;
 import com.cubefury.vendingmachine.trade.TradeGroup;
@@ -31,6 +33,7 @@ import codechicken.nei.api.ItemFilter;
 public class TradeMainPanel extends ModularPanel {
 
     public boolean shiftHeld = false;
+    public boolean ctrlHeld = false;
     private final MTEVendingMachineGui gui;
     private final PanelSyncManager syncManager;
     private final PosGuiData guiData;
@@ -47,24 +50,29 @@ public class TradeMainPanel extends ModularPanel {
 
     @Override
     public boolean onKeyPressed(char typedChar, int keyCode) {
-        // left or right shift
-        if (keyCode == 0x2A || keyCode == 0x36) {
+        if (keyCode == Keyboard.KEY_LSHIFT || keyCode == Keyboard.KEY_RSHIFT) {
             shiftHeld = true;
+        }
+        if (keyCode == Keyboard.KEY_LCONTROL || keyCode == Keyboard.KEY_RCONTROL) {
+            ctrlHeld = true;
         }
         return super.onKeyPressed(typedChar, keyCode);
     }
 
     @Override
     public boolean onKeyRelease(char typedChar, int keyCode) {
-        // left or right shift
-        if (keyCode == 0x2A || keyCode == 0x36) {
+        if (keyCode == Keyboard.KEY_LSHIFT || keyCode == Keyboard.KEY_RSHIFT) {
             shiftHeld = false;
+        }
+        if (keyCode == Keyboard.KEY_LCONTROL || keyCode == Keyboard.KEY_RCONTROL) {
+            ctrlHeld = false;
+            gui.setForceRefresh();
         }
         return super.onKeyRelease(typedChar, keyCode);
     }
 
     public void updateGui() {
-        if (shiftHeld) {
+        if (shiftHeld || ctrlHeld) {
             this.updateTradeInformation(gui.getCurrentTradeDisplayData());
         } else {
             Map<TradeCategory, List<TradeItemDisplay>> trades = formatTrades();
@@ -74,6 +82,12 @@ public class TradeMainPanel extends ModularPanel {
 
     private void updateTradeInformation(Map<TradeCategory, List<TradeItemDisplay>> currentData) {
         Map<UUID, Map<Integer, TradeItemDisplay>> tradeMap = new HashMap<>();
+        List<TradeItemDisplay> favouritedTrades = FavouritesTracker.INSTANCE
+            .filterTrades(currentData.get(TradeCategory.ALL));
+        if (gui.favouritesTabWidget != null) {
+            gui.favouritesTabWidget.setEnabled(!favouritedTrades.isEmpty());
+        }
+        currentData.put(TradeCategory.FAVOURITES, favouritedTrades);
         for (TradeItemDisplay tid : TradeManager.INSTANCE.tradeData) {
             tradeMap.putIfAbsent(tid.tgID, new HashMap<>());
             tradeMap.get(tid.tgID)
@@ -89,6 +103,7 @@ public class TradeMainPanel extends ModularPanel {
                 tid.cooldown = cur.cooldown;
                 tid.cooldownText = cur.cooldownText;
                 tid.tradeableNow = cur.tradeableNow;
+                tid.isFavourite = FavouritesTracker.INSTANCE.isFavourite(tid);
             }
         });
     }
@@ -134,6 +149,7 @@ public class TradeMainPanel extends ModularPanel {
             if (group == null) {
                 continue;
             }
+            tid.isFavourite = FavouritesTracker.INSTANCE.isFavourite(tid);
             TradeCategory category = group.getCategory();
             trades.putIfAbsent(category, new ArrayList<>());
             trades.get(category)
@@ -160,9 +176,17 @@ public class TradeMainPanel extends ModularPanel {
                 if (b.display.getItem() == null) return -1;
 
                 if (sortMode == SortMode.ALPHABET) {
+                    if (a.isFavourite != b.isFavourite) {
+                        return Boolean.compare(b.isFavourite, a.isFavourite);
+                    }
                     return (a.display.getDisplayName()
                         .compareTo(b.display.getDisplayName()));
                 } else if (sortMode == SortMode.SMART) {
+                    // favourited
+                    if (a.isFavourite != b.isFavourite) {
+                        return Boolean.compare(b.isFavourite, a.isFavourite);
+                    }
+
                     // enabled or has cooldown
                     int rankA = getRank(a);
                     int rankB = getRank(b);
@@ -191,6 +215,9 @@ public class TradeMainPanel extends ModularPanel {
             });
             trades.replace(category, filteredTrades);
         }
+        List<TradeItemDisplay> favouritedTrades = FavouritesTracker.INSTANCE
+            .filterTrades(trades.get(TradeCategory.ALL));
+        trades.put(TradeCategory.FAVOURITES, favouritedTrades);
         return trades;
     }
 
@@ -206,6 +233,10 @@ public class TradeMainPanel extends ModularPanel {
 
     public void attemptPurchase(TradeItemDisplay display) {
         gui.attemptPurchase(display);
+    }
+
+    public void forceGuiRefresh() {
+        gui.setForceRefresh();
     }
 
     @Override

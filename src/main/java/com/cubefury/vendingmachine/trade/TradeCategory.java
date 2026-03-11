@@ -9,6 +9,7 @@ import com.cubefury.vendingmachine.VendingMachine;
 
 public enum TradeCategory {
 
+    FAVOURITES("favourites", "vendingmachine.category.favourites", "gui/icons/favourites.png"),
     UNKNOWN("unknown", "vendingmachine.category.unknown", "gui/icons/unknown.png"),
     ALL("all", "vendingmachine.category.all", "gui/icons/all.png"),
     COMPONENTS("components", "vendingmachine.category.components", "gui/icons/components.png"),
