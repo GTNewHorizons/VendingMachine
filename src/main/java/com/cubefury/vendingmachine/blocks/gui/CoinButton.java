@@ -27,6 +27,7 @@ public class CoinButton extends ToggleButton {
             return Result.IGNORE;
         }
         if (mouseButton == 0) {
+            next();
             Interactable.playButtonClickSound();
             return Result.SUCCESS;
         }

@@ -3,6 +3,7 @@ package com.cubefury.vendingmachine;
 import net.minecraftforge.common.MinecraftForge;
 
 import com.cubefury.vendingmachine.handlers.ClientEventHandler;
+import com.cubefury.vendingmachine.handlers.SaveLoadHandler;
 import com.cubefury.vendingmachine.integration.nei.NEIConfig;
 
 import cpw.mods.fml.common.FMLCommonHandler;
@@ -22,6 +23,7 @@ public class ClientProxy extends CommonProxy {
     public void init(FMLInitializationEvent event) {
         MinecraftForge.EVENT_BUS.register(new NEIConfig());
         super.init(event);
+        SaveLoadHandler.INSTANCE.clientInit();
     }
 
     public boolean isClient() {

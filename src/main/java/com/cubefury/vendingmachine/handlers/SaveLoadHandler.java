@@ -33,10 +33,11 @@ public class SaveLoadHandler {
     public static SaveLoadHandler INSTANCE = new SaveLoadHandler();
 
     private File fileDatabase = null;
-    private File dirFavourites = null;
     private File fileNames = null;
     private File dirTradeState = null;
     private File dirBackupTradeState = null;
+
+    private File dirFavourites = null;
 
     private SaveLoadHandler() {}
 
@@ -48,7 +49,6 @@ public class SaveLoadHandler {
         }
 
         fileDatabase = new File(VMConfig.developer.trade_db_dir, "tradeDatabase.json");
-        dirFavourites = new File(VMConfig.developer.trade_db_dir, "favourites");
         dirTradeState = new File(VMConfig.world_dir, "tradeState");
         dirBackupTradeState = new File(VMConfig.world_dir, "backup/tradeState");
         fileNames = new File(VMConfig.world_dir, "names.json");
@@ -60,6 +60,14 @@ public class SaveLoadHandler {
         loadDatabase();
         loadTradeState(null);
         loadNames();
+    }
+
+    public void clientInit() {
+        dirFavourites = new File(VMConfig.developer.trade_db_dir, "favourites");
+
+        if (dirFavourites.mkdirs()) {
+            VendingMachine.LOG.info("Created favourited trades directory");
+        }
     }
 
     public void createFilesAndDirectories() {
@@ -83,9 +91,6 @@ public class SaveLoadHandler {
         }
         if (dirTradeState.mkdirs()) {
             VendingMachine.LOG.info("Created trade state directory");
-        }
-        if (dirFavourites.mkdirs()) {
-            VendingMachine.LOG.info("Created favourited trades directory");
         }
     }
 
