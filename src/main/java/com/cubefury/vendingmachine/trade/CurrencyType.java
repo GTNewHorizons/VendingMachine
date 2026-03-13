@@ -1,5 +1,8 @@
 package com.cubefury.vendingmachine.trade;
 
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+
 import com.cleanroommc.modularui.drawable.UITexture;
 import com.cubefury.vendingmachine.VendingMachine;
 import com.cubefury.vendingmachine.util.Translator;
@@ -44,6 +47,11 @@ public enum CurrencyType {
 
     public static CurrencyType getTypeFromId(String type) {
         return CurrencyItem.typeMap.get(type);
+    }
+
+    public boolean isMatchingType(ItemStack item) {
+        return Item.itemRegistry.getNameForObject(item.getItem())
+            .startsWith(itemPrefix);
     }
 
     @SideOnly(Side.CLIENT)
