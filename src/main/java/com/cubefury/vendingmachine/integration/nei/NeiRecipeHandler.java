@@ -129,11 +129,21 @@ public class NeiRecipeHandler extends TemplateRecipeHandler {
     public void loadUsageRecipes(ItemStack ingredient) {
         setTextColors();
         for (NeiRecipeCache.CacheEntry entry : NeiRecipeCache.recipeCache) {
+            boolean addRecipe = false;
             for (BigItemStack compareTo : entry.trade().fromItems) {
                 if (matchStack(ingredient, compareTo)) {
-                    this.arecipes.add(new CachedTradeRecipe(entry.trade(), entry.requirements()));
+                    addRecipe = true;
                     break;
                 }
+            }
+            for (CurrencyItem currency : entry.trade().fromCurrency) {
+                if (currency.type.isMatchingType(ingredient)) {
+                    addRecipe = true;
+                    break;
+                }
+            }
+            if (addRecipe) {
+                this.arecipes.add(new CachedTradeRecipe(entry.trade(), entry.requirements()));
             }
         }
     }
