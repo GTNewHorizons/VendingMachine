@@ -39,6 +39,7 @@ public class TradeMainPanel extends ModularPanel {
     private final PosGuiData guiData;
     private EntityPlayer player = null;
     private int ticksOpen = 0;
+    public UUID currentSelected = null;
 
     public TradeMainPanel(@NotNull String name, MTEVendingMachineGui gui, PosGuiData guiData,
         PanelSyncManager syncManager) {
@@ -129,6 +130,19 @@ public class TradeMainPanel extends ModularPanel {
             MTEVendingMachineGui.resetForceRefresh();
             TradeManager.INSTANCE.hasCurrencyUpdate = false;
         }
+        TradeCategory activeCategory = gui.getActiveTradeCategory();
+        Map<TradeCategory, List<TradeItemDisplayWidget>> displayedTrades = VMConfig.gui.display_type == DisplayType.TILE
+            ? gui.displayedTradesTiles
+            : gui.displayedTradesList;
+
+        this.currentSelected = null;
+        for (TradeItemDisplayWidget display : displayedTrades.get(activeCategory)) {
+            if (display.isBelowMouse()) {
+                this.currentSelected = display.getDisplay().tgID;
+                break;
+            }
+        }
+
         this.ticksOpen += 1;
     }
 
