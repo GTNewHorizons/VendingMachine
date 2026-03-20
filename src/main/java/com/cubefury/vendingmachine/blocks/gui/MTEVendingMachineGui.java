@@ -49,6 +49,7 @@ import com.cubefury.vendingmachine.trade.CurrencyType;
 import com.cubefury.vendingmachine.trade.FavouritesTracker;
 import com.cubefury.vendingmachine.trade.TradeCategory;
 import com.cubefury.vendingmachine.trade.TradeDatabase;
+import com.cubefury.vendingmachine.trade.TradeGroup;
 import com.cubefury.vendingmachine.trade.TradeManager;
 import com.cubefury.vendingmachine.util.BigItemStack;
 import com.cubefury.vendingmachine.util.Translator;
@@ -67,8 +68,8 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
     private boolean ejectItems = false;
     private boolean ejectCoins = false;
     private final Map<CurrencyType, Boolean> ejectSingleCoin = new HashMap<>();
-    private final Map<TradeCategory, List<TradeItemDisplayWidget>> displayedTradesTiles = new HashMap<>();
-    private final Map<TradeCategory, List<TradeItemDisplayWidget>> displayedTradesList = new HashMap<>();
+    public final Map<TradeCategory, List<TradeItemDisplayWidget>> displayedTradesTiles = new HashMap<>();
+    public final Map<TradeCategory, List<TradeItemDisplayWidget>> displayedTradesList = new HashMap<>();
     private final List<TradeCategory> tradeCategories = new ArrayList<>();
     private final List<InterceptingSlot> inputSlots = new ArrayList<>();
 
@@ -252,6 +253,10 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
             }
         }
         return tabColumn;
+    }
+
+    public TradeCategory getActiveTradeCategory() {
+        return this.tradeCategories.get(this.tabController.getActivePageIndex());
     }
 
     // why is the original method private lmao
@@ -492,6 +497,20 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                 }
                 builder.emptyLine();
             }
+
+            TradeGroup tg = TradeDatabase.INSTANCE.getTradeGroupFromId(cur.tgID);
+            if (
+                tg != null && tg.getTrades()
+                    .size() > 1
+            ) {
+                builder.addLine(
+                    IKey.str(
+                        Translator.translate(
+                            "vendingmachine.gui.shared_trades_tooltip",
+                            tg.getTrades()
+                                .size() - 1)));
+            }
+            builder.emptyLine();
 
             builder.addLine(
                 IKey.str(Translator.translate("vendingmachine.gui.trade_hint"))
