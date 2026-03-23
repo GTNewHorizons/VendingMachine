@@ -95,9 +95,6 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
                 if (this.display.tradeableNow) {
                     GuiDraw.drawBorderInsideLTRB(1, 1, 45, 23, 2, 0x883CFF00);
                 }
-                if (this.display.tgID.equals(this.rootPanel.currentSelected)) {
-                    GuiDraw.drawBorderInsideLTRB(1, 1, 45, 23, 1, 0xAA039BE5);
-                }
                 if (!this.checkVmActive() || this.display.hasCooldown || !this.display.enabled) {
                     GuiDraw.drawRoundedRect(
                         1,
@@ -107,6 +104,9 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
                         0xBB000000,
                         1,
                         1);
+                }
+                if (this.display.tgID.equals(this.rootPanel.currentSelected)) {
+                    GuiDraw.drawBorderInsideLTRB(1, 1, 45, 23, 1, 0xAA039BE5);
                 }
                 this.overlay(
                     IKey.str(display.hasCooldown ? this.display.cooldownText : "")
@@ -134,9 +134,6 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
                     3,
                     MTEVendingMachineGui.LIST_ITEM_HEIGHT - 3,
                     this.display.tradeableNow ? 0x883CFF00 : 0x88333333);
-                if (this.display.tgID.equals(this.rootPanel.currentSelected)) {
-                    GuiDraw.drawRect(1, 1, 2, MTEVendingMachineGui.LIST_ITEM_HEIGHT - 3, 0xAA039BE5);
-                }
                 if (!this.checkVmActive() || this.display.hasCooldown || !this.display.enabled) {
                     GuiDraw.drawRect(
                         1,
@@ -144,6 +141,9 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
                         MTEVendingMachineGui.LIST_ITEM_WIDTH - 2,
                         MTEVendingMachineGui.LIST_ITEM_HEIGHT - 2,
                         0xBB000000);
+                }
+                if (this.display.tgID.equals(this.rootPanel.currentSelected)) {
+                    GuiDraw.drawRect(1, 1, 2, MTEVendingMachineGui.LIST_ITEM_HEIGHT - 3, 0xAA039BE5);
                 }
                 this.overlay(
                     IKey.str(display.hasCooldown && this.display.enabled ? this.display.cooldownText : "")
