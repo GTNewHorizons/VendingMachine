@@ -105,6 +105,9 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
                         1,
                         1);
                 }
+                if (this.display.tgID.equals(this.rootPanel.currentSelected)) {
+                    GuiDraw.drawBorderInsideLTRB(1, 1, 45, 23, 1, 0xAA039BE5);
+                }
                 this.overlay(
                     IKey.str(display.hasCooldown ? this.display.cooldownText : "")
                         .style(IKey.WHITE));
@@ -138,6 +141,9 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
                         MTEVendingMachineGui.LIST_ITEM_WIDTH - 2,
                         MTEVendingMachineGui.LIST_ITEM_HEIGHT - 2,
                         0xBB000000);
+                }
+                if (this.display.tgID.equals(this.rootPanel.currentSelected)) {
+                    GuiDraw.drawRect(1, 1, 2, MTEVendingMachineGui.LIST_ITEM_HEIGHT - 3, 0xAA039BE5);
                 }
                 this.overlay(
                     IKey.str(display.hasCooldown && this.display.enabled ? this.display.cooldownText : "")
