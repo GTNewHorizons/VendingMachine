@@ -90,9 +90,9 @@ public class EventHandler {
         if (!server.isDedicatedServer()) {
             boolean tmp = openToLAN;
             openToLAN = server instanceof IntegratedServer iServer && iServer.getPublic();
-            if (openToLAN && !tmp) opQueue.addAll(server.getConfigurationManager().playerEntityList);
-        } else if (!openToLAN) {
-            openToLAN = true;
+            if (openToLAN && !tmp) {
+                opQueue.addAll(server.getConfigurationManager().playerEntityList);
+            }
         }
 
         while (!opQueue.isEmpty()) {
