@@ -132,7 +132,9 @@ public class VendingMachine {
     }
 
     @Mod.EventHandler
-    public void serverStop(FMLServerStoppedEvent event) {}
+    public void serverStop(FMLServerStoppedEvent event) {
+        proxy.serverStopped(event);
+    }
 
     @Mod.EventHandler
     public void missingMapping(FMLMissingMappingsEvent event) {

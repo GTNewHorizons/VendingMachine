@@ -2,8 +2,6 @@ package com.cubefury.vendingmachine.handlers;
 
 import java.util.ArrayDeque;
 import java.util.Collections;
-import java.util.concurrent.Callable;
-import java.util.concurrent.FutureTask;
 
 import javax.annotation.Nonnull;
 
@@ -12,8 +10,6 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.integrated.IntegratedServer;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
-
-import org.apache.commons.lang3.Validate;
 
 import com.cleanroommc.modularui.factory.PosGuiData;
 import com.cleanroommc.modularui.screen.ModularContainer;
@@ -26,9 +22,6 @@ import com.cubefury.vendingmachine.network.handlers.NetBulkSync;
 import com.cubefury.vendingmachine.network.handlers.NetTradeDbSync;
 import com.cubefury.vendingmachine.storage.NameCache;
 import com.cubefury.vendingmachine.trade.TradeManager;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListenableFutureTask;
 
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.PlayerEvent;
@@ -37,8 +30,6 @@ import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
 
 public class EventHandler {
 
-    private static final ArrayDeque<FutureTask> serverTasks = new ArrayDeque<>();
-    private static Thread serverThread = null;
     private final ArrayDeque<EntityPlayerMP> opQueue = new ArrayDeque<>();
     private boolean openToLAN = false;
 
@@ -88,36 +79,9 @@ public class EventHandler {
         }
     }
 
-    @SuppressWarnings("UnstableApiUsage")
-    public static <T> ListenableFuture<T> scheduleServerTask(Callable<T> task) {
-        Validate.notNull(task);
-
-        if (Thread.currentThread() != serverThread) {
-            ListenableFutureTask<T> lft = ListenableFutureTask.create(task);
-
-            synchronized (serverTasks) {
-                serverTasks.add(lft);
-                return lft;
-            }
-        } else {
-            try {
-                return Futures.immediateFuture(task.call());
-            } catch (Exception exception) {
-                return Futures.immediateFailedCheckedFuture(exception);
-            }
-        }
-    }
-
     @SubscribeEvent
     public void onServerTick(TickEvent.ServerTickEvent event) {
         if (event.phase == TickEvent.Phase.START) {
-            if (serverThread == null) serverThread = Thread.currentThread();
-
-            synchronized (serverTasks) {
-                while (!serverTasks.isEmpty()) serverTasks.poll()
-                    .run();
-            }
-
             return;
         }
 
@@ -143,7 +107,7 @@ public class EventHandler {
         }
     }
 
-    private void livingPlayerTick(@Nonnull EntityPlayerMP player) {
+    private static void livingPlayerTick(@Nonnull EntityPlayerMP player) {
         if (
             !VMConfig.vendingMachineSettings.restock_notifications_enabled || player.ticksExisted == 0
                 || player.ticksExisted % VMConfig.vendingMachineSettings.restock_notifications_interval != 0
@@ -154,7 +118,7 @@ public class EventHandler {
         TradeManager.INSTANCE.sendTradeNotifications(player);
     }
 
-    private void terminateVendingSession(@Nonnull EntityPlayer player) {
+    private static void terminateVendingSession(@Nonnull EntityPlayer player) {
         if (VendingMachine.proxy.isClient()) {
             return;
         }

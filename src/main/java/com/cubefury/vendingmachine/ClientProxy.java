@@ -8,14 +8,8 @@ import com.cubefury.vendingmachine.integration.nei.NEIConfig;
 
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
-import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 
 public final class ClientProxy extends CommonProxy {
-
-    @Override
-    public void preInit(FMLPreInitializationEvent event) {
-        super.preInit(event);
-    }
 
     // Override CommonProxy methods here, if you want a different behaviour on the client (e.g. registering renders).
     // Don't forget to call the super methods as well.
@@ -32,7 +26,7 @@ public final class ClientProxy extends CommonProxy {
     }
 
     @Override
-    public void registerHandlers() {
+    protected void registerHandlers() {
         super.registerHandlers();
         final ClientEventHandler handler = new ClientEventHandler();
         MinecraftForge.EVENT_BUS.register(handler);
