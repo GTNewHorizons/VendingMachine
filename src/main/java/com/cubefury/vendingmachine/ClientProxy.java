@@ -10,7 +10,7 @@ import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 
-public class ClientProxy extends CommonProxy {
+public final class ClientProxy extends CommonProxy {
 
     @Override
     public void preInit(FMLPreInitializationEvent event) {
@@ -26,6 +26,7 @@ public class ClientProxy extends CommonProxy {
         SaveLoadHandler.INSTANCE.clientInit();
     }
 
+    @Override
     public boolean isClient() {
         return true;
     }
