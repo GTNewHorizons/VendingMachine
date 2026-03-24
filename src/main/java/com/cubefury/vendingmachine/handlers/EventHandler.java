@@ -37,8 +37,6 @@ import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
 
 public class EventHandler {
 
-    public static final EventHandler INSTANCE = new EventHandler();
-
     private static final ArrayDeque<FutureTask> serverTasks = new ArrayDeque<>();
     private static Thread serverThread = null;
     private final ArrayDeque<EntityPlayerMP> opQueue = new ArrayDeque<>();

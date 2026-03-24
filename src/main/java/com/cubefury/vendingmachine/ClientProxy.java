@@ -33,10 +33,11 @@ public class ClientProxy extends CommonProxy {
     @Override
     public void registerHandlers() {
         super.registerHandlers();
-        MinecraftForge.EVENT_BUS.register(ClientEventHandler.INSTANCE);
+        final ClientEventHandler handler = new ClientEventHandler();
+        MinecraftForge.EVENT_BUS.register(handler);
         FMLCommonHandler.instance()
             .bus()
-            .register(ClientEventHandler.INSTANCE);
+            .register(handler);
     }
 
 }

@@ -81,7 +81,6 @@ public class VendingMachine {
 
         network = NetworkRegistry.INSTANCE.newSimpleChannel(CHANNEL);
 
-        proxy.registerHandlers();
         PacketTypeRegistry.INSTANCE.init();
 
         // MUI2

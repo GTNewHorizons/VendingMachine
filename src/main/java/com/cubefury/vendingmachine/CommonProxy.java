@@ -21,6 +21,7 @@ public class CommonProxy {
     // GameRegistry." (Remove if not needed)
     public void preInit(FMLPreInitializationEvent event) {
         VendingMachine.LOG.info("Loading Vending Machine " + Tags.VERSION);
+        this.registerHandlers();
     }
 
     // load "Do your mod setup. Build whatever data structures you care about. Register recipes." (Remove if not needed)
@@ -45,9 +46,10 @@ public class CommonProxy {
     }
 
     public void registerHandlers() {
-        MinecraftForge.EVENT_BUS.register(EventHandler.INSTANCE);
+        final EventHandler handler = new EventHandler();
+        MinecraftForge.EVENT_BUS.register(handler);
         FMLCommonHandler.instance()
             .bus()
-            .register(EventHandler.INSTANCE);
+            .register(handler);
     }
 }
