@@ -11,8 +11,7 @@ import cpw.mods.fml.common.network.FMLNetworkEvent;
 
 public class ClientEventHandler {
 
-    public static final ClientEventHandler INSTANCE = new ClientEventHandler();
-    private static boolean pendingWorldInit = false;
+    private boolean pendingWorldInit = false;
 
     @SubscribeEvent
     public void onClientConnect(FMLNetworkEvent.ClientConnectedToServerEvent event) {
