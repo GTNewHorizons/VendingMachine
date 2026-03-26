@@ -1,6 +1,5 @@
 package com.cubefury.vendingmachine.handlers;
 
-import java.util.ArrayDeque;
 import java.util.Collections;
 
 import javax.annotation.Nonnull;
@@ -30,7 +29,6 @@ import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
 
 public class EventHandler {
 
-    private final ArrayDeque<EntityPlayerMP> opQueue = new ArrayDeque<>();
     private boolean openToLAN = false;
 
     @SubscribeEvent
@@ -91,14 +89,11 @@ public class EventHandler {
             boolean tmp = openToLAN;
             openToLAN = server instanceof IntegratedServer iServer && iServer.getPublic();
             if (openToLAN && !tmp) {
-                opQueue.addAll(server.getConfigurationManager().playerEntityList);
-            }
-        }
-
-        while (!opQueue.isEmpty()) {
-            EntityPlayerMP playerMP = opQueue.poll();
-            if (playerMP != null) {
-                NameCache.INSTANCE.updateName(playerMP);
+                server.getConfigurationManager().playerEntityList.forEach(p -> {
+                    if (p != null) {
+                        NameCache.INSTANCE.updateName(p);
+                    }
+                });
             }
         }
 
