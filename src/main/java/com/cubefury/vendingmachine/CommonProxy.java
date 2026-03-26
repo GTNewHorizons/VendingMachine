@@ -47,10 +47,18 @@ public class CommonProxy {
 
         SaveLoadHandler.INSTANCE.init(server);
         this.taskScheduler = new ServerTaskScheduler(Thread.currentThread());
+        FMLCommonHandler.instance()
+            .bus()
+            .register(this.taskScheduler);
     }
 
     public void serverStopped(FMLServerStoppedEvent event) {
-        this.taskScheduler = null;
+        if (this.taskScheduler != null) {
+            FMLCommonHandler.instance()
+                .bus()
+                .unregister(this.taskScheduler);
+            this.taskScheduler = null;
+        }
     }
 
     public boolean isClient() {
