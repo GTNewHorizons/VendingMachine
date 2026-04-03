@@ -10,7 +10,6 @@ import net.minecraft.util.ResourceLocation;
 
 import com.cubefury.vendingmachine.VendingMachine;
 import com.cubefury.vendingmachine.api.util.Tuple2;
-import com.cubefury.vendingmachine.handlers.EventHandler;
 import com.cubefury.vendingmachine.storage.NameCache;
 
 import cpw.mods.fml.common.network.ByteBufUtils;
@@ -72,7 +71,8 @@ public class SerializedPacket implements IMessage {
                     .warn("Recieved a packet server side with an invalid ID: {}", message.getString("ID"));
                 return null;
             } else if (sender != null) {
-                EventHandler.scheduleServerTask(Executors.callable(() -> method.accept(new Tuple2<>(message, sender))));
+                VendingMachine.proxy
+                    .scheduleServerTask(Executors.callable(() -> method.accept(new Tuple2<>(message, sender))));
             }
 
             return null;

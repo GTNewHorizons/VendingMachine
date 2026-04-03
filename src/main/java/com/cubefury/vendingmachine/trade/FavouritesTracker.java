@@ -31,7 +31,7 @@ public class FavouritesTracker {
     private FavouritesTracker() {}
 
     public void toggleFavourites(UUID tradeGroupId, int tradeGroupOrder) {
-        Pair pair = new ImmutablePair<>(tradeGroupId, tradeGroupOrder);
+        Pair<UUID, Integer> pair = new ImmutablePair<>(tradeGroupId, tradeGroupOrder);
         if (favourites.contains(pair)) {
             favourites.remove(pair);
         } else {
