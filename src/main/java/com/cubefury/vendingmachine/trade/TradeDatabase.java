@@ -11,10 +11,12 @@ import java.util.UUID;
 
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.Constants;
 
 import com.cubefury.vendingmachine.VMConfig;
 import com.cubefury.vendingmachine.VendingMachine;
+import com.cubefury.vendingmachine.events.MarkDirtyDbEvent;
 import com.cubefury.vendingmachine.integration.betterquesting.BqAdapter;
 import com.cubefury.vendingmachine.integration.nei.NeiRecipeCache;
 
@@ -97,7 +99,7 @@ public class TradeDatabase {
         }
         if (isFileLoad && (VMConfig.developer.force_rewrite_database || newMetadataCount > 0)) {
             VendingMachine.LOG.info("Appended metadata to {} new trades", newMetadataCount);
-            DirtyDbMarker.markDirty();
+            MinecraftForge.EVENT_BUS.post(new MarkDirtyDbEvent());
         }
         if (VendingMachine.proxy.isClient()) {
             refreshNeiCache();

@@ -19,8 +19,6 @@ import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.SidedProxy;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
-import cpw.mods.fml.common.event.FMLMissingMappingsEvent;
-import cpw.mods.fml.common.event.FMLMissingMappingsEvent.MissingMapping;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
@@ -29,7 +27,6 @@ import cpw.mods.fml.common.event.FMLServerStoppingEvent;
 import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import cpw.mods.fml.common.registry.GameRegistry;
-import cpw.mods.fml.common.registry.GameRegistry.Type;
 import cpw.mods.fml.relauncher.Side;
 
 @Mod(
@@ -81,7 +78,6 @@ public class VendingMachine {
 
         network = NetworkRegistry.INSTANCE.newSimpleChannel(CHANNEL);
 
-        proxy.registerHandlers();
         PacketTypeRegistry.INSTANCE.init();
 
         // MUI2
@@ -117,7 +113,6 @@ public class VendingMachine {
     @Mod.EventHandler
     // postInit "Handle interaction with other mods, complete your setup based on this." (Remove if not needed)
     public void postInit(FMLPostInitializationEvent event) {
-
         proxy.postInit(event);
     }
 
@@ -133,14 +128,7 @@ public class VendingMachine {
     }
 
     @Mod.EventHandler
-    public void serverStop(FMLServerStoppedEvent event) {}
-
-    @Mod.EventHandler
-    public void missingMapping(FMLMissingMappingsEvent event) {
-        for (MissingMapping mapping : event.getAll()) {
-            if (mapping.type != Type.BLOCK) {
-                continue;
-            }
-        }
+    public void serverStop(FMLServerStoppedEvent event) {
+        proxy.serverStopped(event);
     }
 }
