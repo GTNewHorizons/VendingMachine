@@ -2,7 +2,6 @@ package com.cubefury.vendingmachine.blocks.gui;
 
 import org.jetbrains.annotations.NotNull;
 
-import com.cleanroommc.modularui.api.drawable.IDrawable;
 import com.cleanroommc.modularui.api.widget.Interactable;
 import com.cleanroommc.modularui.widgets.ToggleButton;
 import com.cubefury.vendingmachine.trade.CurrencyType;
@@ -14,8 +13,8 @@ public class CoinButton extends ToggleButton {
 
     public CoinButton(TradeMainPanel panel, CurrencyType type) {
         super();
-        background(IDrawable.EMPTY);
-        selectedBackground(IDrawable.EMPTY);
+        disableThemeBackground(true);
+        disableHoverThemeBackground(true);
 
         this.panel = panel;
         this.type = type;
