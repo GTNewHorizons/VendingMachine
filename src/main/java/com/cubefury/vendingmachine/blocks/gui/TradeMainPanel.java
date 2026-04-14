@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -51,6 +52,13 @@ public class TradeMainPanel extends ModularPanel {
 
     @Override
     public boolean onKeyPressed(char typedChar, int keyCode) {
+        int invKey = Minecraft.getMinecraft().gameSettings.keyBindInventory.getKeyCode();
+        if (
+            keyCode == invKey && gui.getSearchBar()
+                .isFocused()
+        ) {
+            return true;
+        }
         if (keyCode == Keyboard.KEY_LSHIFT || keyCode == Keyboard.KEY_RSHIFT) {
             shiftHeld = true;
         }

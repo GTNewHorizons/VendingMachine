@@ -817,6 +817,10 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
         return this.searchBar.getText();
     }
 
+    public SearchBar getSearchBar() {
+        return this.searchBar;
+    }
+
     // server-side sync for all input slots
     // during next tick after any input
     private void refreshInputSlots() {
