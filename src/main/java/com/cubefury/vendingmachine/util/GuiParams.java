@@ -21,7 +21,7 @@ public enum GuiParams {
     trade_display_disabled_color(0xBB000000),
     trade_display_list_tradable_now_color(0x883CFF00),
     trade_display_list_untradable_now_color(0x88333333),
-    trade_display_list_current_selected(0xAA039BE5),
+    trade_display_list_current_selected_color(0xAA039BE5),
     trade_display_tile_disabled_corner_radius(1),
     trade_display_tile_disabled_corner_radius_segments(1),
 
@@ -36,8 +36,12 @@ public enum GuiParams {
 
     public int getColor(boolean hasAlphaChannel) {
         String hex = translate(this.getUnlocalized());
-        int color = this.value;
         int bitMask = hasAlphaChannel ? 0xFFFFFFFF : 0xFFFFFF;
+        if (hex.equals(this.getUnlocalized())) {
+            return this.value & bitMask;
+        }
+
+        int color = this.value;
         try {
             color = Integer.parseUnsignedInt(hex, 16) & bitMask;
         } catch (NumberFormatException e) {
@@ -48,6 +52,10 @@ public enum GuiParams {
 
     public int getInt() {
         String rawInt = translate(this.getUnlocalized());
+        if (rawInt.equals(this.getUnlocalized())) {
+            return this.value;
+        }
+
         int value = this.value;
         try {
             value = Integer.parseInt(rawInt);

@@ -157,7 +157,7 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
                         1,
                         2,
                         MTEVendingMachineGui.LIST_ITEM_HEIGHT - 3,
-                        GuiParams.trade_display_list_current_selected.getColor(true));
+                        GuiParams.trade_display_list_current_selected_color.getColor(true));
                 }
                 this.overlay(
                     IKey.str(display.hasCooldown && this.display.enabled ? this.display.cooldownText : "")
