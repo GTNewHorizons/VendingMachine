@@ -847,4 +847,36 @@ public class MTEVendingMachine extends MTEMultiBlockBase
             hatch.refreshStorageContents();
         }
     }
+
+    @Override
+    public int getSizeInventory() {
+        return INPUT_SLOTS + OUTPUT_SLOTS;
+    }
+
+    @Override
+    public ItemStack getStackInSlot(int index) {
+        if (index < INPUT_SLOTS) {
+            return inputItems.getStackInSlot(index);
+        }
+        return outputItems.getStackInSlot(index - INPUT_SLOTS);
+    }
+
+    @Override
+    public boolean isValidSlot(int aIndex) {
+        return aIndex < INPUT_SLOTS + OUTPUT_SLOTS;
+    }
+
+    @Override
+    public boolean shouldDropItemAt(int index) {
+        return true;
+    }
+
+    @Override
+    public void setInventorySlotContents(int aIndex, ItemStack aStack) {
+        if (aIndex < INPUT_SLOTS) {
+            inputItems.setStackInSlot(aIndex, aStack);
+        } else {
+            outputItems.setStackInSlot(aIndex - INPUT_SLOTS, aStack);
+        }
+    }
 }
