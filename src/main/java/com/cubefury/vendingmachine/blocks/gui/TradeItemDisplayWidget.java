@@ -19,7 +19,7 @@ import com.cubefury.vendingmachine.blocks.MTEVendingMachine;
 import com.cubefury.vendingmachine.gui.GuiTextures;
 import com.cubefury.vendingmachine.gui.WidgetThemes;
 import com.cubefury.vendingmachine.trade.FavouritesTracker;
-import com.cubefury.vendingmachine.util.Translator;
+import com.cubefury.vendingmachine.util.GuiParams;
 
 public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interactable {
 
@@ -86,14 +86,18 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
 
     @Override
     public void draw(ModularGuiContext context, WidgetThemeEntry<?> widgetTheme) {
-        int textColor = Translator.getColor("vendingmachine.gui.display_text_color");
+        int textColor = GuiParams.display_text_color.getColor(false);
         ItemStack item = value.getValue();
         if (!Platform.isStackEmpty(item)) {
             if (this.displayType == DisplayType.TILE) {
                 GuiDraw.drawText(" " + this.display.display.stackSize, 4, 9, 1.0f, textColor, false);
                 GuiDraw.drawItem(item, 26, 4, 16, 16, context.getCurrentDrawingZ());
                 if (this.display.tradeableNow) {
-                    GuiDraw.drawBorderInsideLTRB(1, 1, 45, 23, 2, 0x883CFF00);
+                    GuiTextures.OVERLAY_TRADEABLE.draw(
+                        1,
+                        1,
+                        MTEVendingMachineGui.TILE_ITEM_WIDTH - 2,
+                        MTEVendingMachineGui.TILE_ITEM_HEIGHT - 2);
                 }
                 if (!this.checkVmActive() || this.display.hasCooldown || !this.display.enabled) {
                     GuiDraw.drawRoundedRect(
@@ -101,12 +105,16 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
                         1,
                         MTEVendingMachineGui.TILE_ITEM_WIDTH - 2,
                         MTEVendingMachineGui.TILE_ITEM_HEIGHT - 2,
-                        0xBB000000,
-                        1,
-                        1);
+                        GuiParams.trade_display_disabled_color.getColor(true),
+                        GuiParams.trade_display_tile_disabled_corner_radius.getInt(),
+                        GuiParams.trade_display_tile_disabled_corner_radius_segments.getInt());
                 }
                 if (this.display.tgID.equals(this.rootPanel.currentSelected)) {
-                    GuiDraw.drawBorderInsideLTRB(1, 1, 45, 23, 1, 0xAA039BE5);
+                    GuiTextures.OVERLAY_SELECTED.draw(
+                        1,
+                        1,
+                        MTEVendingMachineGui.TILE_ITEM_WIDTH - 2,
+                        MTEVendingMachineGui.TILE_ITEM_HEIGHT - 2);
                 }
                 this.overlay(
                     IKey.str(display.hasCooldown ? this.display.cooldownText : "")
@@ -133,17 +141,23 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
                     1,
                     3,
                     MTEVendingMachineGui.LIST_ITEM_HEIGHT - 3,
-                    this.display.tradeableNow ? 0x883CFF00 : 0x88333333);
+                    this.display.tradeableNow ? GuiParams.trade_display_list_tradable_now_color.getColor(true)
+                        : GuiParams.trade_display_list_untradable_now_color.getColor(true));
                 if (!this.checkVmActive() || this.display.hasCooldown || !this.display.enabled) {
                     GuiDraw.drawRect(
                         1,
                         1,
                         MTEVendingMachineGui.LIST_ITEM_WIDTH - 2,
                         MTEVendingMachineGui.LIST_ITEM_HEIGHT - 2,
-                        0xBB000000);
+                        GuiParams.trade_display_disabled_color.getColor(true));
                 }
                 if (this.display.tgID.equals(this.rootPanel.currentSelected)) {
-                    GuiDraw.drawRect(1, 1, 2, MTEVendingMachineGui.LIST_ITEM_HEIGHT - 3, 0xAA039BE5);
+                    GuiDraw.drawRect(
+                        1,
+                        1,
+                        2,
+                        MTEVendingMachineGui.LIST_ITEM_HEIGHT - 3,
+                        GuiParams.trade_display_list_current_selected_color.getColor(true));
                 }
                 this.overlay(
                     IKey.str(display.hasCooldown && this.display.enabled ? this.display.cooldownText : "")
