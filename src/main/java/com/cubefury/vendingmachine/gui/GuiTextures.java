@@ -81,6 +81,22 @@ public final class GuiTextures {
         .name("list_trade_button_pressed")
         .build();
 
+    public static final UITexture OVERLAY_TRADEABLE = UITexture.builder()
+        .location(VendingMachine.MODID, "gui/overlay/tile_tradeable")
+        .imageSize(20, 20)
+        .adaptable(2)
+        .nonOpaque()
+        .name("overlay_tradeable")
+        .build();
+
+    public static final UITexture OVERLAY_SELECTED = UITexture.builder()
+        .location(VendingMachine.MODID, "gui/overlay/tile_selected")
+        .imageSize(20, 20)
+        .adaptable(2)
+        .nonOpaque()
+        .name("overlay_selected")
+        .build();
+
     public static final UITexture MODE_TILE = UITexture.builder()
         .location(VendingMachine.MODID, "gui/overlay/mode_tile")
         .imageSize(32, 32)

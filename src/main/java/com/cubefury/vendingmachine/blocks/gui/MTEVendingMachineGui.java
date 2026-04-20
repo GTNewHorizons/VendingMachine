@@ -508,7 +508,8 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                         Translator.translate(
                             "vendingmachine.gui.shared_trades_tooltip",
                             tg.getTrades()
-                                .size() - 1)));
+                                .size() - 1))
+                        .style(IKey.AQUA, IKey.ITALIC));
             }
             builder.emptyLine();
 
