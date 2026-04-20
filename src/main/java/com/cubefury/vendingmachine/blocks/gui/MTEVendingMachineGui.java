@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 
+import com.cleanroommc.modularui.api.GuiAxis;
 import com.cleanroommc.modularui.api.drawable.IKey;
 import com.cleanroommc.modularui.api.widget.IWidget;
 import com.cleanroommc.modularui.drawable.DynamicDrawable;
@@ -32,9 +33,7 @@ import com.cleanroommc.modularui.widgets.PagedWidget;
 import com.cleanroommc.modularui.widgets.SlotGroupWidget;
 import com.cleanroommc.modularui.widgets.TextWidget;
 import com.cleanroommc.modularui.widgets.ToggleButton;
-import com.cleanroommc.modularui.widgets.layout.Column;
 import com.cleanroommc.modularui.widgets.layout.Flow;
-import com.cleanroommc.modularui.widgets.layout.Row;
 import com.cleanroommc.modularui.widgets.slot.ItemSlot;
 import com.cleanroommc.modularui.widgets.slot.ModularSlot;
 import com.cubefury.vendingmachine.VMConfig;
@@ -146,7 +145,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
             }
         });
         panel.child(createCategoryTabs(this.tabController));
-        Flow mainColumn = new Column().width(170);
+        Flow mainColumn = new Flow(GuiAxis.Y).width(170);
         if (VendingMachine.proxy.isClient()) { // client side sort and filtering
             panel.child(createQolButtonColumn());
             mainColumn.child(
@@ -161,7 +160,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
         mainColumn.child(createInventoryRow());
         panel.child(mainColumn);
         panel.child(
-            new Column().size(20)
+            new Flow(GuiAxis.Y).size(20)
                 .right(5));
         panel.child(createIOColumn());
         return panel;
@@ -175,7 +174,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
     }
 
     public IWidget createQolButtonColumn() {
-        Flow buttonColumn = new Column().width(8)
+        Flow buttonColumn = new Flow(GuiAxis.Y).width(8)
             .height(20)
             .left(-17)
             .top(1)
@@ -221,7 +220,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
     }
 
     public IWidget createCategoryTabs(PagedWidget.Controller tabController) {
-        Flow tabColumn = new Column().width(40)
+        Flow tabColumn = new Flow(GuiAxis.Y).width(40)
             .height(300)
             .left(-29)
             .top(40)
@@ -361,18 +360,22 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
             .top(40)
             .widgetTheme(WidgetThemes.BACKGROUND_SIDEPANEL)
             .child(
-                new Column().child(
+                new Flow(GuiAxis.Y).child(
                     GuiTextures.INPUT_SPRITE.asWidget()
                         .leftRel(0.5f)
                         .top(8)
                         .width(30)
                         .height(20))
                     .child(
-                        new Row().child(createInputSlots().center())
+                        (IWidget) new TextWidget(IKey.lang("vendingmachine.gui.in")).textAlign(Alignment.CENTER)
+                            .top(8)
+                            .widthRel(1.0f))
+                    .child(
+                        new Flow(GuiAxis.X).child(createInputSlots().center())
                             .top(20)
                             .height(18 * 4))
                     .child(
-                        new Row().child(
+                        new Flow(GuiAxis.X).child(
                             new ToggleButton().overlay(GTGuiTextures.OVERLAY_BUTTON_CYCLIC)
                                 .tooltipBuilder(t -> t.addLine(IKey.lang("vendingmachine.gui.item_eject")))
                                 .syncHandler("ejectItems")
@@ -389,11 +392,15 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                     .child(
                         GuiTextures.OUTPUT_SPRITE.asWidget()
                             .leftRel(0.5f)
-                            .bottom(70)
+                            .bottom(73)
                             .width(30)
                             .height(20))
                     .child(
-                        new Row().child(createOutputSlots().center())
+                        (IWidget) new TextWidget(IKey.lang("vendingmachine.gui.out")).textAlign(Alignment.CENTER)
+                            .bottom(81)
+                            .widthRel(1.0f))
+                    .child(
+                        new Flow(GuiAxis.X).child(createOutputSlots().center())
                             .bottom(6)
                             .height(18 * 4))
                     .right(1));
@@ -538,10 +545,10 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                 .height(144)
                 .collapseDisabledChild(true);
 
-            tradeList.child(new Row().height(2));
+            tradeList.child(new Flow(GuiAxis.X).height(2));
 
             // Incomplete Structure status message
-            Flow statusRow = new Row().height(10).width(TRADE_ROW_WIDTH).marginLeft(2)
+            Flow statusRow = new Flow(GuiAxis.X).height(10).width(TRADE_ROW_WIDTH).marginLeft(2)
                 .child(new TextWidget(IKey.lang("vendingmachine.gui.error.incomplete_structure")))
                 .setEnabledIf(slot -> !this.getBase().getActive());
             tradeList.child(statusRow);
@@ -607,11 +614,11 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                 row = new TradeRow().height(LIST_ITEM_HEIGHT).width(TRADE_ROW_WIDTH).marginLeft(2);
             }
 
-            tradeList.child(new Row().height(2)); // bottom padding for last row
+            tradeList.child(new Flow(GuiAxis.X).height(2)); // bottom padding for last row
             paged.addPage(tradeList);
         }
 
-        return new Row().child(paged.top(0))
+        return new Flow(GuiAxis.X).child(paged.top(0))
             .left(3)
             .top(24);
     }
@@ -628,19 +635,19 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
     }
 
     private IWidget createCoinInventoryRow(TradeMainPanel panel, PanelSyncManager syncManager) {
-        Flow parent = new Row() // .background(GuiTextures.TEXT_FIELD_BACKGROUND)
+        Flow parent = new Flow(GuiAxis.X) // .background(GuiTextures.TEXT_FIELD_BACKGROUND)
             .width(162)
             .height(36)
             .top(172)
             .left(3);
-        Flow coinColumn = new Column().width(COIN_COLUMN_WIDTH);
+        Flow coinColumn = new Flow(GuiAxis.Y).width(COIN_COLUMN_WIDTH);
         int coinCount = 0;
 
         for (CurrencyType type : CurrencyType.values()) {
             coinColumn.child(createCoinDisplay(panel, type, syncManager));
             if (++coinCount % COIN_COLUMN_ROW_COUNT == 0) {
                 parent.child(coinColumn.left(3 + COIN_COLUMN_WIDTH * (coinCount / COIN_COLUMN_ROW_COUNT - 1)));
-                coinColumn = new Column().width(COIN_COLUMN_WIDTH);
+                coinColumn = new Flow(GuiAxis.Y).width(COIN_COLUMN_WIDTH);
             }
         }
         if (coinColumn.hasChildren()) {
@@ -651,7 +658,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
 
     private IWidget createCoinDisplay(TradeMainPanel panel, CurrencyType type, PanelSyncManager syncManager) {
         IntSyncValue coinSyncValue = syncManager.findSyncHandler("coinAmount_" + type.id, 0, IntSyncValue.class);
-        return new Row().child(
+        return new Flow(GuiAxis.X).child(
             new CoinButton(panel, type).overlay(
                 type.texture.asIcon()
                     .size(12))
@@ -679,9 +686,10 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
 
     // why is the original method private lmao
     private IWidget createInventoryRow() {
-        return new Row().widthRel(1)
+        return new Flow(GuiAxis.X).widthRel(1)
             .height(76)
-            .alignX(0)
+            .leftRel(0)
+            .anchorLeft(0)
             .bottom(5)
             .childIf(
                 base.doesBindPlayerInventory(),
