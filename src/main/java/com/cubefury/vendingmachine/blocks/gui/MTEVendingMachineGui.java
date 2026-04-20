@@ -9,10 +9,10 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import com.cleanroommc.modularui.api.GuiAxis;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 
+import com.cleanroommc.modularui.api.GuiAxis;
 import com.cleanroommc.modularui.api.drawable.IKey;
 import com.cleanroommc.modularui.api.widget.IWidget;
 import com.cleanroommc.modularui.drawable.DynamicDrawable;
@@ -33,9 +33,7 @@ import com.cleanroommc.modularui.widgets.PagedWidget;
 import com.cleanroommc.modularui.widgets.SlotGroupWidget;
 import com.cleanroommc.modularui.widgets.TextWidget;
 import com.cleanroommc.modularui.widgets.ToggleButton;
-import com.cleanroommc.modularui.widgets.layout.Column;
 import com.cleanroommc.modularui.widgets.layout.Flow;
-import com.cleanroommc.modularui.widgets.layout.Row;
 import com.cleanroommc.modularui.widgets.slot.ItemSlot;
 import com.cleanroommc.modularui.widgets.slot.ModularSlot;
 import com.cubefury.vendingmachine.VMConfig;
@@ -369,8 +367,9 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                         .width(30)
                         .height(20))
                     .child(
-                        (IWidget) new TextWidget(IKey.lang("vendingmachine.gui.in")).textAlign(Alignment.CENTER).top(8).widthRel(1.0f)
-                    )
+                        (IWidget) new TextWidget(IKey.lang("vendingmachine.gui.in")).textAlign(Alignment.CENTER)
+                            .top(8)
+                            .widthRel(1.0f))
                     .child(
                         new Flow(GuiAxis.X).child(createInputSlots().center())
                             .top(20)
@@ -397,8 +396,9 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                             .width(30)
                             .height(20))
                     .child(
-                        (IWidget) new TextWidget(IKey.lang("vendingmachine.gui.out")).textAlign(Alignment.CENTER).bottom(81).widthRel(1.0f)
-                    )
+                        (IWidget) new TextWidget(IKey.lang("vendingmachine.gui.out")).textAlign(Alignment.CENTER)
+                            .bottom(81)
+                            .widthRel(1.0f))
                     .child(
                         new Flow(GuiAxis.X).child(createOutputSlots().center())
                             .bottom(6)
