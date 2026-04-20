@@ -642,7 +642,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
     }
 
     private IWidget createCoinInventoryRow(TradeMainPanel panel, PanelSyncManager syncManager) {
-        Flow parent = Flow.row() // .background(GuiTextures.TEXT_FIELD_BACKGROUND)
+        Flow parent = Flow.row()
             .width(162)
             .height(36)
             .top(172)
