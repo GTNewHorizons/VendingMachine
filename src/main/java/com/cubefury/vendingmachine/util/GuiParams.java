@@ -22,8 +22,7 @@ public enum GuiParams {
     trade_display_list_tradable_now_color(0x883CFF00),
     trade_display_list_untradable_now_color(0x88333333),
     trade_display_list_current_selected_color(0xAA039BE5),
-    trade_display_tile_disabled_corner_radius(1),
-    trade_display_tile_disabled_corner_radius_segments(1),
+    trade_display_text_color(0xFFFFFF),
 
     // new line to prevent merge conflicts
     ;

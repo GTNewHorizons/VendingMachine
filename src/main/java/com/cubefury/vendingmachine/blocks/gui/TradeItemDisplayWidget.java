@@ -93,32 +93,20 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
                 GuiDraw.drawText(" " + this.display.display.stackSize, 4, 9, 1.0f, textColor, false);
                 GuiDraw.drawItem(item, 26, 4, 16, 16, context.getCurrentDrawingZ());
                 if (this.display.tradeableNow) {
-                    GuiTextures.OVERLAY_TRADEABLE.draw(
-                        1,
-                        1,
-                        MTEVendingMachineGui.TILE_ITEM_WIDTH - 2,
-                        MTEVendingMachineGui.TILE_ITEM_HEIGHT - 2);
+                    GuiTextures.OVERLAY_TRADEABLE
+                        .draw(0, 0, MTEVendingMachineGui.TILE_ITEM_WIDTH, MTEVendingMachineGui.TILE_ITEM_HEIGHT);
                 }
                 if (!this.checkVmActive() || this.display.hasCooldown || !this.display.enabled) {
-                    GuiDraw.drawRoundedRect(
-                        1,
-                        1,
-                        MTEVendingMachineGui.TILE_ITEM_WIDTH - 2,
-                        MTEVendingMachineGui.TILE_ITEM_HEIGHT - 2,
-                        GuiParams.trade_display_disabled_color.getColor(true),
-                        GuiParams.trade_display_tile_disabled_corner_radius.getInt(),
-                        GuiParams.trade_display_tile_disabled_corner_radius_segments.getInt());
+                    GuiTextures.OVERLAY_COOLDOWN
+                        .draw(0, 0, MTEVendingMachineGui.TILE_ITEM_WIDTH, MTEVendingMachineGui.TILE_ITEM_HEIGHT);
                 }
                 if (this.display.tgID.equals(this.rootPanel.currentSelected)) {
-                    GuiTextures.OVERLAY_SELECTED.draw(
-                        1,
-                        1,
-                        MTEVendingMachineGui.TILE_ITEM_WIDTH - 2,
-                        MTEVendingMachineGui.TILE_ITEM_HEIGHT - 2);
+                    GuiTextures.OVERLAY_SELECTED
+                        .draw(0, 0, MTEVendingMachineGui.TILE_ITEM_WIDTH, MTEVendingMachineGui.TILE_ITEM_HEIGHT);
                 }
                 this.overlay(
                     IKey.str(display.hasCooldown ? this.display.cooldownText : "")
-                        .style(IKey.WHITE));
+                        .color(GuiParams.trade_display_text_color.getColor(false)));
                 if (this.display.isFavourite) {
                     GuiTextures.FAVOURITE_SPRITE.draw(context, 4, 4, 6, 6, widgetTheme.getTheme());
                 }
@@ -140,7 +128,7 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
                     1,
                     1,
                     3,
-                    MTEVendingMachineGui.LIST_ITEM_HEIGHT - 3,
+                    MTEVendingMachineGui.LIST_ITEM_HEIGHT - 2,
                     this.display.tradeableNow ? GuiParams.trade_display_list_tradable_now_color.getColor(true)
                         : GuiParams.trade_display_list_untradable_now_color.getColor(true));
                 if (!this.checkVmActive() || this.display.hasCooldown || !this.display.enabled) {
@@ -156,12 +144,12 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
                         1,
                         1,
                         2,
-                        MTEVendingMachineGui.LIST_ITEM_HEIGHT - 3,
+                        MTEVendingMachineGui.LIST_ITEM_HEIGHT - 2,
                         GuiParams.trade_display_list_current_selected_color.getColor(true));
                 }
                 this.overlay(
                     IKey.str(display.hasCooldown && this.display.enabled ? this.display.cooldownText : "")
-                        .style(IKey.WHITE)
+                        .color(GuiParams.trade_display_text_color.getColor(false))
                         .scale(0.9f));
                 if (this.display.isFavourite) {
                     GuiTextures.FAVOURITE_SPRITE.draw(context, 139, 2, 10, 10, widgetTheme.getTheme());
