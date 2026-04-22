@@ -3,7 +3,6 @@ package com.cubefury.vendingmachine.blocks.gui;
 import net.minecraft.item.ItemStack;
 
 import org.jetbrains.annotations.NotNull;
-import org.lwjgl.opengl.GL11;
 
 import com.cleanroommc.modularui.api.drawable.IKey;
 import com.cleanroommc.modularui.api.value.ISyncOrValue;
@@ -94,17 +93,14 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
                 GuiDraw.drawText(" " + this.display.display.stackSize, 4, 9, 1.0f, textColor, false);
                 GuiDraw.drawItem(item, 26, 4, 16, 16, context.getCurrentDrawingZ());
                 if (this.display.tradeableNow) {
-                    GL11.glColor4f(1f, 1f, 1f, 1f);
                     GuiTextures.OVERLAY_TRADEABLE
                         .draw(0, 0, MTEVendingMachineGui.TILE_ITEM_WIDTH, MTEVendingMachineGui.TILE_ITEM_HEIGHT);
                 }
                 if (!this.checkVmActive() || this.display.hasCooldown || !this.display.enabled) {
-                    GL11.glColor4f(1f, 1f, 1f, 1f);
                     GuiTextures.OVERLAY_COOLDOWN
                         .draw(0, 0, MTEVendingMachineGui.TILE_ITEM_WIDTH, MTEVendingMachineGui.TILE_ITEM_HEIGHT);
                 }
                 if (this.display.tgID.equals(this.rootPanel.currentSelected)) {
-                    GL11.glColor4f(1f, 1f, 1f, 1f);
                     GuiTextures.OVERLAY_SELECTED
                         .draw(0, 0, MTEVendingMachineGui.TILE_ITEM_WIDTH, MTEVendingMachineGui.TILE_ITEM_HEIGHT);
                 }
@@ -147,7 +143,7 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
                     GuiDraw.drawRect(
                         1,
                         1,
-                        3,
+                        2,
                         MTEVendingMachineGui.LIST_ITEM_HEIGHT - 2,
                         GuiParams.trade_display_list_current_selected_color.getColor(true));
                 }

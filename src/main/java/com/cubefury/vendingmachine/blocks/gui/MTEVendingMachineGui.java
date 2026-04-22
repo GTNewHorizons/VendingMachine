@@ -87,7 +87,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
     public static final int TILE_ITEMS_PER_ROW = 3;
     public static final int TILE_ITEM_HEIGHT = 25;
     public static final int TILE_ITEM_WIDTH = 47;
-    public static final int LIST_ITEM_HEIGHT = 15;
+    public static final int LIST_ITEM_HEIGHT = 14;
     public static final int LIST_ITEM_WIDTH = 153;
 
     private static final int COIN_COLUMN_WIDTH = 40;

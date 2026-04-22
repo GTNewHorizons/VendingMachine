@@ -10,16 +10,10 @@ import com.cubefury.vendingmachine.VendingMachine;
 
 public final class GuiTextures {
 
-    public static final UITexture OVERLAY_TRADE_DISABLED = UITexture.builder()
-        .location(VendingMachine.MODID, "gui/overlay/trade_disabled")
-        .imageSize(47, 25)
-        .canApplyTheme()
-        .name("trade_disabled")
-        .build();
-
     public static final UITexture SIDE_PANEL_BACKGROUND = UITexture.builder()
         .location(VendingMachine.MODID, "gui/background/panel_side")
         .imageSize(50, 214)
+        .adaptable(4)
         .canApplyTheme()
         .name("panel_side_background")
         .build();
@@ -36,6 +30,7 @@ public final class GuiTextures {
         .location(VendingMachine.MODID, "gui/background/trade_button_unpressed")
         .canApplyTheme()
         .imageSize(47, 25)
+        .adaptable(4)
         .name("trade_button_unpressed")
         .build();
 
@@ -43,6 +38,7 @@ public final class GuiTextures {
         .location(VendingMachine.MODID, "gui/background/trade_button_pressed")
         .canApplyTheme()
         .imageSize(47, 25)
+        .adaptable(4)
         .name("trade_button_pressed")
         .build();
 
@@ -50,6 +46,7 @@ public final class GuiTextures {
         .location(VendingMachine.MODID, "gui/background/list_trade_button_unpressed")
         .canApplyTheme()
         .imageSize(154, 14)
+        .adaptable(4)
         .name("list_trade_button_unpressed")
         .build();
 
@@ -63,6 +60,7 @@ public final class GuiTextures {
     public static final UITexture OVERLAY_TRADEABLE = UITexture.builder()
         .location(VendingMachine.MODID, "gui/overlay/tile_tradeable")
         .imageSize(47, 25)
+        .adaptable(4)
         .nonOpaque()
         .name("overlay_tradeable")
         .build();
@@ -70,6 +68,7 @@ public final class GuiTextures {
     public static final UITexture OVERLAY_SELECTED = UITexture.builder()
         .location(VendingMachine.MODID, "gui/overlay/tile_selected")
         .imageSize(47, 25)
+        .adaptable(4)
         .nonOpaque()
         .name("overlay_selected")
         .build();
@@ -77,6 +76,7 @@ public final class GuiTextures {
     public static final UITexture OVERLAY_COOLDOWN = UITexture.builder()
         .location(VendingMachine.MODID, "gui/overlay/tile_cooldown")
         .imageSize(47, 25)
+        .adaptable(4)
         .nonOpaque()
         .name("overlay_cooldown")
         .build();
