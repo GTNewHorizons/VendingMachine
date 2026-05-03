@@ -11,6 +11,8 @@ import java.util.stream.Collectors;
 
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraftforge.common.util.Constants;
 
 import com.cleanroommc.modularui.api.drawable.IKey;
 import com.cleanroommc.modularui.api.widget.IWidget;
@@ -462,13 +464,42 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
     private void constructTradeTooltip(RichTooltip builder, TradeItemDisplay cur) {
         if (cur != null) {
             for (BigItemStack toItem : cur.toItems) {
-                builder.addLine(
-                    IKey.str(
-                        toItem.stackSize + " "
-                            + toItem.getBaseStack()
-                                .getDisplayName())
-                        .style(IKey.AQUA));
-                // builder.add(new ItemDrawable(toItem.getBaseStack()));
+                StringBuilder nameLine = new StringBuilder();
+                if (toItem.stackSize > 1) {
+                    nameLine.append(
+                        IKey.str(toItem.stackSize + " ")
+                            .style(IKey.AQUA));
+                }
+                nameLine.append(IKey.RESET);
+                ItemStack baseStack = toItem.getBaseStack();
+                boolean hasCustomName = false;
+                if (
+                    baseStack.stackTagCompound != null
+                        && baseStack.stackTagCompound.hasKey("display", Constants.NBT.TAG_COMPOUND)
+                ) {
+                    NBTTagCompound nbt = baseStack.stackTagCompound.getCompoundTag("display");
+                    if (nbt.hasKey("Name", Constants.NBT.TAG_STRING)) {
+                        nameLine.append(
+                            IKey.str(nbt.getString("Name") + " ")
+                                .style(IKey.AQUA, IKey.ITALIC));
+                        nameLine.append(IKey.RESET);
+                        hasCustomName = true;
+                    }
+                }
+                if (hasCustomName) {
+                    nameLine.append(
+                        IKey.str(
+                            "(" + baseStack.getItem()
+                                .getItemStackDisplayName(baseStack) + ")")
+                            .style(IKey.AQUA));
+                } else {
+                    nameLine.append(
+                        IKey.str(
+                            baseStack.getItem()
+                                .getItemStackDisplayName(baseStack))
+                            .style(IKey.AQUA));
+                }
+                builder.addLine(nameLine.toString());
             }
             builder.emptyLine();
 
