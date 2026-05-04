@@ -138,4 +138,10 @@ public final class GuiTextures {
         .name("favourite_indicator")
         .build();
 
+    public static final UITexture TAB_HIGHLIGHT = UITexture.builder()
+        .location(VendingMachine.MODID, "gui/overlay/filtered_tab")
+        .imageSize(20, 16)
+        .name("filtered_tab")
+        .nonOpaque()
+        .build();
 }
