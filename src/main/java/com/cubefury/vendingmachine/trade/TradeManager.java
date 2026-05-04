@@ -205,8 +205,7 @@ public class TradeManager {
 
         boolean enabled = tg.maxTrades == -1 || tradeCount < tg.maxTrades;
 
-        return (availableTrades.getOrDefault(player, Collections.emptySet())
-            .contains(tg.getId()) || tg.requirementSet.isEmpty()) && enabled && cooldownRemaining < 0;
+        return getAvailableTradeGroups(player).contains(tg) && enabled && cooldownRemaining < 0;
     }
 
     public void executeTrade(@Nonnull UUID player, TradeGroup tg) {
