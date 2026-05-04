@@ -1,13 +1,13 @@
 package com.cubefury.vendingmachine.blocks.gui;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -53,10 +53,10 @@ public class TradeMainPanel extends ModularPanel {
 
     @Override
     public boolean onKeyPressed(char typedChar, int keyCode) {
-        int invKey = Minecraft.getMinecraft().gameSettings.keyBindInventory.getKeyCode();
         if (
-            keyCode == invKey && gui.getSearchBar()
-                .isFocused()
+            gui.getSearchBar()
+                .isFocused() && typedChar > 32
+                && typedChar != 127
         ) {
             return true;
         }
@@ -107,7 +107,7 @@ public class TradeMainPanel extends ModularPanel {
 
         currentData.forEach((k, v) -> {
             for (TradeItemDisplay tid : v) {
-                TradeItemDisplay cur = tradeMap.get(tid.tgID)
+                TradeItemDisplay cur = tradeMap.getOrDefault(tid.tgID, Collections.emptyMap())
                     .get(tid.tradeGroupOrder);
                 tid.enabled = cur != null && cur.enabled;
                 tid.hasCooldown = cur.cooldown > 0;
@@ -155,7 +155,7 @@ public class TradeMainPanel extends ModularPanel {
 
         this.currentSelected = null;
         for (TradeItemDisplayWidget display : displayedTrades.get(activeCategory)) {
-            if (display.isBelowMouse()) {
+            if (display.isBelowMouse() && display.getDisplay() != null) {
                 this.currentSelected = display.getDisplay().tgID;
                 break;
             }
