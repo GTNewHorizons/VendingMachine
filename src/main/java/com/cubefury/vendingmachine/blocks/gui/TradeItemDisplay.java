@@ -23,12 +23,14 @@ public class TradeItemDisplay {
     public String cooldownText;
     public boolean hasCooldown;
     public boolean enabled;
-    public boolean tradeableNow;
+    public boolean tradeableNowPersonal;
+    public boolean tradeableNowTeam;
     public boolean isFavourite;
 
     public TradeItemDisplay(List<CurrencyItem> fromCurrency, List<BigItemStack> fromItems, List<BigItemStack> ncItems,
         List<BigItemStack> toItems, ItemStack display, UUID tgID, int tradeGroupOrder, long cooldown,
-        String cooldownText, boolean hasCooldown, boolean enabled, boolean tradeableNow) {
+        String cooldownText, boolean hasCooldown, boolean enabled, boolean tradeableNowPersonal,
+        boolean tradeableNowTeam) {
         this.fromCurrency = fromCurrency;
         this.fromItems = fromItems;
         this.ncItems = ncItems;
@@ -40,7 +42,8 @@ public class TradeItemDisplay {
         this.cooldownText = cooldownText;
         this.hasCooldown = hasCooldown;
         this.enabled = enabled;
-        this.tradeableNow = tradeableNow;
+        this.tradeableNowPersonal = tradeableNowPersonal;
+        this.tradeableNowTeam = tradeableNowTeam;
         this.isFavourite = false;
     }
 
@@ -49,5 +52,12 @@ public class TradeItemDisplay {
             .anyMatch(bis -> filter.matches(bis.getBaseStack()))
             || this.fromItems.stream()
                 .anyMatch(bis -> filter.matches(bis.getBaseStack()));
+    }
+
+    public boolean isTradeableNow(WalletMode walletMode) {
+        return switch (walletMode) {
+            case PERSONAL -> tradeableNowPersonal;
+            case TEAM -> tradeableNowTeam;
+        };
     }
 }

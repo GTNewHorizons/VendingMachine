@@ -4,6 +4,7 @@ import java.io.File;
 
 import com.cubefury.vendingmachine.blocks.gui.DisplayType;
 import com.cubefury.vendingmachine.blocks.gui.SortMode;
+import com.cubefury.vendingmachine.blocks.gui.WalletMode;
 import com.gtnewhorizon.gtnhlib.config.Config;
 
 @Config(modid = VendingMachine.MODID, category = "vendingmachine", filename = "vendingmachine")
@@ -44,6 +45,11 @@ public class VMConfig {
         @Config.DefaultInt(16)
         @Config.RequiresWorldRestart
         public int dispense_amount;
+
+        @Config.Comment("Treats everyone as being part of the same team")
+        @Config.DefaultBoolean(false)
+        @Config.RequiresWorldRestart
+        public boolean global_team;
     }
 
     public static class GUI {
@@ -55,6 +61,10 @@ public class VMConfig {
         @Config.Comment("Default sort mode, either SMART or ALPHABET. Case sensitive.")
         @Config.DefaultEnum("SMART")
         public SortMode sort_mode = SortMode.SMART;
+
+        @Config.Comment("Default wallet mode, either PERSONAL or TEAM. Case sensitive.")
+        @Config.DefaultEnum("PERSONAL")
+        public WalletMode wallet_mode = WalletMode.PERSONAL;
     }
 
     public static class Developer {

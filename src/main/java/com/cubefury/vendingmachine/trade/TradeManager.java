@@ -24,6 +24,7 @@ import com.cubefury.vendingmachine.handlers.SaveLoadHandler;
 import com.cubefury.vendingmachine.network.handlers.NetTradeNotification;
 import com.cubefury.vendingmachine.storage.NameCache;
 import com.cubefury.vendingmachine.util.NBTConverter;
+import com.cubefury.vendingmachine.util.TeamHelper;
 
 // Sync the following objects to the client every GUI refresh cycle:
 // tradedata, No-condition trades and currency
@@ -40,7 +41,7 @@ public class TradeManager {
     // Map for tradegroup id -> player trade states and unlock status
     public final Map<UUID, TradeGroupState> tradeGroupStates = new HashMap<>();
 
-    // Map for player id -> currency data
+    // Map for player and team id -> currency data
     public final Map<UUID, Map<CurrencyType, Integer>> playerCurrency = new HashMap<>();
 
     // Map for player id -> trades with pending refresh notifications
@@ -204,9 +205,8 @@ public class TradeManager {
 
         boolean enabled = tg.maxTrades == -1 || tradeCount < tg.maxTrades;
 
-        return availableTrades.getOrDefault(player, Collections.emptySet())
-            .contains(tg.getId()) && enabled
-            && cooldownRemaining < 0;
+        return (availableTrades.getOrDefault(player, Collections.emptySet())
+            .contains(tg.getId()) || tg.requirementSet.isEmpty()) && enabled && cooldownRemaining < 0;
     }
 
     public void executeTrade(@Nonnull UUID player, TradeGroup tg) {
@@ -214,6 +214,10 @@ public class TradeManager {
         newTradeHistory.executeTrade(tg.maxTrades, tg.cooldown != -1);
         setTradeState(player, tg, newTradeHistory);
         SaveLoadHandler.INSTANCE.writeTradeState(Collections.singleton(player));
+        UUID teamId = TeamHelper.GetTeamUUID(player);
+        if (teamId != null) {
+            SaveLoadHandler.INSTANCE.writeTradeState(Collections.singleton(teamId));
+        }
         if (newTradeHistory.notificationQueued) {
             addNotification(player, tg);
         }

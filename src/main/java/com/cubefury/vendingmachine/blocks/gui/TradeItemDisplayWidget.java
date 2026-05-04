@@ -92,7 +92,7 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
             if (this.displayType == DisplayType.TILE) {
                 GuiDraw.drawText(" " + this.display.display.stackSize, 4, 9, 1.0f, textColor, false);
                 GuiDraw.drawItem(item, 26, 4, 16, 16, context.getCurrentDrawingZ());
-                if (this.display.tradeableNow) {
+                if (this.display.isTradeableNow(rootPanel.getWalletMode())) {
                     GuiTextures.OVERLAY_TRADEABLE
                         .draw(0, 0, MTEVendingMachineGui.TILE_ITEM_WIDTH, MTEVendingMachineGui.TILE_ITEM_HEIGHT);
                 }
@@ -129,7 +129,8 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
                     1,
                     3,
                     MTEVendingMachineGui.LIST_ITEM_HEIGHT - 2,
-                    this.display.tradeableNow ? GuiParams.trade_display_list_tradable_now_color.getColor(true)
+                    display.isTradeableNow(rootPanel.getWalletMode())
+                        ? GuiParams.trade_display_list_tradable_now_color.getColor(true)
                         : GuiParams.trade_display_list_untradable_now_color.getColor(true));
                 if (!this.checkVmActive() || this.display.hasCooldown || !this.display.enabled) {
                     GuiDraw.drawRect(

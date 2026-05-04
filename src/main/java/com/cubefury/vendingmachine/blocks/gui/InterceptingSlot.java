@@ -1,12 +1,12 @@
 package com.cubefury.vendingmachine.blocks.gui;
 
-import net.minecraft.entity.player.EntityPlayer;
+import java.util.UUID;
+
 import net.minecraft.item.ItemStack;
 
 import com.cleanroommc.modularui.utils.item.ItemStackHandler;
 import com.cleanroommc.modularui.widgets.slot.ModularSlot;
 import com.cubefury.vendingmachine.blocks.MTEVendingMachine;
-import com.cubefury.vendingmachine.storage.NameCache;
 import com.cubefury.vendingmachine.trade.CurrencyItem;
 import com.cubefury.vendingmachine.trade.TradeManager;
 
@@ -20,7 +20,7 @@ public class InterceptingSlot extends ModularSlot {
     }
 
     // intercept item on both ends, but only do the post-intercept actions on server side
-    public boolean intercept(ItemStack newItem, boolean client, EntityPlayer player) {
+    public boolean intercept(ItemStack newItem, boolean client, UUID id) {
         if (vm == null || !vm.getActive()) {
             return false;
         }
@@ -28,7 +28,7 @@ public class InterceptingSlot extends ModularSlot {
         if (mapped != null) {
             this.putStack(null);
             if (!client) {
-                TradeManager.INSTANCE.addCurrency(NameCache.INSTANCE.getUUIDFromPlayer(player), mapped);
+                TradeManager.INSTANCE.addCurrency(id, mapped);
             }
             return true;
         }

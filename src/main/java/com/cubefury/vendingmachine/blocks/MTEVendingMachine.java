@@ -40,9 +40,9 @@ import com.cubefury.vendingmachine.VMConfig;
 import com.cubefury.vendingmachine.VendingMachine;
 import com.cubefury.vendingmachine.blocks.gui.MTEVendingMachineGui;
 import com.cubefury.vendingmachine.blocks.gui.TradeItemDisplay;
+import com.cubefury.vendingmachine.blocks.gui.WalletMode;
 import com.cubefury.vendingmachine.network.handlers.NetTradeDisplaySync;
 import com.cubefury.vendingmachine.network.handlers.NetTradeRequestSync;
-import com.cubefury.vendingmachine.storage.NameCache;
 import com.cubefury.vendingmachine.trade.CurrencyItem;
 import com.cubefury.vendingmachine.trade.CurrencyType;
 import com.cubefury.vendingmachine.trade.Trade;
@@ -51,6 +51,7 @@ import com.cubefury.vendingmachine.trade.TradeManager;
 import com.cubefury.vendingmachine.trade.TradeRequest;
 import com.cubefury.vendingmachine.util.BigItemStack;
 import com.cubefury.vendingmachine.util.OverlayHelper;
+import com.cubefury.vendingmachine.util.TeamHelper;
 import com.cubefury.vendingmachine.util.Translator;
 import com.gtnewhorizon.structurelib.StructureLibAPI;
 import com.gtnewhorizon.structurelib.alignment.IAlignment;
@@ -152,7 +153,7 @@ public class MTEVendingMachine extends MTEMultiBlockBase
         return this.mIsAnimated;
     }
 
-    public void sendTradeRequest(TradeItemDisplay trade) {
+    public void sendTradeRequest(TradeItemDisplay trade, WalletMode walletMode) {
         IGregTechTileEntity baseTile = getBaseMetaTileEntity();
         if (baseTile == null || !baseTile.isActive()) {
             return;
@@ -162,7 +163,8 @@ public class MTEVendingMachine extends MTEMultiBlockBase
             baseTile.getWorld(),
             baseTile.getXCoord(),
             baseTile.getYCoord(),
-            baseTile.getZCoord());
+            baseTile.getZCoord(),
+            walletMode);
     }
 
     public void addTradeRequest(TradeRequest trade) {
@@ -256,9 +258,13 @@ public class MTEVendingMachine extends MTEMultiBlockBase
             .getTrades()
             .get(tradeRequest.tradeGroupOrder);
 
+        UUID uuid = tradeRequest.walletMode == WalletMode.TEAM ? TeamHelper.GetTeamUUID(tradeRequest.playerID)
+            : tradeRequest.playerID;
+
+        if (uuid == null) return false;
+
         if (
-            !this.inputCurrencySatisfied(trade.fromCurrency, tradeRequest.playerID)
-                || !this.inputItemsSatisfied(trade.fromItems)
+            !this.inputCurrencySatisfied(trade.fromCurrency, uuid) || !this.inputItemsSatisfied(trade.fromItems)
                 || !this.inputItemsSatisfied(trade.nonConsumedItems)
         ) {
             return false;
@@ -270,10 +276,8 @@ public class MTEVendingMachine extends MTEMultiBlockBase
             inputSlots[i] = curStack == null ? null : curStack.copy();
         }
 
-        UUID currentPlayer = NameCache.INSTANCE.getUUIDFromPlayer(this.getCurrentUser());
-
-        TradeManager.INSTANCE.playerCurrency.putIfAbsent(currentPlayer, new HashMap<>());
-        Map<CurrencyType, Integer> coinInventory = TradeManager.INSTANCE.playerCurrency.get(currentPlayer);
+        TradeManager.INSTANCE.playerCurrency.putIfAbsent(uuid, new HashMap<>());
+        Map<CurrencyType, Integer> coinInventory = TradeManager.INSTANCE.playerCurrency.get(uuid);
 
         Map<CurrencyType, Integer> newCoinInventory = new HashMap<>();
         for (CurrencyItem ci : trade.fromCurrency) {

@@ -48,6 +48,7 @@ public class NameCache implements INameCache {
         ) {
             tag.setString("name", name);
             tag.setBoolean("isOP", isOP);
+            tag.setBoolean("player", true);
             return true;
         }
 
@@ -171,5 +172,12 @@ public class NameCache implements INameCache {
 
         return player.getGameProfile()
             .getId();
+    }
+
+    public void addTeamUUID(UUID uuid, String name) {
+        NBTTagCompound tag = new NBTTagCompound();
+        tag.setString("name", name);
+        tag.setBoolean("player", true);
+        cache.put(uuid, tag);
     }
 }
