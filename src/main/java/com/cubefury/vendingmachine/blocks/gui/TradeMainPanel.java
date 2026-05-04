@@ -55,7 +55,7 @@ public class TradeMainPanel extends ModularPanel {
     public boolean onKeyPressed(char typedChar, int keyCode) {
         if (
             gui.getSearchBar()
-                .isFocused() && typedChar > 32
+                .isFocused() && typedChar >= 32
                 && typedChar != 127
         ) {
             return true;
