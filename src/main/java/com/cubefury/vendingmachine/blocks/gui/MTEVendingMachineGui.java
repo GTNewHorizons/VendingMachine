@@ -3,9 +3,11 @@ package com.cubefury.vendingmachine.blocks.gui;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -14,6 +16,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.util.Constants;
 
+import com.cleanroommc.modularui.api.drawable.IDrawable;
 import com.cleanroommc.modularui.api.drawable.IKey;
 import com.cleanroommc.modularui.api.widget.IWidget;
 import com.cleanroommc.modularui.drawable.DynamicDrawable;
@@ -73,6 +76,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
     private final Map<CurrencyType, Boolean> ejectSingleCoin = new HashMap<>();
     public final Map<TradeCategory, List<TradeItemDisplayWidget>> displayedTradesTiles = new HashMap<>();
     public final Map<TradeCategory, List<TradeItemDisplayWidget>> displayedTradesList = new HashMap<>();
+    public final Set<TradeCategory> highlightedTabs = new HashSet<>();
     private final List<TradeCategory> tradeCategories = new ArrayList<>();
     private final List<InterceptingSlot> inputSlots = new ArrayList<>();
 
@@ -240,8 +244,15 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
             int index = i;
             tabColumn.child(
                 new VendingPageButton(i, tabController).tab(GuiTextures.TAB_LEFT, -1)
-                    .overlay(
-                        this.tradeCategories.get(i)
+                    .overlay(new DynamicDrawable(() -> {
+
+                        if (highlightedTabs.contains(this.tradeCategories.get(index))) {
+                            return GuiTextures.TAB_HIGHLIGHT.asIcon()
+                                .size(20, 20);
+                        }
+                        return IDrawable.EMPTY;
+                    }),
+                        this.tradeCategories.get(index)
                             .getTexture()
                             .asIcon()
                             .margin(6)
@@ -875,6 +886,25 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
         }
         this.updateTradeDisplay(trades, displayedTradesTiles);
         this.updateTradeDisplay(trades, displayedTradesList);
+        this.updateTabHighlighting(trades);
+    }
+
+    private void updateTabHighlighting(Map<TradeCategory, List<TradeItemDisplay>> trades) {
+        this.highlightedTabs.clear();
+        if (
+            this.searchBar.getText()
+                .equals("")
+        ) {
+            return;
+        }
+        for (Map.Entry<TradeCategory, List<TradeItemDisplay>> entry : trades.entrySet()) {
+            if (
+                !entry.getValue()
+                    .isEmpty()
+            ) {
+                this.highlightedTabs.add(entry.getKey());
+            }
+        }
     }
 
     public Map<TradeCategory, List<TradeItemDisplay>> getCurrentTradeDisplayData() {
