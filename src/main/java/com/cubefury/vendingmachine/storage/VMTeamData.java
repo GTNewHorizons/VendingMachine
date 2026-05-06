@@ -18,12 +18,16 @@ public class VMTeamData implements ITeamData {
     public static String ID = "VM";
 
     private final Wallet wallet = new Wallet();
-    private final Map<UUID, Wallet> personalWallets = new HashMap<>();
+    private final Map<UUID, VMPlayerData> playerData = new HashMap<>();
+
+    public VMPlayerData getPlayerData(UUID uuid) {
+        return playerData.computeIfAbsent(uuid, id -> new VMPlayerData());
+    }
 
     public Wallet getWallet(UUID uuid, WalletMode walletMode) {
         switch (walletMode) {
             case PERSONAL -> {
-                return personalWallets.computeIfAbsent(uuid, id -> new Wallet());
+                return getPlayerData(uuid).wallet;
             }
             case TEAM -> {
                 return wallet;
@@ -38,38 +42,36 @@ public class VMTeamData implements ITeamData {
         wallet.writeToNBT(teamWalletTag);
         tag.setTag("wallet", teamWalletTag);
 
-        if (!personalWallets.isEmpty()) {
-            NBTTagList personalList = new NBTTagList();
-            for (Entry<UUID, Wallet> entry : personalWallets.entrySet()) {
-                NBTTagCompound personalTag = new NBTTagCompound();
-                personalList.appendTag(personalTag);
-                personalTag.setString(
+        if (!playerData.isEmpty()) {
+            NBTTagList playerDataList = new NBTTagList();
+            for (Entry<UUID, VMPlayerData> entry : playerData.entrySet()) {
+                NBTTagCompound playerDataTag = new NBTTagCompound();
+                playerDataList.appendTag(playerDataTag);
+                playerDataTag.setString(
                     "uuid",
                     entry.getKey()
                         .toString());
-                NBTTagCompound walletTag = new NBTTagCompound();
                 entry.getValue()
-                    .writeToNBT(walletTag);
-                personalTag.setTag("wallet", walletTag);
+                    .writeToNBT(playerDataTag);
             }
-            tag.setTag("personal", personalList);
+            tag.setTag("players", playerDataList);
         }
     }
 
     @Override
     public void readFromNBT(NBTTagCompound tag) {
-        personalWallets.clear();
+        playerData.clear();
         if (tag.hasKey("wallet")) {
             wallet.readFromNBT(tag.getCompoundTag("wallet"), false);
         }
-        if (tag.hasKey("personal")) {
-            NBTTagList personalList = tag.getTagList("personal", Constants.NBT.TAG_COMPOUND);
-            for (int i = 0; i < personalList.tagCount(); i++) {
-                NBTTagCompound personalTag = personalList.getCompoundTagAt(i);
-                UUID uuid = UUID.fromString(personalTag.getString("uuid"));
-                Wallet personalWallet = new Wallet();
-                personalWallet.readFromNBT(personalTag.getCompoundTag("wallet"), false);
-                personalWallets.put(uuid, personalWallet);
+        if (tag.hasKey("players")) {
+            NBTTagList playersList = tag.getTagList("players", Constants.NBT.TAG_COMPOUND);
+            for (int i = 0; i < playersList.tagCount(); i++) {
+                NBTTagCompound playerTag = playersList.getCompoundTagAt(i);
+                UUID uuid = UUID.fromString(playerTag.getString("uuid"));
+                VMPlayerData pd = new VMPlayerData();
+                pd.readFromNBT(playerTag);
+                playerData.put(uuid, pd);
             }
         }
     }

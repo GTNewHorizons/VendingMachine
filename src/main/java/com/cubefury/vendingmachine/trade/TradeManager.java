@@ -37,16 +37,8 @@ public class TradeManager {
 
     public static TradeManager INSTANCE = new TradeManager();
 
-    // availableTrades and noCondition trades technically have information that
-    // is extractable from tradegroupStates, but querying that every second
-    // for gui display is more expensive so we cache it here
-    private final Map<UUID, Set<UUID>> availableTrades = new HashMap<>();
-
     // Map for tradegroup id -> player trade states and unlock status
     public final Map<UUID, TradeGroupState> tradeGroupStates = new HashMap<>();
-
-    // Map for player id -> trades with pending refresh notifications
-    public final Map<UUID, Set<UUID>> notificationQueue = new HashMap<>();
 
     public final List<TradeItemDisplay> tradeData = new ArrayList<>();
 
@@ -55,33 +47,44 @@ public class TradeManager {
     private TradeManager() {}
 
     public void addTradeGroup(@Nonnull UUID player, UUID tg) {
-        availableTrades.putIfAbsent(player, new HashSet<>());
-        availableTrades.get(player)
-            .add(tg);
+        VMTeamData teamData = getTeamData(player);
+        if (teamData == null) return;
+        Set<UUID> availableTrades = teamData.getPlayerData(player).availableTrades;
+        if(availableTrades.add(tg)){
+            saveTeamData(player);
+        }
     }
 
     public void removeTradeGroup(UUID player, UUID tg) {
-        if (availableTrades.containsKey(player)) {
-            availableTrades.get(player)
-                .remove(tg);
+        VMTeamData teamData = getTeamData(player);
+        if (teamData == null) return;
+        Set<UUID> availableTrades = teamData.getPlayerData(player).availableTrades;
+        if(availableTrades.remove(tg)){
+            saveTeamData(player);
         }
     }
 
     public @Nullable Wallet getWallet(UUID player, WalletMode walletMode) {
-        if (player == null) return null;
-        Team team = TeamManager.getTeamByPlayer(player);
-        if (team == null) return null;
-        ITeamData teamData = team.getData(VMTeamData.ID);
-        if (teamData instanceof VMTeamData vmTeamData) {
-            return vmTeamData.getWallet(player, walletMode);
-        }
-        return null;
+        VMTeamData teamData = getTeamData(player);
+        if (teamData == null) return null;
+        return teamData.getWallet(player, walletMode);
     }
 
     public void saveTeamData(UUID player) {
         Team team = TeamManager.getTeamByPlayer(player);
         if (team == null) return;
         team.markDirty();
+    }
+
+    private @Nullable VMTeamData getTeamData(UUID player) {
+        if (player == null) return null;
+        Team team = TeamManager.getTeamByPlayer(player);
+        if (team == null) return null;
+        ITeamData teamData = team.getData(VMTeamData.ID);
+        if (teamData instanceof VMTeamData vmTeamData) {
+            return vmTeamData;
+        }
+        return null;
     }
 
     public void addSatisfiedCondition(TradeGroup tradeGroup, @Nonnull UUID player, ICondition c) {
@@ -121,23 +124,24 @@ public class TradeManager {
     }
 
     public List<TradeGroup> getAvailableTradeGroups(UUID player) {
-        availableTrades.putIfAbsent(player, new HashSet<>());
         ArrayList<TradeGroup> tradeList = new ArrayList<>();
-        for (UUID tgId : availableTrades.get(player)) {
-            tradeList.add(TradeDatabase.INSTANCE.getTradeGroupFromId(tgId));
+        VMTeamData teamData = getTeamData(player);
+        if (teamData != null){
+            Set<UUID> availableTrades = teamData.getPlayerData(player).availableTrades;
+            for (UUID tgId : availableTrades) {
+                tradeList.add(TradeDatabase.INSTANCE.getTradeGroupFromId(tgId));
+            }
         }
+
         tradeList.addAll(TradeDatabase.INSTANCE.noConditionTrades);
         return tradeList;
     }
 
     public void clearTradeState(@Nullable UUID player) {
-        tradeGroupStates.forEach((uuid, tgs) -> tgs.clearTradeState(player));
-        clearNotificationQueue(player);
-        if (player == null) {
-            availableTrades.clear();
-        } else {
-            availableTrades.remove(player);
-        }
+        VMTeamData teamData = getTeamData(player);
+        if (teamData == null) return;
+        teamData.getPlayerData(player).availableTrades.clear();
+        saveTeamData(player);
     }
 
     public TradeHistory getTradeState(@Nonnull UUID player, TradeGroup tg) {
@@ -225,24 +229,21 @@ public class TradeManager {
         return nbt;
     }
 
-    public void clearNotificationQueue(UUID playerOrNull) {
-        if (playerOrNull == null) {
-            this.notificationQueue.clear();
-        } else {
-            this.notificationQueue.remove(playerOrNull);
-        }
-    }
-
     public void addNotification(UUID player, TradeGroup tg) {
-        this.notificationQueue.putIfAbsent(player, new HashSet<>());
-        this.notificationQueue.get(player)
-            .add(tg.getId());
+        VMTeamData teamData = getTeamData(player);
+        if (teamData == null) return;
+        Set<UUID> notificationQueue = teamData.getPlayerData(player).notificationQueue;
+        if(notificationQueue.add(tg.getId())){
+            saveTeamData(player);
+        }
     }
 
     public void sendTradeNotifications(EntityPlayerMP player) {
         UUID playerId = NameCache.INSTANCE.getUUIDFromPlayer(player);
-        Set<UUID> notifGroups = this.notificationQueue.get(playerId);
-        if (notifGroups == null) {
+        VMTeamData teamData = getTeamData(playerId);
+        if (teamData == null) return;
+        Set<UUID> notifGroups = teamData.getPlayerData(playerId).notificationQueue;
+        if (notifGroups == null || notifGroups.isEmpty()) {
             return;
         }
 
@@ -263,11 +264,11 @@ public class TradeManager {
 
         if (!notifList.isEmpty()) {
             NetTradeNotification.sendNotification(player, notifList);
-            SaveLoadHandler.INSTANCE.writeTradeState(Collections.singleton(playerId));
         }
 
         for (UUID tg : notifList) {
             notifGroups.remove(tg);
         }
+        saveTeamData(playerId);
     }
 }
