@@ -11,10 +11,14 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraftforge.common.util.Constants;
 
+import org.jetbrains.annotations.Nullable;
+
 import com.cubefury.vendingmachine.blocks.gui.WalletMode;
 import com.cubefury.vendingmachine.trade.TradeHistory;
 import com.cubefury.vendingmachine.util.Wallet;
 import com.gtnewhorizon.gtnhlib.teams.ITeamData;
+import com.gtnewhorizon.gtnhlib.teams.Team;
+import com.gtnewhorizon.gtnhlib.teams.TeamDataCopyReason;
 
 public class VMTeamData implements ITeamData {
 
@@ -52,6 +56,35 @@ public class VMTeamData implements ITeamData {
 
     public TradeHistory getTradeState(@Nonnull UUID tg) {
         return tradeHistory.getOrDefault(tg, new TradeHistory());
+    }
+
+    @Override
+    public void mergeData(Team consumed, Team surviving, ITeamData oldTeamData) {
+        if (oldTeamData instanceof VMTeamData other) {
+            wallet.merge(other.wallet);
+
+            playerData.putAll(other.playerData);
+            for (Entry<UUID, TradeHistory> entry : other.tradeHistory.entrySet()) {
+                tradeHistory.merge(entry.getKey(), entry.getValue(), TradeHistory::merge);
+            }
+        }
+    }
+
+    @Override
+    public @Nullable ITeamData copyData(Team oldTeam, Team newTeam, UUID playerId, TeamDataCopyReason reason) {
+        VMPlayerData pd = playerData.getOrDefault(playerId, null);
+        VMTeamData newData = (VMTeamData) newTeam.getData(ID);
+        if (pd != null) {
+            newData.playerData.put(playerId, pd);
+        }
+        for (Entry<UUID, TradeHistory> entry : tradeHistory.entrySet()) {
+            tradeHistory.merge(
+                entry.getKey(),
+                entry.getValue()
+                    .copy(),
+                TradeHistory::merge);
+        }
+        return null;
     }
 
     @Override

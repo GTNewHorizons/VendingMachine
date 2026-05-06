@@ -1,6 +1,7 @@
 package com.cubefury.vendingmachine.util;
 
 import java.util.*;
+import java.util.Map.Entry;
 
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -42,6 +43,12 @@ public class Wallet {
             }
         }
         return true;
+    }
+
+    public void merge(Wallet other) {
+        for (Entry<CurrencyType, Integer> entry : other.currencies.entrySet()) {
+            addCount(entry.getKey(), entry.getValue());
+        }
     }
 
     public int getCount(CurrencyType type) {
