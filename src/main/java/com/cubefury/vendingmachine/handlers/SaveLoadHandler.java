@@ -15,7 +15,6 @@ import com.cubefury.vendingmachine.VendingMachine;
 import com.cubefury.vendingmachine.storage.NameCache;
 import com.cubefury.vendingmachine.trade.FavouritesTracker;
 import com.cubefury.vendingmachine.trade.TradeDatabase;
-import com.cubefury.vendingmachine.trade.TradeManager;
 import com.cubefury.vendingmachine.util.FileIO;
 import com.cubefury.vendingmachine.util.JsonHelper;
 import com.cubefury.vendingmachine.util.NBTConverter;
@@ -109,13 +108,10 @@ public class SaveLoadHandler {
     public void unloadAll() {
         NameCache.INSTANCE.clear();
         TradeDatabase.INSTANCE.clear();
-        TradeManager.INSTANCE.clearTradeState(null);
     }
 
     public void reloadDatabase() {
         TradeDatabase.INSTANCE.clear();
-        TradeManager.INSTANCE.clearTradeState(null);
-
         loadDatabase();
     }
 

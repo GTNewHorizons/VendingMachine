@@ -2,6 +2,7 @@ package com.cubefury.vendingmachine.trade;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -30,7 +31,12 @@ public class TradeManager {
 
     public static TradeManager INSTANCE = new TradeManager();
 
-    // Map for tradegroup id -> player trade states and unlock status
+    // availableTrades and noCondition trades technically have information that
+    // is extractable from tradegroupStates, but querying that every second
+    // for gui display is more expensive so we cache it here
+    private final Map<UUID, Set<UUID>> availableTrades = new HashMap<>();
+
+    // Map for tradegroup id -> player unlock status
     public final Map<UUID, TradeGroupState> tradeGroupStates = new HashMap<>();
 
     public final List<TradeItemDisplay> tradeData = new ArrayList<>();
@@ -40,20 +46,15 @@ public class TradeManager {
     private TradeManager() {}
 
     public void addTradeGroup(@Nonnull UUID player, UUID tg) {
-        VMTeamData teamData = getTeamData(player);
-        if (teamData == null) return;
-        Set<UUID> availableTrades = teamData.getPlayerData(player).availableTrades;
-        if (availableTrades.add(tg)) {
-            saveTeamData(player);
-        }
+        availableTrades.putIfAbsent(player, new HashSet<>());
+        availableTrades.get(player)
+            .add(tg);
     }
 
     public void removeTradeGroup(UUID player, UUID tg) {
-        VMTeamData teamData = getTeamData(player);
-        if (teamData == null) return;
-        Set<UUID> availableTrades = teamData.getPlayerData(player).availableTrades;
-        if (availableTrades.remove(tg)) {
-            saveTeamData(player);
+        if (availableTrades.containsKey(player)) {
+            availableTrades.get(player)
+                .remove(tg);
         }
     }
 
@@ -117,24 +118,13 @@ public class TradeManager {
     }
 
     public List<TradeGroup> getAvailableTradeGroups(UUID player) {
+        availableTrades.putIfAbsent(player, new HashSet<>());
         ArrayList<TradeGroup> tradeList = new ArrayList<>();
-        VMTeamData teamData = getTeamData(player);
-        if (teamData != null) {
-            Set<UUID> availableTrades = teamData.getPlayerData(player).availableTrades;
-            for (UUID tgId : availableTrades) {
-                tradeList.add(TradeDatabase.INSTANCE.getTradeGroupFromId(tgId));
-            }
+        for (UUID tgId : availableTrades.get(player)) {
+            tradeList.add(TradeDatabase.INSTANCE.getTradeGroupFromId(tgId));
         }
-
         tradeList.addAll(TradeDatabase.INSTANCE.noConditionTrades);
         return tradeList;
-    }
-
-    public void clearTradeState(@Nullable UUID player) {
-        VMTeamData teamData = getTeamData(player);
-        if (teamData == null) return;
-        teamData.getPlayerData(player).availableTrades.clear();
-        saveTeamData(player);
     }
 
     public TradeHistory getTradeState(@Nonnull UUID player, TradeGroup tg) {

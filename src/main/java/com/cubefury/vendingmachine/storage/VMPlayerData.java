@@ -14,7 +14,6 @@ import com.cubefury.vendingmachine.util.Wallet;
 public class VMPlayerData {
 
     public final Wallet wallet = new Wallet();
-    public final Set<UUID> availableTrades = new HashSet<>();
 
     // trades with pending refresh notifications
     public final Set<UUID> notificationQueue = new HashSet<>();
