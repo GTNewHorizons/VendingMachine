@@ -1,7 +1,6 @@
 package com.cubefury.vendingmachine.blocks.gui;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -57,9 +56,11 @@ import com.cubefury.vendingmachine.trade.TradeDatabase;
 import com.cubefury.vendingmachine.trade.TradeGroup;
 import com.cubefury.vendingmachine.trade.TradeManager;
 import com.cubefury.vendingmachine.util.BigItemStack;
-import com.cubefury.vendingmachine.util.TeamHelper;
 import com.cubefury.vendingmachine.util.Translator;
+import com.cubefury.vendingmachine.util.Wallet;
 import com.gtnewhorizon.gtnhlib.config.ConfigurationManager;
+import com.gtnewhorizon.gtnhlib.teams.Team;
+import com.gtnewhorizon.gtnhlib.teams.TeamManager;
 
 import gregtech.api.modularui2.GTGuiTextures;
 import gregtech.api.modularui2.GTWidgetThemes;
@@ -308,22 +309,17 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
         if (this.guiData.isClient() || !this.base.getActive()) {
             return;
         }
-        UUID uuid = getUUID();
-        if (uuid == null) return;
-        if (
-            !TradeManager.INSTANCE.playerCurrency.containsKey(uuid) || !TradeManager.INSTANCE.playerCurrency.get(uuid)
-                .containsKey(type)
-        ) {
+        UUID playerId = NameCache.INSTANCE.getUUIDFromPlayer(base.getCurrentUser());
+        Wallet wallet = TradeManager.INSTANCE.getWallet(playerId, walletMode);
+        if (wallet == null || wallet.getCount(type) <= 0) {
             this.ejectSingleCoin.put(type, false);
             return;
         }
-        for (ItemStack ejectable : new CurrencyItem(
-            type,
-            TradeManager.INSTANCE.playerCurrency.get(uuid)
-                .get(type)).itemize()) {
+        for (ItemStack ejectable : new CurrencyItem(type, wallet.getCount(type)).itemize()) {
             base.spawnItem(ejectable);
         }
-        TradeManager.INSTANCE.resetCurrency(uuid, type);
+        wallet.resetCount(type);
+        TradeManager.INSTANCE.saveTeamData(playerId);
         this.ejectSingleCoin.put(type, false);
     }
 
@@ -336,26 +332,25 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
             ejectCoins = false;
             return;
         }
-        UUID uuid = getUUID();
+        UUID playerId = NameCache.INSTANCE.getUUIDFromPlayer(base.getCurrentUser());
+        Wallet wallet = TradeManager.INSTANCE.getWallet(playerId, walletMode);
 
-        if (uuid == null || !TradeManager.INSTANCE.playerCurrency.containsKey(uuid)) {
+        if (wallet == null) {
             ejectCoins = false;
             return;
         }
 
-        Map<CurrencyType, Integer> coins = TradeManager.INSTANCE.playerCurrency.getOrDefault(uuid, new HashMap<>());
-        for (Map.Entry<CurrencyType, Integer> entry : coins.entrySet()) {
-            for (ItemStack ejectable : new CurrencyItem(entry.getKey(), entry.getValue()).itemize()) {
-                base.spawnItem(ejectable);
+        for (CurrencyType type : CurrencyType.values()) {
+            if (wallet.getCount(type) > 0) {
+                for (ItemStack ejectable : new CurrencyItem(type, wallet.getCount(type)).itemize()) {
+                    base.spawnItem(ejectable);
+                }
             }
         }
-        TradeManager.INSTANCE.resetCurrency(uuid, null);
-        ejectCoins = false;
-    }
 
-    private UUID getUUID() {
-        UUID playerUuid = NameCache.INSTANCE.getUUIDFromPlayer(base.getCurrentUser());
-        return walletMode == WalletMode.TEAM ? TeamHelper.GetTeamUUID(playerUuid) : playerUuid;
+        wallet.resetAllCount();
+        TradeManager.INSTANCE.saveTeamData(playerId);
+        ejectCoins = false;
     }
 
     private void doEjectItems() {
@@ -436,6 +431,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
     }
 
     private SlotGroupWidget createInputSlots() {
+        UUID playerId = NameCache.INSTANCE.getUUIDFromPlayer(getBase().getCurrentUser());
         return SlotGroupWidget.builder()
             .matrix("II", "II", "II", "II")
             .key('I', index -> {
@@ -444,7 +440,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                 return new ItemSlot().slot(
                     slot.slotGroup("inputSlotGroup")
                         .changeListener((newItem, onlyAmountChanged, client, init) -> {
-                            boolean hasCoin = slot.intercept(newItem, client, getUUID());
+                            boolean hasCoin = slot.intercept(newItem, client, playerId, walletMode);
                             if (client) {
                                 return;
                             }
@@ -798,10 +794,12 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
         });
         syncManager.syncValue("ejectCoins", ejectCoinsSyncer);
 
+        UUID playerId = NameCache.INSTANCE.getUUIDFromPlayer(getBase().getCurrentUser());
         for (CurrencyType type : CurrencyType.values()) {
-            IntSyncValue coinAmountSyncer = new IntSyncValue(
-                () -> TradeManager.INSTANCE.playerCurrency.getOrDefault(getUUID(), Collections.emptyMap())
-                    .getOrDefault(type, 0));
+            IntSyncValue coinAmountSyncer = new IntSyncValue(() -> {
+                Wallet wallet = TradeManager.INSTANCE.getWallet(playerId, walletMode);
+                return wallet == null ? 0 : wallet.getCount(type);
+            });
             syncManager.syncValue("coinAmount_" + type.id, coinAmountSyncer);
 
             BooleanSyncValue ejectCoinSyncer = new BooleanSyncValue(() -> this.ejectSingleCoin.get(type), val -> {
@@ -813,13 +811,16 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
             syncManager.syncValue("ejectCoin_" + type.id, ejectCoinSyncer);
         }
 
-        UUID teamId = TeamHelper.GetTeamUUID(NameCache.INSTANCE.getUUIDFromPlayer(getBase().getCurrentUser()));
-        BooleanSyncValue hasTeamSyncer = new BooleanSyncValue(() -> teamId != null, val -> {
-            walletButton.stateCount(val ? 2 : 1);
-            if (!val) {
-                walletButton.setState(WalletMode.PERSONAL.ordinal(), true);
-            }
-        });
+        Team team = TeamManager.getTeamByPlayer(playerId);
+        BooleanSyncValue hasTeamSyncer = new BooleanSyncValue(
+            () -> team != null && team.getMembers()
+                .size() > 1,
+            val -> {
+                walletButton.stateCount(val ? 2 : 1);
+                if (!val) {
+                    walletButton.setState(WalletMode.PERSONAL.ordinal(), true);
+                }
+            });
         syncManager.syncValue("hasTeam", hasTeamSyncer);
 
         // Block modifications from server -> client

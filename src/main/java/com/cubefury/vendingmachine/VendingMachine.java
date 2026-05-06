@@ -11,9 +11,11 @@ import com.cubefury.vendingmachine.items.VMItems;
 import com.cubefury.vendingmachine.network.PacketTypeRegistry;
 import com.cubefury.vendingmachine.network.SerializedPacket;
 import com.cubefury.vendingmachine.storage.NameCache;
+import com.cubefury.vendingmachine.storage.VMTeamData;
 import com.cubefury.vendingmachine.util.ItemPlaceholder;
 import com.gtnewhorizon.gtnhlib.config.ConfigException;
 import com.gtnewhorizon.gtnhlib.config.ConfigurationManager;
+import com.gtnewhorizon.gtnhlib.teams.TeamDataRegistry;
 
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.Mod;
@@ -106,6 +108,8 @@ public class VendingMachine {
         if (isGtLoaded) {
             VMItems.registerMultis();
         }
+
+        TeamDataRegistry.register(VMTeamData.ID, VMTeamData::new);
 
         proxy.init(event);
     }

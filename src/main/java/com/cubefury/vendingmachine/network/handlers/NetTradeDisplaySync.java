@@ -16,6 +16,7 @@ import com.cubefury.vendingmachine.api.network.UnserializedPacket;
 import com.cubefury.vendingmachine.blocks.MTEVendingMachine;
 import com.cubefury.vendingmachine.blocks.gui.MTEVendingMachineGui;
 import com.cubefury.vendingmachine.blocks.gui.TradeItemDisplay;
+import com.cubefury.vendingmachine.blocks.gui.WalletMode;
 import com.cubefury.vendingmachine.network.PacketSender;
 import com.cubefury.vendingmachine.network.PacketTypeRegistry;
 import com.cubefury.vendingmachine.storage.NameCache;
@@ -25,7 +26,6 @@ import com.cubefury.vendingmachine.trade.TradeGroup;
 import com.cubefury.vendingmachine.trade.TradeHistory;
 import com.cubefury.vendingmachine.trade.TradeManager;
 import com.cubefury.vendingmachine.util.NBTConverter;
-import com.cubefury.vendingmachine.util.TeamHelper;
 import com.cubefury.vendingmachine.util.Translator;
 
 import cpw.mods.fml.relauncher.Side;
@@ -126,7 +126,6 @@ public class NetTradeDisplaySync {
 
         NBTTagCompound payload = new NBTTagCompound();
         NBTTagList trades = new NBTTagList();
-        UUID teamId = TeamHelper.GetTeamUUID(playerId);
         for (TradeGroup tg : availableGroups) {
             TradeHistory history = TradeManager.INSTANCE.getTradeState(playerId, tg);
             long lastTradeTime = history.lastTrade;
@@ -149,9 +148,9 @@ public class NetTradeDisplaySync {
                     && base.inputItemsSatisfied(trade.nonConsumedItems);
 
                 boolean tradableNowPersonal = inputItemsSatisfied
-                    && base.inputCurrencySatisfied(trade.fromCurrency, playerId);
-                boolean tradableNowTeam = inputItemsSatisfied && teamId != null
-                    && base.inputCurrencySatisfied(trade.fromCurrency, teamId);
+                    && base.inputCurrencySatisfied(trade.fromCurrency, playerId, WalletMode.PERSONAL);
+                boolean tradableNowTeam = inputItemsSatisfied
+                    && base.inputCurrencySatisfied(trade.fromCurrency, playerId, WalletMode.TEAM);
 
                 trades.appendTag(
                     new Tradable(tg.getId(), i, cooldownRemaining, enabled, tradableNowPersonal, tradableNowTeam)

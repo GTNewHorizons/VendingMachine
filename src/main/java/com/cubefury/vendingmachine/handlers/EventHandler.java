@@ -1,6 +1,5 @@
 package com.cubefury.vendingmachine.handlers;
 
-import java.util.Collections;
 import java.util.UUID;
 
 import javax.annotation.Nonnull;
@@ -22,7 +21,6 @@ import com.cubefury.vendingmachine.network.handlers.NetBulkSync;
 import com.cubefury.vendingmachine.network.handlers.NetTradeDbSync;
 import com.cubefury.vendingmachine.storage.NameCache;
 import com.cubefury.vendingmachine.trade.TradeManager;
-import com.cubefury.vendingmachine.util.TeamHelper;
 
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.PlayerEvent;
@@ -128,11 +126,7 @@ public class EventHandler {
             VendingMachine.LOG.info("Force terminating VM session for {}", player);
             vm.resetCurrentUser(player);
             UUID playerId = NameCache.INSTANCE.getUUIDFromPlayer(player);
-            SaveLoadHandler.INSTANCE.writeTradeState(Collections.singleton(playerId));
-            UUID teamId = TeamHelper.GetTeamUUID(playerId);
-            if (teamId != null) {
-                SaveLoadHandler.INSTANCE.writeTradeState(Collections.singleton(teamId));
-            }
+            TradeManager.INSTANCE.saveTeamData(playerId);
         }
     }
 

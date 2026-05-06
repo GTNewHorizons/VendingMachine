@@ -17,14 +17,18 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraftforge.common.util.Constants;
 
-import com.cubefury.vendingmachine.VendingMachine;
 import com.cubefury.vendingmachine.api.trade.ICondition;
 import com.cubefury.vendingmachine.blocks.gui.TradeItemDisplay;
+import com.cubefury.vendingmachine.blocks.gui.WalletMode;
 import com.cubefury.vendingmachine.handlers.SaveLoadHandler;
 import com.cubefury.vendingmachine.network.handlers.NetTradeNotification;
 import com.cubefury.vendingmachine.storage.NameCache;
+import com.cubefury.vendingmachine.storage.VMTeamData;
 import com.cubefury.vendingmachine.util.NBTConverter;
-import com.cubefury.vendingmachine.util.TeamHelper;
+import com.cubefury.vendingmachine.util.Wallet;
+import com.gtnewhorizon.gtnhlib.teams.ITeamData;
+import com.gtnewhorizon.gtnhlib.teams.Team;
+import com.gtnewhorizon.gtnhlib.teams.TeamManager;
 
 // Sync the following objects to the client every GUI refresh cycle:
 // tradedata, No-condition trades and currency
@@ -41,14 +45,8 @@ public class TradeManager {
     // Map for tradegroup id -> player trade states and unlock status
     public final Map<UUID, TradeGroupState> tradeGroupStates = new HashMap<>();
 
-    // Map for player and team id -> currency data
-    public final Map<UUID, Map<CurrencyType, Integer>> playerCurrency = new HashMap<>();
-
     // Map for player id -> trades with pending refresh notifications
     public final Map<UUID, Set<UUID>> notificationQueue = new HashMap<>();
-
-    // For writeback to file in original format, to prevent data loss
-    private final Map<UUID, List<NBTTagCompound>> invalidCurrency = new HashMap<>();
 
     public final List<TradeItemDisplay> tradeData = new ArrayList<>();
 
@@ -67,6 +65,23 @@ public class TradeManager {
             availableTrades.get(player)
                 .remove(tg);
         }
+    }
+
+    public @Nullable Wallet getWallet(UUID player, WalletMode walletMode) {
+        if (player == null) return null;
+        Team team = TeamManager.getTeamByPlayer(player);
+        if (team == null) return null;
+        ITeamData teamData = team.getData(VMTeamData.ID);
+        if (teamData instanceof VMTeamData vmTeamData) {
+            return vmTeamData.getWallet(player, walletMode);
+        }
+        return null;
+    }
+
+    public void saveTeamData(UUID player) {
+        Team team = TeamManager.getTeamByPlayer(player);
+        if (team == null) return;
+        team.markDirty();
     }
 
     public void addSatisfiedCondition(TradeGroup tradeGroup, @Nonnull UUID player, ICondition c) {
@@ -115,59 +130,8 @@ public class TradeManager {
         return tradeList;
     }
 
-    public void populateCurrencyFromNBT(NBTTagCompound nbt, UUID player, boolean merge) {
-        NBTTagList tagList = nbt.getTagList("playerCurrency", Constants.NBT.TAG_COMPOUND);
-        if (!merge) {
-            this.clearCurrency(player);
-        }
-        this.playerCurrency.computeIfAbsent(player, k -> new HashMap<>());
-        for (int i = 0; i < tagList.tagCount(); i++) {
-            NBTTagCompound currencyEntry = tagList.getCompoundTagAt(i);
-            CurrencyType type = CurrencyType.getTypeFromId(currencyEntry.getString("currency"));
-            if (type == null) {
-                VendingMachine.LOG.warn("Unknown currency type found: {}", currencyEntry.getString("currency"));
-                this.invalidCurrency.computeIfAbsent(player, k -> new ArrayList<>());
-                this.invalidCurrency.get(player)
-                    .add(currencyEntry);
-                continue;
-            }
-            int amount = currencyEntry.getInteger("amount");
-            this.playerCurrency.get(player)
-                .computeIfAbsent(type, k -> 0);
-            this.playerCurrency.get(player)
-                .put(
-                    type,
-                    amount + (merge ? this.playerCurrency.get(player)
-                        .get(type) : 0));
-        }
-        this.hasCurrencyUpdate = true;
-    }
-
-    public NBTTagCompound writeCurrencyToNBT(NBTTagCompound nbt, @Nonnull UUID player) {
-        if (this.playerCurrency.get(player) == null) {
-            return nbt;
-        }
-        NBTTagList nbtCurrencyList = new NBTTagList();
-        for (Map.Entry<CurrencyType, Integer> entry : this.playerCurrency.get(player)
-            .entrySet()) {
-            NBTTagCompound currencyEntry = new NBTTagCompound();
-            currencyEntry.setString("currency", entry.getKey().id);
-            currencyEntry.setInteger("amount", entry.getValue());
-            nbtCurrencyList.appendTag(currencyEntry);
-        }
-
-        if (this.invalidCurrency.get(player) != null) {
-            for (NBTTagCompound tag : this.invalidCurrency.get(player)) {
-                nbtCurrencyList.appendTag(tag);
-            }
-        }
-        nbt.setTag("playerCurrency", nbtCurrencyList);
-        return nbt;
-    }
-
     public void clearTradeState(@Nullable UUID player) {
         tradeGroupStates.forEach((uuid, tgs) -> tgs.clearTradeState(player));
-        clearCurrency(player);
         clearNotificationQueue(player);
         if (player == null) {
             availableTrades.clear();
@@ -213,10 +177,6 @@ public class TradeManager {
         newTradeHistory.executeTrade(tg.maxTrades, tg.cooldown != -1);
         setTradeState(player, tg, newTradeHistory);
         SaveLoadHandler.INSTANCE.writeTradeState(Collections.singleton(player));
-        UUID teamId = TeamHelper.GetTeamUUID(player);
-        if (teamId != null) {
-            SaveLoadHandler.INSTANCE.writeTradeState(Collections.singleton(teamId));
-        }
         if (newTradeHistory.notificationQueued) {
             addNotification(player, tg);
         }
@@ -245,7 +205,6 @@ public class TradeManager {
                 }
             }
         }
-        populateCurrencyFromNBT(nbt, player, merge);
     }
 
     public NBTTagCompound writeTradeStateToNBT(NBTTagCompound nbt, @Nonnull UUID player) {
@@ -263,44 +222,7 @@ public class TradeManager {
             }
         }
         nbt.setTag("tradeState", tradeStateList);
-        writeCurrencyToNBT(nbt, player);
         return nbt;
-    }
-
-    public void resetCurrency(UUID playerId, CurrencyType type) {
-        this.playerCurrency.computeIfAbsent(playerId, k -> new HashMap<>());
-        if (type == null) {
-            this.playerCurrency.get(playerId)
-                .clear();
-        } else {
-            this.playerCurrency.get(playerId)
-                .put(type, 0);
-        }
-        this.hasCurrencyUpdate = true;
-    }
-
-    public void addCurrency(UUID playerId, CurrencyItem mapped) {
-        if (mapped != null) {
-            this.playerCurrency.computeIfAbsent(playerId, k -> new HashMap<>());
-            this.playerCurrency.get(playerId)
-                .computeIfAbsent(mapped.type, k -> 0);
-            this.playerCurrency.get(playerId)
-                .put(
-                    mapped.type,
-                    this.playerCurrency.get(playerId)
-                        .get(mapped.type) + mapped.value);
-        }
-        this.hasCurrencyUpdate = true;
-    }
-
-    public void clearCurrency(UUID player) {
-        if (player == null) {
-            this.playerCurrency.clear();
-            this.invalidCurrency.clear();
-        } else {
-            this.playerCurrency.remove(player);
-            this.invalidCurrency.remove(player);
-        }
     }
 
     public void clearNotificationQueue(UUID playerOrNull) {

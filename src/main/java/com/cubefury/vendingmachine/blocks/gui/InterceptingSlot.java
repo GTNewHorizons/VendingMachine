@@ -9,6 +9,7 @@ import com.cleanroommc.modularui.widgets.slot.ModularSlot;
 import com.cubefury.vendingmachine.blocks.MTEVendingMachine;
 import com.cubefury.vendingmachine.trade.CurrencyItem;
 import com.cubefury.vendingmachine.trade.TradeManager;
+import com.cubefury.vendingmachine.util.Wallet;
 
 public class InterceptingSlot extends ModularSlot {
 
@@ -20,7 +21,7 @@ public class InterceptingSlot extends ModularSlot {
     }
 
     // intercept item on both ends, but only do the post-intercept actions on server side
-    public boolean intercept(ItemStack newItem, boolean client, UUID id) {
+    public boolean intercept(ItemStack newItem, boolean client, UUID playerId, WalletMode walletMode) {
         if (vm == null || !vm.getActive()) {
             return false;
         }
@@ -28,7 +29,11 @@ public class InterceptingSlot extends ModularSlot {
         if (mapped != null) {
             this.putStack(null);
             if (!client) {
-                TradeManager.INSTANCE.addCurrency(id, mapped);
+                Wallet wallet = TradeManager.INSTANCE.getWallet(playerId, walletMode);
+                if (wallet != null) {
+                    wallet.addCount(mapped.type, mapped.value);
+                }
+                TradeManager.INSTANCE.saveTeamData(playerId);
             }
             return true;
         }
