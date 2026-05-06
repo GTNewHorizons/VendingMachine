@@ -6,7 +6,7 @@ public class TradeHistory {
     public int tradeCount = 0;
     public boolean notificationQueued = false;
 
-    public static TradeHistory DEFAULT = new TradeHistory();
+    public static final TradeHistory DEFAULT = new TradeHistory();
 
     public TradeHistory() {}
 

@@ -2,24 +2,15 @@ package com.cubefury.vendingmachine.command.vending;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.UUID;
 
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ChatComponentText;
 
-import com.cleanroommc.modularui.factory.PosGuiData;
-import com.cleanroommc.modularui.screen.ModularContainer;
-import com.cubefury.vendingmachine.blocks.MTEVendingMachine;
 import com.cubefury.vendingmachine.handlers.SaveLoadHandler;
 import com.cubefury.vendingmachine.network.handlers.NetTradeDbSync;
 import com.cubefury.vendingmachine.storage.NameCache;
-import com.cubefury.vendingmachine.trade.TradeManager;
-
-import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
 
 public class SubCmdReload implements IVendingSubcommand {
 
@@ -30,7 +21,7 @@ public class SubCmdReload implements IVendingSubcommand {
 
     @Override
     public String getUsage(ICommandSender sender) {
-        return "/vending reload database, /vending reload tradestate [player]";
+        return "/vending reload database";
     }
 
     @Override
@@ -40,34 +31,6 @@ public class SubCmdReload implements IVendingSubcommand {
             NetTradeDbSync.sendDatabase(null, false);
 
             sender.addChatMessage(new ChatComponentText("Reloaded Trade Database"));
-        } else if ((args.length == 1 || args.length == 2) && args[0].equals("tradestate")) {
-            UUID target = args.length == 1
-                ? NameCache.INSTANCE.getUUIDFromPlayer(CommandBase.getCommandSenderAsPlayer(sender))
-                : NameCache.INSTANCE.getUUID(args[1]);
-            if (target == null) {
-                sender.addChatMessage(new ChatComponentText("Could not resolve UUID of player."));
-                return;
-            }
-            MinecraftServer server = MinecraftServer.getServer();
-            if (server != null) {
-                EntityPlayerMP player = server.getConfigurationManager()
-                    .func_152612_a(NameCache.INSTANCE.getName(target));
-                if (
-                    player != null && player.openContainer instanceof ModularContainer container
-                        && container.getGuiData() instanceof PosGuiData guiData
-                        && guiData.getTileEntity() instanceof IGregTechTileEntity gte
-                        && gte.getMetaTileEntity() instanceof MTEVendingMachine
-                ) {
-                    sender.addChatMessage(
-                        new ChatComponentText(
-                            "Cannot reload trade state for a player currently accessing a vending machine."));
-                    return;
-                }
-            }
-            TradeManager.INSTANCE.clearTradeState(target);
-            SaveLoadHandler.INSTANCE.loadTradeState(target);
-            sender.addChatMessage(
-                new ChatComponentText("Reloaded trade state for " + NameCache.INSTANCE.getName(target)));
         } else {
             sender.addChatMessage(new ChatComponentText("Usage: " + getUsage(sender)));
         }

@@ -1,7 +1,5 @@
 package com.cubefury.vendingmachine.network.handlers;
 
-import java.util.Collections;
-
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
@@ -13,10 +11,10 @@ import com.cubefury.vendingmachine.VendingMachine;
 import com.cubefury.vendingmachine.api.network.UnserializedPacket;
 import com.cubefury.vendingmachine.api.util.Tuple2;
 import com.cubefury.vendingmachine.blocks.MTEVendingMachine;
-import com.cubefury.vendingmachine.handlers.SaveLoadHandler;
 import com.cubefury.vendingmachine.network.PacketSender;
 import com.cubefury.vendingmachine.network.PacketTypeRegistry;
 import com.cubefury.vendingmachine.storage.NameCache;
+import com.cubefury.vendingmachine.trade.TradeManager;
 
 import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
 
@@ -59,7 +57,6 @@ public class NetResetVMUser {
         ) {
             ((MTEVendingMachine) ((IGregTechTileEntity) te).getMetaTileEntity()).resetCurrentUser(message.second());
         }
-        SaveLoadHandler.INSTANCE
-            .writeTradeState(Collections.singleton(NameCache.INSTANCE.getUUIDFromPlayer(message.second())));
+        TradeManager.INSTANCE.saveTeamData(NameCache.INSTANCE.getUUIDFromPlayer(message.second()));
     }
 }

@@ -1,9 +1,7 @@
 package com.cubefury.vendingmachine.trade;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -13,18 +11,13 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraftforge.common.util.Constants;
 
 import com.cubefury.vendingmachine.api.trade.ICondition;
 import com.cubefury.vendingmachine.blocks.gui.TradeItemDisplay;
 import com.cubefury.vendingmachine.blocks.gui.WalletMode;
-import com.cubefury.vendingmachine.handlers.SaveLoadHandler;
 import com.cubefury.vendingmachine.network.handlers.NetTradeNotification;
 import com.cubefury.vendingmachine.storage.NameCache;
 import com.cubefury.vendingmachine.storage.VMTeamData;
-import com.cubefury.vendingmachine.util.NBTConverter;
 import com.cubefury.vendingmachine.util.Wallet;
 import com.gtnewhorizon.gtnhlib.teams.ITeamData;
 import com.gtnewhorizon.gtnhlib.teams.Team;
@@ -50,7 +43,7 @@ public class TradeManager {
         VMTeamData teamData = getTeamData(player);
         if (teamData == null) return;
         Set<UUID> availableTrades = teamData.getPlayerData(player).availableTrades;
-        if(availableTrades.add(tg)){
+        if (availableTrades.add(tg)) {
             saveTeamData(player);
         }
     }
@@ -59,7 +52,7 @@ public class TradeManager {
         VMTeamData teamData = getTeamData(player);
         if (teamData == null) return;
         Set<UUID> availableTrades = teamData.getPlayerData(player).availableTrades;
-        if(availableTrades.remove(tg)){
+        if (availableTrades.remove(tg)) {
             saveTeamData(player);
         }
     }
@@ -126,7 +119,7 @@ public class TradeManager {
     public List<TradeGroup> getAvailableTradeGroups(UUID player) {
         ArrayList<TradeGroup> tradeList = new ArrayList<>();
         VMTeamData teamData = getTeamData(player);
-        if (teamData != null){
+        if (teamData != null) {
             Set<UUID> availableTrades = teamData.getPlayerData(player).availableTrades;
             for (UUID tgId : availableTrades) {
                 tradeList.add(TradeDatabase.INSTANCE.getTradeGroupFromId(tgId));
@@ -145,15 +138,16 @@ public class TradeManager {
     }
 
     public TradeHistory getTradeState(@Nonnull UUID player, TradeGroup tg) {
-        tradeGroupStates.putIfAbsent(tg.getId(), new TradeGroupState(tg));
-        return tradeGroupStates.get(tg.getId())
-            .getTradeState(player);
+        VMTeamData teamData = getTeamData(player);
+        if (teamData == null) return new TradeHistory();
+        return teamData.getTradeState(tg.getId());
     }
 
     public void setTradeState(@Nonnull UUID player, TradeGroup tg, TradeHistory history) {
-        tradeGroupStates.putIfAbsent(tg.getId(), new TradeGroupState(tg));
-        tradeGroupStates.get(tg.getId())
-            .setTradeState(player, history);
+        VMTeamData teamData = getTeamData(player);
+        if (teamData == null) return;
+        teamData.setTradeHistory(tg.getId(), history);
+        saveTeamData(player);
     }
 
     public boolean canExecuteTrade(@Nonnull UUID player, TradeGroup tg) {
@@ -180,60 +174,16 @@ public class TradeManager {
         TradeHistory newTradeHistory = getTradeState(player, tg);
         newTradeHistory.executeTrade(tg.maxTrades, tg.cooldown != -1);
         setTradeState(player, tg, newTradeHistory);
-        SaveLoadHandler.INSTANCE.writeTradeState(Collections.singleton(player));
         if (newTradeHistory.notificationQueued) {
             addNotification(player, tg);
         }
-    }
-
-    public void populateTradeStateFromNBT(NBTTagCompound nbt, @Nonnull UUID player, boolean merge) {
-        NBTTagList tradeStateList = nbt.getTagList("tradeState", Constants.NBT.TAG_COMPOUND);
-        if (!merge) {
-            clearTradeState(player);
-        }
-        for (int i = 0; i < tradeStateList.tagCount(); i++) {
-            NBTTagCompound state = tradeStateList.getCompoundTagAt(i);
-            UUID tgId = NBTConverter.UuidValueType.TRADEGROUP.readId(state);
-            TradeGroup tg = TradeDatabase.INSTANCE.getTradeGroupFromId(tgId);
-            boolean notificationQueued = state.getBoolean("notificationQueued");
-            TradeHistory th = new TradeHistory(
-                state.getLong("lastTrade"),
-                state.getInteger("tradeCount"),
-                notificationQueued);
-            if (tg != null) {
-                tradeGroupStates.putIfAbsent(tg.getId(), new TradeGroupState(tg));
-                tradeGroupStates.get(tg.getId())
-                    .setTradeState(player, th);
-                if (notificationQueued) {
-                    addNotification(player, tg);
-                }
-            }
-        }
-    }
-
-    public NBTTagCompound writeTradeStateToNBT(NBTTagCompound nbt, @Nonnull UUID player) {
-        NBTTagList tradeStateList = new NBTTagList();
-        for (Map.Entry<UUID, TradeGroupState> entry : tradeGroupStates.entrySet()) {
-            TradeHistory history = entry.getValue()
-                .getTradeState(player);
-            if (!history.equals(TradeHistory.DEFAULT)) {
-                NBTTagCompound state = new NBTTagCompound();
-                NBTConverter.UuidValueType.TRADEGROUP.writeId(entry.getKey(), state);
-                state.setLong("lastTrade", history.lastTrade);
-                state.setInteger("tradeCount", history.tradeCount);
-                state.setBoolean("notificationQueued", history.notificationQueued);
-                tradeStateList.appendTag(state);
-            }
-        }
-        nbt.setTag("tradeState", tradeStateList);
-        return nbt;
     }
 
     public void addNotification(UUID player, TradeGroup tg) {
         VMTeamData teamData = getTeamData(player);
         if (teamData == null) return;
         Set<UUID> notificationQueue = teamData.getPlayerData(player).notificationQueue;
-        if(notificationQueue.add(tg.getId())){
+        if (notificationQueue.add(tg.getId())) {
             saveTeamData(player);
         }
     }

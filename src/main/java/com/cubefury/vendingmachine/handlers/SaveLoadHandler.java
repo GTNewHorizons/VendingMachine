@@ -3,16 +3,8 @@ package com.cubefury.vendingmachine.handlers;
 import static com.cubefury.vendingmachine.util.FileIO.CopyPaste;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Future;
-import java.util.stream.Collectors;
-
-import javax.annotation.Nullable;
 
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -58,7 +50,6 @@ public class SaveLoadHandler {
         unloadAll();
 
         loadDatabase();
-        loadTradeState(null);
         loadNames();
     }
 
@@ -105,52 +96,6 @@ public class SaveLoadHandler {
             out -> NBTConverter.NBTtoJSON_Compound(TradeDatabase.INSTANCE.writeToNBT(new NBTTagCompound()), out, true));
     }
 
-    public void loadTradeState(@Nullable UUID player) {
-        if (!dirTradeState.exists()) {
-            JsonHelper.populateTradeStateFromFiles(Collections.emptyList());
-            return;
-        }
-
-        if (player == null) {
-            File[] fileList = dirTradeState.listFiles();
-
-            if (fileList != null) {
-                JsonHelper.populateTradeStateFromFiles(
-                    Arrays.stream(fileList)
-                        .filter(
-                            f -> f.getName()
-                                .endsWith(".json"))
-                        .collect(Collectors.toList()));
-            } else {
-                JsonHelper.populateTradeStateFromFiles(Collections.emptyList());
-            }
-            return;
-        }
-
-        File playerFile = new File(dirTradeState, player + ".json");
-
-        if (playerFile.exists() && playerFile.isFile()) {
-            JsonHelper.populateTradeStateFromFiles(Collections.singletonList(playerFile));
-        } else {
-            JsonHelper.populateTradeStateFromFiles(Collections.emptyList());
-        }
-    }
-
-    public List<Future<Void>> writeTradeState(Collection<UUID> players) {
-        if (!dirBackupTradeState.exists()) {
-            CopyPaste(dirTradeState, dirBackupTradeState);
-        }
-
-        List<Future<Void>> futures = new ArrayList<>();
-        for (UUID player : players) {
-            File playerFile = new File(dirTradeState, player.toString() + ".json");
-            CopyPaste(playerFile, new File(dirBackupTradeState, player.toString() + ".json"));
-            NBTTagCompound state = TradeManager.INSTANCE.writeTradeStateToNBT(new NBTTagCompound(), player);
-            futures.add(FileIO.WriteToFile(playerFile, out -> NBTConverter.NBTtoJSON_Compound(state, out, true)));
-        }
-        return futures;
-    }
-
     public void loadNames() {
         JsonHelper.populateNameCacheFromFile(fileNames);
     }
@@ -172,7 +117,6 @@ public class SaveLoadHandler {
         TradeManager.INSTANCE.clearTradeState(null);
 
         loadDatabase();
-        loadTradeState(null);
     }
 
     public Future<Void> writeFavourites(UUID player, String world_identifier) {
