@@ -87,7 +87,6 @@ public class TradeMainPanel extends ModularPanel {
         } else {
             Map<TradeCategory, List<TradeItemDisplay>> trades = formatTrades();
             gui.updateTradeDisplay(trades);
-            gui.updateCoinDisplay(syncManager);
         }
     }
 

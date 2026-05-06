@@ -80,9 +80,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
     private final PagedWidget.Controller tabController;
     public IWidget favouritesTabWidget;
     private final SearchBar searchBar;
-    private TradeMainPanel mainPanel;
     private CycleButtonWidget walletButton;
-    private Flow coinDisplayRow;
 
     public static String lastSearch = "";
     public static int lastPage = 0;
@@ -173,7 +171,6 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                 .size(20)
                 .right(5));
         panel.child(createIOColumn());
-        mainPanel = (TradeMainPanel) panel;
         return panel;
     }
 
@@ -225,25 +222,6 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                     builder.clearText();
                     builder.addLine(
                         IKey.lang("vendingmachine.gui.display_sort") + " " + VMConfig.gui.sort_mode.getLocalizedName());
-                    setForceRefresh();
-                })
-                .tooltipAutoUpdate(true));
-        buttonColumn.child(
-            walletButton = new CycleButtonWidget().size(14)
-                .top(17 * 2)
-                .overlay(
-                    new DynamicDrawable(
-                        () -> walletMode.getTexture()
-                            .size(14)))
-                .stateCount(SortMode.values().length)
-                .value(new Dynamic(() -> walletMode.ordinal(), val -> {
-                    VMConfig.gui.wallet_mode = walletMode = WalletMode.values()[val];
-                    shouldSyncWalletMode = true;
-                }))
-                .tooltipDynamic(builder -> {
-                    builder.clearText();
-                    builder
-                        .addLine(IKey.lang("vendingmachine.gui.display_wallet") + " " + walletMode.getLocalizedName());
                     setForceRefresh();
                 })
                 .tooltipAutoUpdate(true));
@@ -700,30 +678,47 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
     }
 
     private IWidget createCoinInventoryRow(TradeMainPanel panel, PanelSyncManager syncManager) {
-        coinDisplayRow = Flow.row()
+        Flow coinDisplayRow = Flow.row()
             .width(162)
             .height(36)
             .top(172)
             .left(3);
-        createCoinDisplays(coinDisplayRow, panel, syncManager);
-        return coinDisplayRow;
-    }
 
-    private void createCoinDisplays(Flow parent, TradeMainPanel panel, PanelSyncManager syncManager) {
         Flow coinColumn = Flow.column()
             .width(COIN_COLUMN_WIDTH);
         int coinCount = 0;
         for (CurrencyType type : CurrencyType.values()) {
             coinColumn.child(createCoinDisplay(panel, type, syncManager));
             if (++coinCount % COIN_COLUMN_ROW_COUNT == 0) {
-                parent.child(coinColumn.left(3 + COIN_COLUMN_WIDTH * (coinCount / COIN_COLUMN_ROW_COUNT - 1)));
+                coinDisplayRow.child(coinColumn.left(3 + COIN_COLUMN_WIDTH * (coinCount / COIN_COLUMN_ROW_COUNT - 1)));
                 coinColumn = Flow.column()
                     .width(COIN_COLUMN_WIDTH);
             }
         }
+        coinColumn.child(
+            walletButton = new CycleButtonWidget().width(COIN_COLUMN_WIDTH)
+                .marginTop(6)
+                .overlay(
+                    new DynamicDrawable(
+                        () -> walletMode.getTexture()
+                            .size(14)))
+                .stateCount(SortMode.values().length)
+                .value(new Dynamic(() -> walletMode.ordinal(), val -> {
+                    VMConfig.gui.wallet_mode = walletMode = WalletMode.values()[val];
+                    shouldSyncWalletMode = true;
+                    setForceRefresh();
+                }))
+                .tooltipDynamic(builder -> {
+                    builder.clearText();
+                    builder
+                        .addLine(IKey.lang("vendingmachine.gui.display_wallet") + " " + walletMode.getLocalizedName());
+                })
+                .tooltipAutoUpdate(true));
+
         if (coinColumn.hasChildren()) {
-            parent.child(coinColumn.left(3 + COIN_COLUMN_WIDTH * (coinCount / COIN_COLUMN_ROW_COUNT)));
+            coinDisplayRow.child(coinColumn.left(3 + COIN_COLUMN_WIDTH * (coinCount / COIN_COLUMN_ROW_COUNT)));
         }
+        return coinDisplayRow;
     }
 
     private IWidget createCoinDisplay(TradeMainPanel panel, CurrencyType type, PanelSyncManager syncManager) {
@@ -753,12 +748,6 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                     .left(14)
                     .width(21))
             .height(14);
-    }
-
-    public void updateCoinDisplay(PanelSyncManager syncManager) {
-        if (coinDisplayRow == null) return;
-        coinDisplayRow.removeAll();
-        createCoinDisplays(coinDisplayRow, mainPanel, syncManager);
     }
 
     // why is the original method private lmao
