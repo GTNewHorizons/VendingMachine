@@ -4,6 +4,7 @@ import java.io.File;
 
 import com.cubefury.vendingmachine.blocks.gui.DisplayType;
 import com.cubefury.vendingmachine.blocks.gui.SortMode;
+import com.cubefury.vendingmachine.blocks.gui.WalletMode;
 import com.gtnewhorizon.gtnhlib.config.Config;
 
 @Config(modid = VendingMachine.MODID, category = "vendingmachine", filename = "vendingmachine")
@@ -14,6 +15,9 @@ public class VMConfig {
 
     @Config.Comment("GUI Settings")
     public static final GUI gui = new GUI();
+
+    @Config.Comment("Team Settings")
+    public static final TeamSettings team = new TeamSettings();
 
     @Config.Comment("Developer Settings")
     public static final Developer developer = new Developer();
@@ -55,6 +59,18 @@ public class VMConfig {
         @Config.Comment("Default sort mode, either SMART or ALPHABET. Case sensitive.")
         @Config.DefaultEnum("SMART")
         public SortMode sort_mode = SortMode.SMART;
+
+        @Config.Comment("Default wallet mode, either PERSONAL or TEAM. Case sensitive.")
+        @Config.DefaultEnum("PERSONAL")
+        public WalletMode wallet_mode = WalletMode.PERSONAL;
+    }
+
+    public static class TeamSettings {
+
+        @Config.Comment("Allows using the team wallet in solo teams")
+        @Config.DefaultBoolean(false)
+        public boolean soloTeam = false;
+
     }
 
     public static class Developer {

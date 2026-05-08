@@ -13,6 +13,7 @@ import com.cubefury.vendingmachine.api.util.Tuple2;
 import com.cubefury.vendingmachine.blocks.MTEVendingMachine;
 import com.cubefury.vendingmachine.blocks.gui.MTEVendingMachineGui;
 import com.cubefury.vendingmachine.blocks.gui.TradeItemDisplay;
+import com.cubefury.vendingmachine.blocks.gui.WalletMode;
 import com.cubefury.vendingmachine.network.PacketSender;
 import com.cubefury.vendingmachine.network.PacketTypeRegistry;
 import com.cubefury.vendingmachine.storage.NameCache;
@@ -35,7 +36,8 @@ public class NetTradeRequestSync {
         }
     }
 
-    public static void sendTradeRequest(TradeItemDisplay trade, World world, int x, int y, int z) {
+    public static void sendTradeRequest(TradeItemDisplay trade, World world, int x, int y, int z,
+        WalletMode walletMode) {
         NBTTagCompound payload = new NBTTagCompound();
         NBTConverter.UuidValueType.TRADEGROUP.writeId(trade.tgID, payload);
         payload.setInteger("tradeGroupOrder", trade.tradeGroupOrder);
@@ -43,6 +45,7 @@ public class NetTradeRequestSync {
         payload.setInteger("x", x);
         payload.setInteger("y", y);
         payload.setInteger("z", z);
+        payload.setByte("wallet", (byte) walletMode.ordinal());
         PacketSender.INSTANCE.sendToServer(new UnserializedPacket(ID_NAME, payload));
     }
 
@@ -72,6 +75,8 @@ public class NetTradeRequestSync {
                     NBTConverter.UuidValueType.TRADEGROUP.readId(message.first()),
                     message.first()
                         .getInteger("tradeGroupOrder"),
+                    WalletMode.values()[message.first()
+                        .getByte("wallet")],
                     (MTEVendingMachine) ((IGregTechTileEntity) te).getMetaTileEntity()));
         }
     }

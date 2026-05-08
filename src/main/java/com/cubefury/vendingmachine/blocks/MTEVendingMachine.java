@@ -40,11 +40,10 @@ import com.cubefury.vendingmachine.VMConfig;
 import com.cubefury.vendingmachine.VendingMachine;
 import com.cubefury.vendingmachine.blocks.gui.MTEVendingMachineGui;
 import com.cubefury.vendingmachine.blocks.gui.TradeItemDisplay;
+import com.cubefury.vendingmachine.blocks.gui.WalletMode;
 import com.cubefury.vendingmachine.network.handlers.NetTradeDisplaySync;
 import com.cubefury.vendingmachine.network.handlers.NetTradeRequestSync;
-import com.cubefury.vendingmachine.storage.NameCache;
 import com.cubefury.vendingmachine.trade.CurrencyItem;
-import com.cubefury.vendingmachine.trade.CurrencyType;
 import com.cubefury.vendingmachine.trade.Trade;
 import com.cubefury.vendingmachine.trade.TradeDatabase;
 import com.cubefury.vendingmachine.trade.TradeManager;
@@ -52,6 +51,7 @@ import com.cubefury.vendingmachine.trade.TradeRequest;
 import com.cubefury.vendingmachine.util.BigItemStack;
 import com.cubefury.vendingmachine.util.OverlayHelper;
 import com.cubefury.vendingmachine.util.Translator;
+import com.cubefury.vendingmachine.util.Wallet;
 import com.gtnewhorizon.structurelib.StructureLibAPI;
 import com.gtnewhorizon.structurelib.alignment.IAlignment;
 import com.gtnewhorizon.structurelib.alignment.IAlignmentLimits;
@@ -152,7 +152,7 @@ public class MTEVendingMachine extends MTEMultiBlockBase
         return this.mIsAnimated;
     }
 
-    public void sendTradeRequest(TradeItemDisplay trade) {
+    public void sendTradeRequest(TradeItemDisplay trade, WalletMode walletMode) {
         IGregTechTileEntity baseTile = getBaseMetaTileEntity();
         if (baseTile == null || !baseTile.isActive()) {
             return;
@@ -162,7 +162,8 @@ public class MTEVendingMachine extends MTEMultiBlockBase
             baseTile.getWorld(),
             baseTile.getXCoord(),
             baseTile.getYCoord(),
-            baseTile.getZCoord());
+            baseTile.getZCoord(),
+            walletMode);
     }
 
     public void addTradeRequest(TradeRequest trade) {
@@ -257,7 +258,7 @@ public class MTEVendingMachine extends MTEMultiBlockBase
             .get(tradeRequest.tradeGroupOrder);
 
         if (
-            !this.inputCurrencySatisfied(trade.fromCurrency, tradeRequest.playerID)
+            !this.inputCurrencySatisfied(trade.fromCurrency, tradeRequest.playerID, tradeRequest.walletMode)
                 || !this.inputItemsSatisfied(trade.fromItems)
                 || !this.inputItemsSatisfied(trade.nonConsumedItems)
         ) {
@@ -270,20 +271,11 @@ public class MTEVendingMachine extends MTEMultiBlockBase
             inputSlots[i] = curStack == null ? null : curStack.copy();
         }
 
-        UUID currentPlayer = NameCache.INSTANCE.getUUIDFromPlayer(this.getCurrentUser());
-
-        TradeManager.INSTANCE.playerCurrency.putIfAbsent(currentPlayer, new HashMap<>());
-        Map<CurrencyType, Integer> coinInventory = TradeManager.INSTANCE.playerCurrency.get(currentPlayer);
-
-        Map<CurrencyType, Integer> newCoinInventory = new HashMap<>();
-        for (CurrencyItem ci : trade.fromCurrency) {
-            int oldValue = coinInventory.get(ci.type);
-            if (!coinInventory.containsKey(ci.type) || oldValue < ci.value) {
-                return false;
-            } else {
-                newCoinInventory.put(ci.type, oldValue - ci.value);
-            }
+        Wallet wallet = TradeManager.INSTANCE.getWallet(tradeRequest.playerID, tradeRequest.walletMode);
+        if (wallet == null || !wallet.performTrade(trade.fromCurrency)) {
+            return false;
         }
+        TradeManager.INSTANCE.saveTeamData(tradeRequest.playerID);
 
         for (BigItemStack stack : trade.fromItems) {
             ItemStack requiredStack = stack.getBaseStack();
@@ -338,14 +330,6 @@ public class MTEVendingMachine extends MTEMultiBlockBase
                     && !fetchItemFromAE(requiredStack, false, stack.hasOreDict() ? stack.getOreDict() : null)
             ) {
                 return false;
-            }
-        }
-
-        for (Map.Entry<CurrencyType, Integer> entry : newCoinInventory.entrySet()) {
-            if (entry.getValue() == 0) {
-                coinInventory.remove(entry.getKey());
-            } else {
-                coinInventory.replace(entry.getKey(), entry.getValue());
             }
         }
 
@@ -695,17 +679,17 @@ public class MTEVendingMachine extends MTEMultiBlockBase
         return true;
     }
 
-    public boolean inputCurrencySatisfied(List<CurrencyItem> currencyItems, UUID player) {
+    public boolean inputCurrencySatisfied(List<CurrencyItem> currencyItems, UUID player, WalletMode walletMode) {
         if (currencyItems == null || currencyItems.isEmpty()) {
             return true;
         }
-        Map<CurrencyType, Integer> availableCurrency = TradeManager.INSTANCE.playerCurrency.get(player);
-        if (availableCurrency == null) {
+
+        Wallet wallet = TradeManager.INSTANCE.getWallet(player, walletMode);
+        if (wallet == null) {
             return false;
         }
         // TODO: Add AE2 coin item support
-        return currencyItems.stream()
-            .allMatch(ci -> availableCurrency.containsKey(ci.type) && availableCurrency.get(ci.type) >= ci.value);
+        return wallet.hasEnough(currencyItems);
     }
 
     public boolean getActive() {

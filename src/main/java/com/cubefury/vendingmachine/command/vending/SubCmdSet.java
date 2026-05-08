@@ -1,8 +1,6 @@
 package com.cubefury.vendingmachine.command.vending;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import net.minecraft.command.CommandBase;
@@ -12,10 +10,13 @@ import net.minecraft.command.PlayerNotFoundException;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.util.ChatComponentText;
 
+import com.cubefury.vendingmachine.blocks.gui.WalletMode;
 import com.cubefury.vendingmachine.command.Utils;
 import com.cubefury.vendingmachine.storage.NameCache;
 import com.cubefury.vendingmachine.trade.CurrencyType;
 import com.cubefury.vendingmachine.trade.TradeManager;
+import com.cubefury.vendingmachine.util.Wallet;
+import com.gtnewhorizon.gtnhlib.util.CommandUtils;
 
 public class SubCmdSet implements IVendingSubcommand {
 
@@ -62,19 +63,23 @@ public class SubCmdSet implements IVendingSubcommand {
         }
 
         UUID playerId = NameCache.INSTANCE.getUUIDFromPlayer(target);
-        TradeManager.INSTANCE.playerCurrency.putIfAbsent(playerId, new HashMap<>());
-        Map<CurrencyType, Integer> coinInventory = TradeManager.INSTANCE.playerCurrency.get(playerId);
+        Wallet wallet = TradeManager.INSTANCE.getWallet(playerId, WalletMode.PERSONAL);
+        if (wallet == null) {
+            CommandUtils.error(sender, "No wallet found");
+            return;
+        }
         if (allCurrency) {
             for (CurrencyType cur : CurrencyType.values()) {
-                coinInventory.put(cur, amount);
+                wallet.setCount(cur, amount);
             }
             sender.addChatMessage(
                 new ChatComponentText(String.format("Set all coins = %d for %s", amount, target.getDisplayName())));
         } else {
-            coinInventory.put(type, amount);
+            wallet.setCount(type, amount);
             sender.addChatMessage(
                 new ChatComponentText(String.format("Set %s = %d for %s", type.id, amount, target.getDisplayName())));
         }
+        TradeManager.INSTANCE.saveTeamData(playerId);
     }
 
     @Override

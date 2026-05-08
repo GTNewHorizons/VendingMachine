@@ -3,39 +3,42 @@ package com.cubefury.vendingmachine.handlers;
 import static com.cubefury.vendingmachine.util.FileIO.CopyPaste;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.io.FileReader;
 import java.util.UUID;
 import java.util.concurrent.Future;
-import java.util.stream.Collectors;
-
-import javax.annotation.Nullable;
 
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.server.MinecraftServer;
 
+import org.apache.commons.io.FileUtils;
+
 import com.cubefury.vendingmachine.VMConfig;
 import com.cubefury.vendingmachine.VendingMachine;
 import com.cubefury.vendingmachine.storage.NameCache;
+import com.cubefury.vendingmachine.storage.VMPlayerData;
+import com.cubefury.vendingmachine.storage.VMTeamData;
+import com.cubefury.vendingmachine.trade.CurrencyType;
 import com.cubefury.vendingmachine.trade.FavouritesTracker;
 import com.cubefury.vendingmachine.trade.TradeDatabase;
-import com.cubefury.vendingmachine.trade.TradeManager;
 import com.cubefury.vendingmachine.util.FileIO;
 import com.cubefury.vendingmachine.util.JsonHelper;
 import com.cubefury.vendingmachine.util.NBTConverter;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 public class SaveLoadHandler {
 
     public static SaveLoadHandler INSTANCE = new SaveLoadHandler();
 
+    private static final Gson GSON = new GsonBuilder().create();
+
     private File fileDatabase = null;
     private File fileNames = null;
     private File dirTradeState = null;
-    private File dirBackupTradeState = null;
 
     private File dirFavourites = null;
 
@@ -50,7 +53,6 @@ public class SaveLoadHandler {
 
         fileDatabase = new File(VMConfig.developer.trade_db_dir, "tradeDatabase.json");
         dirTradeState = new File(VMConfig.world_dir, "tradeState");
-        dirBackupTradeState = new File(VMConfig.world_dir, "backup/tradeState");
         fileNames = new File(VMConfig.world_dir, "names.json");
 
         createFilesAndDirectories();
@@ -58,7 +60,6 @@ public class SaveLoadHandler {
         unloadAll();
 
         loadDatabase();
-        loadTradeState(null);
         loadNames();
     }
 
@@ -89,9 +90,6 @@ public class SaveLoadHandler {
                 VendingMachine.LOG.warn("Could not create new name cache file");
             }
         }
-        if (dirTradeState.mkdirs()) {
-            VendingMachine.LOG.info("Created trade state directory");
-        }
     }
 
     public void loadDatabase() {
@@ -103,52 +101,6 @@ public class SaveLoadHandler {
         return FileIO.WriteToFile(
             fileDatabase,
             out -> NBTConverter.NBTtoJSON_Compound(TradeDatabase.INSTANCE.writeToNBT(new NBTTagCompound()), out, true));
-    }
-
-    public void loadTradeState(@Nullable UUID player) {
-        if (!dirTradeState.exists()) {
-            JsonHelper.populateTradeStateFromFiles(Collections.emptyList());
-            return;
-        }
-
-        if (player == null) {
-            File[] fileList = dirTradeState.listFiles();
-
-            if (fileList != null) {
-                JsonHelper.populateTradeStateFromFiles(
-                    Arrays.stream(fileList)
-                        .filter(
-                            f -> f.getName()
-                                .endsWith(".json"))
-                        .collect(Collectors.toList()));
-            } else {
-                JsonHelper.populateTradeStateFromFiles(Collections.emptyList());
-            }
-            return;
-        }
-
-        File playerFile = new File(dirTradeState, player + ".json");
-
-        if (playerFile.exists() && playerFile.isFile()) {
-            JsonHelper.populateTradeStateFromFiles(Collections.singletonList(playerFile));
-        } else {
-            JsonHelper.populateTradeStateFromFiles(Collections.emptyList());
-        }
-    }
-
-    public List<Future<Void>> writeTradeState(Collection<UUID> players) {
-        if (!dirBackupTradeState.exists()) {
-            CopyPaste(dirTradeState, dirBackupTradeState);
-        }
-
-        List<Future<Void>> futures = new ArrayList<>();
-        for (UUID player : players) {
-            File playerFile = new File(dirTradeState, player.toString() + ".json");
-            CopyPaste(playerFile, new File(dirBackupTradeState, player.toString() + ".json"));
-            NBTTagCompound state = TradeManager.INSTANCE.writeTradeStateToNBT(new NBTTagCompound(), player);
-            futures.add(FileIO.WriteToFile(playerFile, out -> NBTConverter.NBTtoJSON_Compound(state, out, true)));
-        }
-        return futures;
     }
 
     public void loadNames() {
@@ -164,15 +116,11 @@ public class SaveLoadHandler {
     public void unloadAll() {
         NameCache.INSTANCE.clear();
         TradeDatabase.INSTANCE.clear();
-        TradeManager.INSTANCE.clearTradeState(null);
     }
 
     public void reloadDatabase() {
         TradeDatabase.INSTANCE.clear();
-        TradeManager.INSTANCE.clearTradeState(null);
-
         loadDatabase();
-        loadTradeState(null);
     }
 
     public Future<Void> writeFavourites(UUID player, String world_identifier) {
@@ -196,6 +144,38 @@ public class SaveLoadHandler {
         if (worldFavourites.exists()) {
             JsonHelper.populateFavouritesFromFile(worldFavourites);
         }
+    }
+
+    public boolean attemptMigrate(VMTeamData teamData, UUID playerId) {
+        File oldTradeStateFile = new File(dirTradeState, playerId.toString() + ".json");
+        if (!oldTradeStateFile.exists()) return false;
+        try {
+            try (FileReader reader = new FileReader(oldTradeStateFile)) {
+                JsonObject obj = GSON.fromJson(reader, JsonObject.class);
+                VMPlayerData pd = teamData.getPlayerData(playerId);
+                if (obj.has("playerCurrency:9")) {
+                    JsonArray currencies = obj.getAsJsonArray("playerCurrency:9");
+                    for (JsonElement elem : currencies) {
+                        int amount = elem.getAsJsonObject()
+                            .get("amount:3")
+                            .getAsInt();
+                        String currencyStr = elem.getAsJsonObject()
+                            .get("currency:8")
+                            .getAsString();
+                        CurrencyType currencyType = CurrencyType.getTypeFromId(currencyStr);
+                        if (currencyType != null) {
+                            pd.wallet.addCount(currencyType, amount);
+                        }
+                    }
+                }
+            }
+            FileUtils.moveFile(oldTradeStateFile, new File(dirTradeState, playerId + "_migrated.json"));
+            VendingMachine.LOG.error("Successfully migrated trade state for {}", playerId);
+            return true;
+        } catch (Exception ex) {
+            VendingMachine.LOG.error("Unable to migrate trade state for {}", playerId, ex);
+        }
+        return false;
     }
 
 }

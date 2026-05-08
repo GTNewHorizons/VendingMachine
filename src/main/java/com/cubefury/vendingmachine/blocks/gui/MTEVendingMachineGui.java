@@ -1,7 +1,6 @@
 package com.cubefury.vendingmachine.blocks.gui;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -26,7 +25,9 @@ import com.cleanroommc.modularui.screen.RichTooltip;
 import com.cleanroommc.modularui.screen.UISettings;
 import com.cleanroommc.modularui.utils.Alignment;
 import com.cleanroommc.modularui.value.IntValue;
+import com.cleanroommc.modularui.value.IntValue.Dynamic;
 import com.cleanroommc.modularui.value.sync.BooleanSyncValue;
+import com.cleanroommc.modularui.value.sync.EnumSyncValue;
 import com.cleanroommc.modularui.value.sync.IntSyncValue;
 import com.cleanroommc.modularui.value.sync.PanelSyncManager;
 import com.cleanroommc.modularui.widget.ParentWidget;
@@ -56,7 +57,10 @@ import com.cubefury.vendingmachine.trade.TradeGroup;
 import com.cubefury.vendingmachine.trade.TradeManager;
 import com.cubefury.vendingmachine.util.BigItemStack;
 import com.cubefury.vendingmachine.util.Translator;
+import com.cubefury.vendingmachine.util.Wallet;
 import com.gtnewhorizon.gtnhlib.config.ConfigurationManager;
+import com.gtnewhorizon.gtnhlib.teams.Team;
+import com.gtnewhorizon.gtnhlib.teams.TeamManager;
 
 import gregtech.api.modularui2.GTGuiTextures;
 import gregtech.api.modularui2.GTWidgetThemes;
@@ -81,10 +85,13 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
     private final PagedWidget.Controller tabController;
     public IWidget favouritesTabWidget;
     private final SearchBar searchBar;
+    private CycleButtonWidget walletButton;
 
     public static String lastSearch = "";
     public static int lastPage = 0;
-    public static SortMode sortMode = VMConfig.gui.sort_mode;
+
+    public WalletMode walletMode = WalletMode.PERSONAL;
+    public boolean shouldSyncWalletMode = true;
 
     public static final int CUSTOM_UI_HEIGHT = 320;
 
@@ -303,22 +310,17 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
         if (this.guiData.isClient() || !this.base.getActive()) {
             return;
         }
-        UUID currentUser = NameCache.INSTANCE.getUUIDFromPlayer(base.getCurrentUser());
-        if (
-            !TradeManager.INSTANCE.playerCurrency.containsKey(currentUser)
-                || !TradeManager.INSTANCE.playerCurrency.get(currentUser)
-                    .containsKey(type)
-        ) {
+        UUID playerId = NameCache.INSTANCE.getUUIDFromPlayer(base.getCurrentUser());
+        Wallet wallet = TradeManager.INSTANCE.getWallet(playerId, walletMode);
+        if (wallet == null || wallet.getCount(type) <= 0) {
             this.ejectSingleCoin.put(type, false);
             return;
         }
-        for (ItemStack ejectable : new CurrencyItem(
-            type,
-            TradeManager.INSTANCE.playerCurrency.get(currentUser)
-                .get(type)).itemize()) {
+        for (ItemStack ejectable : new CurrencyItem(type, wallet.getCount(type)).itemize()) {
             base.spawnItem(ejectable);
         }
-        TradeManager.INSTANCE.resetCurrency(currentUser, type);
+        wallet.resetCount(type);
+        TradeManager.INSTANCE.saveTeamData(playerId);
         this.ejectSingleCoin.put(type, false);
     }
 
@@ -331,21 +333,24 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
             ejectCoins = false;
             return;
         }
+        UUID playerId = NameCache.INSTANCE.getUUIDFromPlayer(base.getCurrentUser());
+        Wallet wallet = TradeManager.INSTANCE.getWallet(playerId, walletMode);
 
-        UUID currentUser = NameCache.INSTANCE.getUUIDFromPlayer(base.getCurrentUser());
-        if (!TradeManager.INSTANCE.playerCurrency.containsKey(currentUser)) {
+        if (wallet == null) {
             ejectCoins = false;
             return;
         }
 
-        Map<CurrencyType, Integer> coins = TradeManager.INSTANCE.playerCurrency
-            .getOrDefault(currentUser, new HashMap<>());
-        for (Map.Entry<CurrencyType, Integer> entry : coins.entrySet()) {
-            for (ItemStack ejectable : new CurrencyItem(entry.getKey(), entry.getValue()).itemize()) {
-                base.spawnItem(ejectable);
+        for (CurrencyType type : CurrencyType.values()) {
+            if (wallet.getCount(type) > 0) {
+                for (ItemStack ejectable : new CurrencyItem(type, wallet.getCount(type)).itemize()) {
+                    base.spawnItem(ejectable);
+                }
             }
         }
-        TradeManager.INSTANCE.resetCurrency(currentUser, null);
+
+        wallet.resetAllCount();
+        TradeManager.INSTANCE.saveTeamData(playerId);
         ejectCoins = false;
     }
 
@@ -427,6 +432,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
     }
 
     private SlotGroupWidget createInputSlots() {
+        UUID playerId = NameCache.INSTANCE.getUUIDFromPlayer(getBase().getCurrentUser());
         return SlotGroupWidget.builder()
             .matrix("II", "II", "II", "II")
             .key('I', index -> {
@@ -435,11 +441,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                 return new ItemSlot().slot(
                     slot.slotGroup("inputSlotGroup")
                         .changeListener((newItem, onlyAmountChanged, client, init) -> {
-                            boolean hasCoin = slot.intercept(
-                                newItem,
-                                client,
-                                this.getBase()
-                                    .getCurrentUser());
+                            boolean hasCoin = slot.intercept(newItem, client, playerId, walletMode);
                             if (client) {
                                 return;
                             }
@@ -701,6 +703,25 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                     .width(COIN_COLUMN_WIDTH);
             }
         }
+        coinColumn.child(
+            walletButton = new CycleButtonWidget().width(COIN_COLUMN_WIDTH)
+                .marginTop(6)
+                .overlay(
+                    IKey.dynamicKey(() -> IKey.lang(walletMode.getLocalizedName()))
+                        .scale(0.75f))
+                .stateCount(SortMode.values().length)
+                .value(new Dynamic(() -> walletMode.ordinal(), val -> {
+                    VMConfig.gui.wallet_mode = walletMode = WalletMode.values()[val];
+                    shouldSyncWalletMode = true;
+                    setForceRefresh();
+                }))
+                .tooltipDynamic(builder -> {
+                    builder.clearText();
+                    builder
+                        .addLine(IKey.lang("vendingmachine.gui.display_wallet") + " " + walletMode.getLocalizedName());
+                })
+                .tooltipAutoUpdate(true));
+
         if (coinColumn.hasChildren()) {
             parent.child(coinColumn.left(3 + COIN_COLUMN_WIDTH * (coinCount / COIN_COLUMN_ROW_COUNT)));
         }
@@ -775,9 +796,10 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
 
         UUID playerId = NameCache.INSTANCE.getUUIDFromPlayer(getBase().getCurrentUser());
         for (CurrencyType type : CurrencyType.values()) {
-            IntSyncValue coinAmountSyncer = new IntSyncValue(
-                () -> TradeManager.INSTANCE.playerCurrency.getOrDefault(playerId, Collections.emptyMap())
-                    .getOrDefault(type, 0));
+            IntSyncValue coinAmountSyncer = new IntSyncValue(() -> {
+                Wallet wallet = TradeManager.INSTANCE.getWallet(playerId, walletMode);
+                return wallet == null ? 0 : wallet.getCount(type);
+            });
             syncManager.syncValue("coinAmount_" + type.id, coinAmountSyncer);
 
             BooleanSyncValue ejectCoinSyncer = new BooleanSyncValue(() -> this.ejectSingleCoin.get(type), val -> {
@@ -789,6 +811,21 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
             syncManager.syncValue("ejectCoin_" + type.id, ejectCoinSyncer);
         }
 
+        Team team = TeamManager.getTeamByPlayer(playerId);
+        BooleanSyncValue hasTeamSyncer = new BooleanSyncValue(
+            () -> team != null && (VMConfig.team.soloTeam || team.getMembers()
+                .size() > 1),
+            val -> walletButton.setEnabled(val));
+        syncManager.syncValue("hasTeam", hasTeamSyncer);
+
+        // Block modifications from server -> client
+        EnumSyncValue<WalletMode> walletModeSyncer = new EnumSyncValue<>(
+            WalletMode.class,
+            () -> walletMode,
+            newWalletMode -> {},
+            () -> walletMode,
+            newWalletMode -> walletMode = newWalletMode);
+        syncManager.syncValue("walletMode", walletModeSyncer);
     }
 
     public void attemptPurchase(TradeItemDisplay display) {
@@ -797,10 +834,10 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
     }
 
     private void submitTradesToServer(TradeItemDisplay trade) {
-        if (!trade.tradeableNow || !trade.enabled) {
+        if (!trade.isTradeableNow(walletMode) || !trade.enabled) {
             return;
         }
-        base.sendTradeRequest(trade);
+        base.sendTradeRequest(trade, walletMode);
     }
 
     public static void resetForceRefresh() {

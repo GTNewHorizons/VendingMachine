@@ -16,6 +16,7 @@ import com.cubefury.vendingmachine.api.network.UnserializedPacket;
 import com.cubefury.vendingmachine.blocks.MTEVendingMachine;
 import com.cubefury.vendingmachine.blocks.gui.MTEVendingMachineGui;
 import com.cubefury.vendingmachine.blocks.gui.TradeItemDisplay;
+import com.cubefury.vendingmachine.blocks.gui.WalletMode;
 import com.cubefury.vendingmachine.network.PacketSender;
 import com.cubefury.vendingmachine.network.PacketTypeRegistry;
 import com.cubefury.vendingmachine.storage.NameCache;
@@ -47,14 +48,17 @@ public class NetTradeDisplaySync {
         public int tradeGroupOrder;
         public long cooldown;
         public boolean enabled;
-        public boolean tradableNow;
+        public boolean tradableNowPersonal;
+        public boolean tradableNowTeam;
 
-        public Tradable(UUID tgID, int tradeGroupOrder, long cooldown, boolean enabled, boolean tradableNow) {
+        public Tradable(UUID tgID, int tradeGroupOrder, long cooldown, boolean enabled, boolean tradableNowPersonal,
+            boolean tradableNowTeam) {
             this.tgID = tgID;
             this.tradeGroupOrder = tradeGroupOrder;
             this.cooldown = cooldown;
             this.enabled = enabled;
-            this.tradableNow = tradableNow;
+            this.tradableNowPersonal = tradableNowPersonal;
+            this.tradableNowTeam = tradableNowTeam;
         }
 
         public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
@@ -62,7 +66,8 @@ public class NetTradeDisplaySync {
             nbt.setInteger("order", this.tradeGroupOrder);
             nbt.setLong("cooldown", this.cooldown);
             nbt.setBoolean("enabled", this.enabled);
-            nbt.setBoolean("tradableNow", this.tradableNow);
+            nbt.setBoolean("tradableNowPersonal", this.tradableNowPersonal);
+            nbt.setBoolean("tradableNowTeam", this.tradableNowTeam);
 
             return nbt;
         }
@@ -73,7 +78,8 @@ public class NetTradeDisplaySync {
                 nbt.getInteger("order"),
                 nbt.getLong("cooldown"),
                 nbt.getBoolean("enabled"),
-                nbt.getBoolean("tradableNow"));
+                nbt.getBoolean("tradableNowPersonal"),
+                nbt.getBoolean("tradableNowTeam"));
         }
 
         public TradeItemDisplay formatItemDisplay() {
@@ -92,7 +98,8 @@ public class NetTradeDisplaySync {
                 convertCooldownText(this.cooldown),
                 this.cooldown > 0,
                 this.enabled,
-                this.tradableNow);
+                this.tradableNowPersonal,
+                this.tradableNowTeam);
         }
 
         public static String convertCooldownText(long cd) {
@@ -136,11 +143,17 @@ public class NetTradeDisplaySync {
                 .size(); i++) {
                 Trade trade = tg.getTrades()
                     .get(i);
-                boolean tradableNow = base.inputItemsSatisfied(trade.fromItems)
-                    && base.inputItemsSatisfied(trade.nonConsumedItems)
-                    && base.inputCurrencySatisfied(trade.fromCurrency, playerId);
+
+                boolean inputItemsSatisfied = base.inputItemsSatisfied(trade.fromItems)
+                    && base.inputItemsSatisfied(trade.nonConsumedItems);
+
+                boolean tradableNowPersonal = inputItemsSatisfied
+                    && base.inputCurrencySatisfied(trade.fromCurrency, playerId, WalletMode.PERSONAL);
+                boolean tradableNowTeam = inputItemsSatisfied
+                    && base.inputCurrencySatisfied(trade.fromCurrency, playerId, WalletMode.TEAM);
+
                 trades.appendTag(
-                    new Tradable(tg.getId(), i, cooldownRemaining, enabled, tradableNow)
+                    new Tradable(tg.getId(), i, cooldownRemaining, enabled, tradableNowPersonal, tradableNowTeam)
                         .writeToNBT(new NBTTagCompound()));
             }
             payload.setTag("trades", trades);

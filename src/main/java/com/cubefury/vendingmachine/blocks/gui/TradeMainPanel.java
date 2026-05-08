@@ -18,6 +18,7 @@ import org.lwjgl.input.Keyboard;
 import com.cleanroommc.modularui.factory.PosGuiData;
 import com.cleanroommc.modularui.screen.ModularPanel;
 import com.cleanroommc.modularui.screen.ModularScreen;
+import com.cleanroommc.modularui.value.sync.EnumSyncValue;
 import com.cleanroommc.modularui.value.sync.PanelSyncManager;
 import com.cubefury.vendingmachine.VMConfig;
 import com.cubefury.vendingmachine.network.handlers.NetResetVMUser;
@@ -111,7 +112,8 @@ public class TradeMainPanel extends ModularPanel {
                 tid.hasCooldown = cur.cooldown > 0;
                 tid.cooldown = cur.cooldown;
                 tid.cooldownText = cur.cooldownText;
-                tid.tradeableNow = cur.tradeableNow;
+                tid.tradeableNowPersonal = cur.tradeableNowPersonal;
+                tid.tradeableNowTeam = cur.tradeableNowTeam;
                 tid.isFavourite = FavouritesTracker.INSTANCE.isFavourite(tid);
             }
         });
@@ -119,13 +121,18 @@ public class TradeMainPanel extends ModularPanel {
 
     @Override
     public void onUpdate() {
-
         super.onUpdate();
         if (!this.guiData.isClient()) {
             return;
         }
         if (this.player == null && this.syncManager.isInitialised()) {
             this.player = syncManager.getPlayer();
+            gui.walletMode = VMConfig.gui.wallet_mode;
+        }
+        if (gui.shouldSyncWalletMode && syncManager.isInitialised()) {
+            syncManager.findSyncHandler("walletMode", EnumSyncValue.class)
+                .setValue(getWalletMode());
+            gui.shouldSyncWalletMode = false;
         }
         if (TradeManager.INSTANCE.hasCurrencyUpdate) {
             MTEVendingMachineGui.setForceRefresh();
@@ -209,9 +216,10 @@ public class TradeMainPanel extends ModularPanel {
                         return Boolean.compare(b.isFavourite, a.isFavourite);
                     }
 
+                    WalletMode walletMode = getWalletMode();
                     // enabled or has cooldown
-                    int rankA = getRank(a);
-                    int rankB = getRank(b);
+                    int rankA = getRank(a, walletMode);
+                    int rankB = getRank(b, walletMode);
 
                     if (rankA != rankB) {
                         return Integer.compare(rankA, rankB);
@@ -243,11 +251,11 @@ public class TradeMainPanel extends ModularPanel {
         return trades;
     }
 
-    private static int getRank(TradeItemDisplay t) {
+    private static int getRank(TradeItemDisplay t, WalletMode walletMode) {
         if (!t.enabled) {
             return 5;
         }
-        if (t.tradeableNow) {
+        if (t.isTradeableNow(walletMode)) {
             return t.hasCooldown ? 2 : 1;
         }
         return t.hasCooldown ? 4 : 3;
@@ -274,5 +282,9 @@ public class TradeMainPanel extends ModularPanel {
     public void onOpen(ModularScreen screen) {
         super.onOpen(screen);
         gui.restorePreviousSettings();
+    }
+
+    public WalletMode getWalletMode() {
+        return gui.walletMode;
     }
 }

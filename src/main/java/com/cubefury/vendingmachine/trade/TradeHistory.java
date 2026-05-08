@@ -6,7 +6,7 @@ public class TradeHistory {
     public int tradeCount = 0;
     public boolean notificationQueued = false;
 
-    public static TradeHistory DEFAULT = new TradeHistory();
+    public static final TradeHistory DEFAULT = new TradeHistory();
 
     public TradeHistory() {}
 
@@ -41,5 +41,13 @@ public class TradeHistory {
     public boolean equals(Object o) {
         if (!(o instanceof TradeHistory that)) return false;
         return lastTrade == that.lastTrade && tradeCount == that.tradeCount;
+    }
+
+    public TradeHistory copy() {
+        return new TradeHistory(lastTrade, tradeCount, notificationQueued);
+    }
+
+    public static TradeHistory merge(TradeHistory th1, TradeHistory th2) {
+        return new TradeHistory(Math.max(th1.lastTrade, th2.lastTrade), th1.tradeCount + th2.tradeCount, false);
     }
 }
