@@ -593,7 +593,6 @@ public class MTEVendingMachine extends MTEMultiBlockBase
 
     @Override
     public void onPostTick(IGregTechTileEntity aBaseMetaTileEntity, long aTimer) {
-        super.onPostTick(aBaseMetaTileEntity, aTimer);
         if (aBaseMetaTileEntity.isClientSide()) {
             if (!aBaseMetaTileEntity.isActive()) {
                 OverlayHelper.clearVMOverlay(overlayTickets);
