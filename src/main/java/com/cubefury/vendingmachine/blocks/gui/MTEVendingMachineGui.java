@@ -146,6 +146,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
     @Override
     public ModularPanel build(PosGuiData guiData, PanelSyncManager syncManager, UISettings uiSettings) {
         this.guiData = guiData;
+
         registerSyncValues(syncManager);
         ModularPanel panel = new TradeMainPanel("MTEMultiBlockBase", this, guiData, syncManager)
             .size(178, CUSTOM_UI_HEIGHT)
@@ -616,8 +617,8 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                         synchronized (displayedTradesTiles) {
                             if (index < displayedTradesTiles.get(category).size()) {
                                 constructTradeTooltip(builder, displayedTradesTiles.get(category).get(index).getDisplay());
+                                }
                             }
-                        }
                     })
                     .tooltipAutoUpdate(true)
                     .setEnabledIf(slot -> {
@@ -685,19 +686,19 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
     }
 
     private IWidget createCoinInventoryRow(TradeMainPanel panel, PanelSyncManager syncManager) {
-        Flow coinDisplayRow = Flow.row()
+        Flow parent = Flow.row()
             .width(162)
             .height(36)
             .top(172)
             .left(3);
-
         Flow coinColumn = Flow.column()
             .width(COIN_COLUMN_WIDTH);
         int coinCount = 0;
+
         for (CurrencyType type : CurrencyType.values()) {
             coinColumn.child(createCoinDisplay(panel, type, syncManager));
             if (++coinCount % COIN_COLUMN_ROW_COUNT == 0) {
-                coinDisplayRow.child(coinColumn.left(3 + COIN_COLUMN_WIDTH * (coinCount / COIN_COLUMN_ROW_COUNT - 1)));
+                parent.child(coinColumn.left(3 + COIN_COLUMN_WIDTH * (coinCount / COIN_COLUMN_ROW_COUNT - 1)));
                 coinColumn = Flow.column()
                     .width(COIN_COLUMN_WIDTH);
             }
@@ -722,9 +723,9 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                 .tooltipAutoUpdate(true));
 
         if (coinColumn.hasChildren()) {
-            coinDisplayRow.child(coinColumn.left(3 + COIN_COLUMN_WIDTH * (coinCount / COIN_COLUMN_ROW_COUNT)));
+            parent.child(coinColumn.left(3 + COIN_COLUMN_WIDTH * (coinCount / COIN_COLUMN_ROW_COUNT)));
         }
-        return coinDisplayRow;
+        return parent;
     }
 
     private IWidget createCoinDisplay(TradeMainPanel panel, CurrencyType type, PanelSyncManager syncManager) {
@@ -814,12 +815,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
         BooleanSyncValue hasTeamSyncer = new BooleanSyncValue(
             () -> team != null && (VMConfig.team.soloTeam || team.getMembers()
                 .size() > 1),
-            val -> {
-                walletButton.stateCount(val ? 2 : 1);
-                if (!val) {
-                    walletButton.setState(WalletMode.PERSONAL.ordinal(), true);
-                }
-            });
+            val -> walletButton.setEnabled(val));
         syncManager.syncValue("hasTeam", hasTeamSyncer);
 
         // Block modifications from server -> client

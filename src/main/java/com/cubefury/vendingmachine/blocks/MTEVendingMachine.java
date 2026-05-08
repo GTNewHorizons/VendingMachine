@@ -257,10 +257,8 @@ public class MTEVendingMachine extends MTEMultiBlockBase
             .getTrades()
             .get(tradeRequest.tradeGroupOrder);
 
-        UUID playerId = tradeRequest.playerID;
-
         if (
-            !this.inputCurrencySatisfied(trade.fromCurrency, playerId, tradeRequest.walletMode)
+            !this.inputCurrencySatisfied(trade.fromCurrency, tradeRequest.playerID, tradeRequest.walletMode)
                 || !this.inputItemsSatisfied(trade.fromItems)
                 || !this.inputItemsSatisfied(trade.nonConsumedItems)
         ) {
@@ -273,11 +271,11 @@ public class MTEVendingMachine extends MTEMultiBlockBase
             inputSlots[i] = curStack == null ? null : curStack.copy();
         }
 
-        Wallet wallet = TradeManager.INSTANCE.getWallet(playerId, tradeRequest.walletMode);
+        Wallet wallet = TradeManager.INSTANCE.getWallet(tradeRequest.playerID, tradeRequest.walletMode);
         if (wallet == null || !wallet.performTrade(trade.fromCurrency)) {
             return false;
         }
-        TradeManager.INSTANCE.saveTeamData(playerId);
+        TradeManager.INSTANCE.saveTeamData(tradeRequest.playerID);
 
         for (BigItemStack stack : trade.fromItems) {
             ItemStack requiredStack = stack.getBaseStack();

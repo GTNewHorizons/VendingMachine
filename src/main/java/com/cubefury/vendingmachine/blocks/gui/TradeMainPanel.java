@@ -129,13 +129,11 @@ public class TradeMainPanel extends ModularPanel {
             this.player = syncManager.getPlayer();
             gui.walletMode = VMConfig.gui.wallet_mode;
         }
-
         if (gui.shouldSyncWalletMode && syncManager.isInitialised()) {
             syncManager.findSyncHandler("walletMode", EnumSyncValue.class)
                 .setValue(getWalletMode());
             gui.shouldSyncWalletMode = false;
         }
-
         if (TradeManager.INSTANCE.hasCurrencyUpdate) {
             MTEVendingMachineGui.setForceRefresh();
         }

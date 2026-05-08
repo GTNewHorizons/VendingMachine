@@ -20,8 +20,12 @@ import com.cubefury.vendingmachine.events.MarkDirtyNamesEvent;
 import com.cubefury.vendingmachine.network.handlers.NetBulkSync;
 import com.cubefury.vendingmachine.network.handlers.NetTradeDbSync;
 import com.cubefury.vendingmachine.storage.NameCache;
+import com.cubefury.vendingmachine.storage.VMTeamData;
 import com.cubefury.vendingmachine.trade.TradeManager;
+import com.gtnewhorizon.gtnhlib.teams.Team;
+import com.gtnewhorizon.gtnhlib.teams.TeamManager;
 
+import cpw.mods.fml.common.eventhandler.EventPriority;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.PlayerEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
@@ -42,7 +46,8 @@ public class EventHandler {
         SaveLoadHandler.INSTANCE.writeNames();
     }
 
-    @SubscribeEvent
+    // Low priority so GTNHLib can create the team for the player
+    @SubscribeEvent(priority = EventPriority.LOW)
     public void onPlayerJoin(PlayerEvent.PlayerLoggedInEvent event) {
         if (
             event.player.worldObj.isRemote || MinecraftServer.getServer() == null
@@ -59,10 +64,19 @@ public class EventHandler {
                             .getName())
         ) {
             NameCache.INSTANCE.updateName(mpPlayer);
-            return;
+        } else {
+            NetBulkSync.sendReset(mpPlayer, true, true);
         }
 
-        NetBulkSync.sendReset(mpPlayer, true, true);
+        UUID uuid = NameCache.INSTANCE.getUUIDFromPlayer(mpPlayer);
+        Team team = TeamManager.getTeamByPlayer(uuid);
+        if (team != null) {
+            VMTeamData teamData = (VMTeamData) team.getData(VMTeamData.ID);
+            if (SaveLoadHandler.INSTANCE.attemptMigrate(teamData, uuid)) {
+                team.markDirty();
+            }
+        }
+
     }
 
     @SubscribeEvent

@@ -3,6 +3,7 @@ package com.cubefury.vendingmachine.handlers;
 import static com.cubefury.vendingmachine.util.FileIO.CopyPaste;
 
 import java.io.File;
+import java.io.FileReader;
 import java.util.UUID;
 import java.util.concurrent.Future;
 
@@ -10,23 +11,30 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.server.MinecraftServer;
 
+import org.apache.commons.io.FileUtils;
+
 import com.cubefury.vendingmachine.VMConfig;
 import com.cubefury.vendingmachine.VendingMachine;
 import com.cubefury.vendingmachine.storage.NameCache;
+import com.cubefury.vendingmachine.storage.VMPlayerData;
+import com.cubefury.vendingmachine.storage.VMTeamData;
+import com.cubefury.vendingmachine.trade.CurrencyType;
 import com.cubefury.vendingmachine.trade.FavouritesTracker;
 import com.cubefury.vendingmachine.trade.TradeDatabase;
 import com.cubefury.vendingmachine.util.FileIO;
 import com.cubefury.vendingmachine.util.JsonHelper;
 import com.cubefury.vendingmachine.util.NBTConverter;
+import com.google.gson.*;
 
 public class SaveLoadHandler {
 
     public static SaveLoadHandler INSTANCE = new SaveLoadHandler();
 
+    private static final Gson GSON = new GsonBuilder().create();
+
     private File fileDatabase = null;
     private File fileNames = null;
     private File dirTradeState = null;
-    private File dirBackupTradeState = null;
 
     private File dirFavourites = null;
 
@@ -41,7 +49,6 @@ public class SaveLoadHandler {
 
         fileDatabase = new File(VMConfig.developer.trade_db_dir, "tradeDatabase.json");
         dirTradeState = new File(VMConfig.world_dir, "tradeState");
-        dirBackupTradeState = new File(VMConfig.world_dir, "backup/tradeState");
         fileNames = new File(VMConfig.world_dir, "names.json");
 
         createFilesAndDirectories();
@@ -78,9 +85,6 @@ public class SaveLoadHandler {
             } catch (Exception ignored) {
                 VendingMachine.LOG.warn("Could not create new name cache file");
             }
-        }
-        if (dirTradeState.mkdirs()) {
-            VendingMachine.LOG.info("Created trade state directory");
         }
     }
 
@@ -136,6 +140,38 @@ public class SaveLoadHandler {
         if (worldFavourites.exists()) {
             JsonHelper.populateFavouritesFromFile(worldFavourites);
         }
+    }
+
+    public boolean attemptMigrate(VMTeamData teamData, UUID playerId) {
+        File oldTradeStateFile = new File(dirTradeState, playerId.toString() + ".json");
+        if (!oldTradeStateFile.exists()) return false;
+        try {
+            try (FileReader reader = new FileReader(oldTradeStateFile)) {
+                JsonObject obj = GSON.fromJson(reader, JsonObject.class);
+                VMPlayerData pd = teamData.getPlayerData(playerId);
+                if (obj.has("playerCurrency:9")) {
+                    JsonArray currencies = obj.getAsJsonArray("playerCurrency:9");
+                    for (JsonElement elem : currencies) {
+                        int amount = elem.getAsJsonObject()
+                            .get("amount:3")
+                            .getAsInt();
+                        String currencyStr = elem.getAsJsonObject()
+                            .get("currency:8")
+                            .getAsString();
+                        CurrencyType currencyType = CurrencyType.getTypeFromId(currencyStr);
+                        if (currencyType != null) {
+                            pd.wallet.addCount(currencyType, amount);
+                        }
+                    }
+                }
+            }
+            FileUtils.moveFile(oldTradeStateFile, new File(dirTradeState, playerId + "_migrated.json"));
+            VendingMachine.LOG.error("Successfully migrated trade state for {}", playerId);
+            return true;
+        } catch (Exception ex) {
+            VendingMachine.LOG.error("Unable to migrate trade state for {}", playerId, ex);
+        }
+        return false;
     }
 
 }
