@@ -616,8 +616,8 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                         synchronized (displayedTradesTiles) {
                             if (index < displayedTradesTiles.get(category).size()) {
                                 constructTradeTooltip(builder, displayedTradesTiles.get(category).get(index).getDisplay());
-                                }
                             }
+                        }
                     })
                     .tooltipAutoUpdate(true)
                     .setEnabledIf(slot -> {
@@ -706,9 +706,8 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
             walletButton = new CycleButtonWidget().width(COIN_COLUMN_WIDTH)
                 .marginTop(6)
                 .overlay(
-                    new DynamicDrawable(
-                        () -> walletMode.getTexture()
-                            .size(14)))
+                    IKey.dynamicKey(() -> IKey.lang(walletMode.getLocalizedName()))
+                        .scale(0.75f))
                 .stateCount(SortMode.values().length)
                 .value(new Dynamic(() -> walletMode.ordinal(), val -> {
                     VMConfig.gui.wallet_mode = walletMode = WalletMode.values()[val];
@@ -813,8 +812,8 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
 
         Team team = TeamManager.getTeamByPlayer(playerId);
         BooleanSyncValue hasTeamSyncer = new BooleanSyncValue(
-            () -> team != null && team.getMembers()
-                .size() > 1,
+            () -> team != null && (VMConfig.team.soloTeam || team.getMembers()
+                .size() > 1),
             val -> {
                 walletButton.stateCount(val ? 2 : 1);
                 if (!val) {

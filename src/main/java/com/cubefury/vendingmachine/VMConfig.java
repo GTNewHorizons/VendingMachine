@@ -16,6 +16,9 @@ public class VMConfig {
     @Config.Comment("GUI Settings")
     public static final GUI gui = new GUI();
 
+    @Config.Comment("Team Settings")
+    public static final TeamSettings team = new TeamSettings();
+
     @Config.Comment("Developer Settings")
     public static final Developer developer = new Developer();
 
@@ -45,11 +48,6 @@ public class VMConfig {
         @Config.DefaultInt(16)
         @Config.RequiresWorldRestart
         public int dispense_amount;
-
-        @Config.Comment("Treats everyone as being part of the same team")
-        @Config.DefaultBoolean(false)
-        @Config.RequiresWorldRestart
-        public boolean global_team;
     }
 
     public static class GUI {
@@ -65,6 +63,14 @@ public class VMConfig {
         @Config.Comment("Default wallet mode, either PERSONAL or TEAM. Case sensitive.")
         @Config.DefaultEnum("PERSONAL")
         public WalletMode wallet_mode = WalletMode.PERSONAL;
+    }
+
+    public static class TeamSettings {
+
+        @Config.Comment("Allows using the team wallet in solo teams")
+        @Config.DefaultBoolean(false)
+        public boolean soloTeam = false;
+
     }
 
     public static class Developer {

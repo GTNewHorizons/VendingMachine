@@ -11,8 +11,6 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraftforge.common.util.Constants;
 
-import org.jetbrains.annotations.Nullable;
-
 import com.cubefury.vendingmachine.blocks.gui.WalletMode;
 import com.cubefury.vendingmachine.trade.TradeHistory;
 import com.cubefury.vendingmachine.util.Wallet;
@@ -71,20 +69,20 @@ public class VMTeamData implements ITeamData {
     }
 
     @Override
-    public @Nullable ITeamData copyData(Team oldTeam, Team newTeam, UUID playerId, TeamDataCopyReason reason) {
-        VMPlayerData pd = playerData.getOrDefault(playerId, null);
-        VMTeamData newData = (VMTeamData) newTeam.getData(ID);
+    public void copyData(Team prevTeam, Team newTeam, UUID playerId, ITeamData prevTeamData,
+        TeamDataCopyReason reason) {
+        VMTeamData oldTeamData = (VMTeamData) prevTeamData;
+        VMPlayerData pd = oldTeamData.playerData.getOrDefault(playerId, null);
         if (pd != null) {
-            newData.playerData.put(playerId, pd);
+            playerData.put(playerId, pd);
         }
-        for (Entry<UUID, TradeHistory> entry : tradeHistory.entrySet()) {
+        for (Entry<UUID, TradeHistory> entry : oldTeamData.tradeHistory.entrySet()) {
             tradeHistory.merge(
                 entry.getKey(),
                 entry.getValue()
                     .copy(),
                 TradeHistory::merge);
         }
-        return null;
     }
 
     @Override
