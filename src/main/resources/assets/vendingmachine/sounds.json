@@ -1,0 +1,11 @@
+{
+  "vendingmachine.lunch_break": {
+    "category": "record",
+    "sounds": [
+      {
+        "name": "vendingmachine:lunch_break",
+        "stream": true
+      }
+    ]
+  }
+}
