@@ -107,13 +107,13 @@ public final class GuiTextures {
 
     public static final UITexture WALLET_PERSONAL = UITexture.builder()
         .location(VendingMachine.MODID, "gui/overlay/wallet_personal")
-        .imageSize(32, 32)
+        .imageSize(16, 16)
         .name("wallet_personal")
         .build();
 
     public static final UITexture WALLET_TEAM = UITexture.builder()
         .location(VendingMachine.MODID, "gui/overlay/wallet_team")
-        .imageSize(32, 32)
+        .imageSize(16, 16)
         .name("wallet_team")
         .build();
 
