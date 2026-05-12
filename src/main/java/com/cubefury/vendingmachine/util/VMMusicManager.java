@@ -33,6 +33,8 @@ public final class VMMusicManager {
 
     public static void setCurrentGameMusic(AudioContext audioContext) {
         gameMusic = audioContext;
+        if(inVm)
+            running = true;
     }
 
     public static void setCurrentVendingMusic(AudioContext audioContext) {
@@ -90,7 +92,7 @@ public final class VMMusicManager {
             sys.setVolume(gameMusic.id, volume * gameMusic.getVolume());
         }
         if (vmMusic != null && sys.playing(vmMusic.id)) {
-            sys.setVolume(vmMusic.id, (1 - volume) * vmMusic.getVolume());
+            sys.setVolume(vmMusic.id, (1 - volume) * vmMusic.getVolume() * VMConfig.music.music_volume);
         }
 
         if (!inVm && !running) {

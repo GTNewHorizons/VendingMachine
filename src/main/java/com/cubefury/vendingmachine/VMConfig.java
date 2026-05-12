@@ -81,6 +81,11 @@ public class VMConfig {
         @Config.Comment("Music track to play in the vending machine, either NONE or LUNCH_BREAK. Case sensitive.")
         @Config.DefaultEnum("LUNCH_BREAK")
         public MusicTrack current_track = MusicTrack.LUNCH_BREAK;
+
+        @Config.Comment("Volume of the vending machine music")
+        @Config.DefaultFloat(0.75f)
+        @Config.RangeFloat(min = 0, max = 2)
+        public float music_volume = 0.75f;
     }
 
     public static class Developer {
