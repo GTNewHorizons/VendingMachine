@@ -29,7 +29,7 @@ public class SoundManagerMixin {
     private static void onPlaySound(ISound sound, CallbackInfo ci, @Local String s, @Local SoundCategory category,
         @Local SoundPoolEntry entry) {
         if (Minecraft.getMinecraft().theWorld == null) return;
-        if (sound == getCurrentMusicTrack()) {
+        if (VMMusicManager.tickingMusic) {
             VMMusicManager.setCurrentGameMusic(new AudioContext(s, sound, category, entry));
         } else if (VMMusicManager.inVendingMachine() && sound instanceof PositionedSound ps) {
             if (
@@ -39,11 +39,6 @@ public class SoundManagerMixin {
                 VMMusicManager.setCurrentVendingMusic(new AudioContext(s, sound, category, entry));
             }
         }
-    }
-
-    private static ISound getCurrentMusicTrack() {
-        return ((MusicTickerAccessor) ((MinecraftAccessor) Minecraft.getMinecraft()).vendingmachine$getMusicTicker())
-            .vendingmachine$getCurrentMusicSound();
     }
 
 }

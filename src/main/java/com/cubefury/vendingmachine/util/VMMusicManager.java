@@ -22,6 +22,8 @@ import paulscode.sound.SoundSystem;
 @EventBusSubscriber(side = Side.CLIENT)
 public final class VMMusicManager {
 
+    public static boolean tickingMusic = false;
+
     private static final int FADE_TIME = 1000;
 
     private static AudioContext gameMusic;

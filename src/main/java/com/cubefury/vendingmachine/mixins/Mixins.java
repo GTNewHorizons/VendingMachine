@@ -13,8 +13,7 @@ public enum Mixins implements IMixins {
             "SoundManagerMixin",
             "SoundManagerAccessor",
             "SoundHandlerAccessor",
-            "MusicTickerAccessor",
-            "MinecraftAccessor"
+            "MinecraftMixin"
         )
         .setPhase(Phase.EARLY))
     ;
