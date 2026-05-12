@@ -1,6 +1,7 @@
 package com.cubefury.vendingmachine.blocks.gui;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -39,6 +40,7 @@ import com.cleanroommc.modularui.widgets.SlotGroupWidget;
 import com.cleanroommc.modularui.widgets.TextWidget;
 import com.cleanroommc.modularui.widgets.ToggleButton;
 import com.cleanroommc.modularui.widgets.layout.Flow;
+import com.cleanroommc.modularui.widgets.layout.Grid;
 import com.cleanroommc.modularui.widgets.slot.ItemSlot;
 import com.cleanroommc.modularui.widgets.slot.ModularSlot;
 import com.cubefury.vendingmachine.VMConfig;
@@ -57,6 +59,7 @@ import com.cubefury.vendingmachine.trade.TradeGroup;
 import com.cubefury.vendingmachine.trade.TradeManager;
 import com.cubefury.vendingmachine.util.BigItemStack;
 import com.cubefury.vendingmachine.util.Translator;
+import com.cubefury.vendingmachine.util.VMMusicManager;
 import com.cubefury.vendingmachine.util.Wallet;
 import com.gtnewhorizon.gtnhlib.config.ConfigurationManager;
 import com.gtnewhorizon.gtnhlib.teams.Team;
@@ -66,7 +69,7 @@ import gregtech.api.modularui2.GTGuiTextures;
 import gregtech.api.modularui2.GTWidgetThemes;
 import gregtech.common.gui.modularui.multiblock.base.MTEMultiBlockBaseGui;
 
-public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
+public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine> {
 
     private final MTEVendingMachine base;
 
@@ -151,15 +154,18 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
         ModularPanel panel = new TradeMainPanel("MTEMultiBlockBase", this, guiData, syncManager)
             .size(178, CUSTOM_UI_HEIGHT)
             .padding(4);
-        panel.onCloseAction(() -> {
-            if (VendingMachine.proxy.isClient()) {
+
+        if (syncManager.isClient()) {
+            panel.onCloseAction(() -> {
                 FavouritesTracker.INSTANCE.saveFavourites();
-            }
-        });
+                VMMusicManager.stopVendingMachineMusic();
+            });
+            VMMusicManager.startVendingMachineMusic(true);
+        }
         panel.child(createCategoryTabs(this.tabController));
         Flow mainColumn = Flow.column()
             .width(170);
-        if (VendingMachine.proxy.isClient()) { // client side sort and filtering
+        if (syncManager.isClient()) { // client side sort and filtering
             panel.child(createQolButtonColumn());
             mainColumn.child(
                 createTitleTextStyle(
@@ -188,50 +194,73 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
     }
 
     public IWidget createQolButtonColumn() {
-        Flow buttonColumn = Flow.column()
-            .width(8)
-            .height(20)
-            .left(-17)
+        return new Grid().left(-17 * 2 + 1)
             .top(1)
-            .coverChildren();
-        buttonColumn.child(
-            new CycleButtonWidget().size(14)
-                .overlay(
-                    new DynamicDrawable(
-                        () -> VMConfig.gui.display_type.getTexture()
-                            .size(14)))
-                .stateCount(DisplayType.values().length)
-                .value(new IntValue.Dynamic(() -> VMConfig.gui.display_type.ordinal(), val -> {
-                    VMConfig.gui.display_type = DisplayType.values()[val];
-                    ConfigurationManager.save(VMConfig.class);
-                }))
-                .tooltipDynamic(builder -> {
-                    builder.clearText();
-                    builder.addLine(
-                        IKey.lang("vendingmachine.gui.display_mode") + " "
-                            + VMConfig.gui.display_type.getLocalizedName());
-                })
-                .tooltipAutoUpdate(true));
-        buttonColumn.child(
-            new CycleButtonWidget().size(14)
-                .top(17)
-                .overlay(
-                    new DynamicDrawable(
-                        () -> VMConfig.gui.sort_mode.getTexture()
-                            .size(14)))
-                .stateCount(SortMode.values().length)
-                .value(new IntValue.Dynamic(() -> VMConfig.gui.sort_mode.ordinal(), val -> {
-                    VMConfig.gui.sort_mode = SortMode.values()[val];
-                    ConfigurationManager.save(VMConfig.class);
-                }))
-                .tooltipDynamic(builder -> {
-                    builder.clearText();
-                    builder.addLine(
-                        IKey.lang("vendingmachine.gui.display_sort") + " " + VMConfig.gui.sort_mode.getLocalizedName());
-                    setForceRefresh();
-                })
-                .tooltipAutoUpdate(true));
-        return buttonColumn;
+            .minElementMargin(1)
+            .coverChildren()
+            .matrix(
+                Arrays.asList(
+                    Arrays.asList(
+                        new CycleButtonWidget().size(14)
+                            .overlay(
+                                new DynamicDrawable(
+                                    () -> VMConfig.music.current_track.getTexture()
+                                        .size(14)))
+                            .stateCount(MusicTrack.values().length)
+                            .value(new IntValue.Dynamic(() -> VMConfig.music.current_track.ordinal(), val -> {
+                                VMConfig.music.current_track = MusicTrack.values()[val];
+                                if (VMConfig.music.current_track == MusicTrack.NONE) {
+                                    VMMusicManager.stopVendingMachineMusic();
+                                } else {
+                                    VMMusicManager.startVendingMachineMusic(false);
+                                }
+                                ConfigurationManager.save(VMConfig.class);
+                            }))
+                            .tooltipDynamic(builder -> {
+                                builder.clearText();
+                                builder.addLine(
+                                    IKey.lang("vendingmachine.gui.display_track") + " "
+                                        + VMConfig.music.current_track.getLocalizedName());
+                                setForceRefresh();
+                            })
+                            .tooltipAutoUpdate(true),
+                        new CycleButtonWidget().size(14)
+                            .overlay(
+                                new DynamicDrawable(
+                                    () -> VMConfig.gui.display_type.getTexture()
+                                        .size(14)))
+                            .stateCount(DisplayType.values().length)
+                            .value(new IntValue.Dynamic(() -> VMConfig.gui.display_type.ordinal(), val -> {
+                                VMConfig.gui.display_type = DisplayType.values()[val];
+                                ConfigurationManager.save(VMConfig.class);
+                            }))
+                            .tooltipDynamic(builder -> {
+                                builder.clearText();
+                                builder.addLine(
+                                    IKey.lang("vendingmachine.gui.display_mode") + " "
+                                        + VMConfig.gui.display_type.getLocalizedName());
+                            })
+                            .tooltipAutoUpdate(true)),
+                    Arrays.asList(
+                        null,
+                        new CycleButtonWidget().size(14)
+                            .overlay(
+                                new DynamicDrawable(
+                                    () -> VMConfig.gui.sort_mode.getTexture()
+                                        .size(14)))
+                            .stateCount(SortMode.values().length)
+                            .value(new IntValue.Dynamic(() -> VMConfig.gui.sort_mode.ordinal(), val -> {
+                                VMConfig.gui.sort_mode = SortMode.values()[val];
+                                ConfigurationManager.save(VMConfig.class);
+                            }))
+                            .tooltipDynamic(builder -> {
+                                builder.clearText();
+                                builder.addLine(
+                                    IKey.lang("vendingmachine.gui.display_sort") + " "
+                                        + VMConfig.gui.sort_mode.getLocalizedName());
+                                setForceRefresh();
+                            })
+                            .tooltipAutoUpdate(true))));
     }
 
     public IWidget createCategoryTabs(PagedWidget.Controller tabController) {
@@ -709,7 +738,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
                 .overlay(
                     IKey.dynamicKey(() -> IKey.lang(walletMode.getLocalizedName()))
                         .scale(0.75f))
-                .stateCount(SortMode.values().length)
+                .stateCount(WalletMode.values().length)
                 .value(new Dynamic(() -> walletMode.ordinal(), val -> {
                     VMConfig.gui.wallet_mode = walletMode = WalletMode.values()[val];
                     shouldSyncWalletMode = true;
