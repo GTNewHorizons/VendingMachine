@@ -57,6 +57,7 @@ import com.cubefury.vendingmachine.trade.TradeGroup;
 import com.cubefury.vendingmachine.trade.TradeManager;
 import com.cubefury.vendingmachine.util.BigItemStack;
 import com.cubefury.vendingmachine.util.Translator;
+import com.cubefury.vendingmachine.util.VMMusicManager;
 import com.cubefury.vendingmachine.util.Wallet;
 import com.gtnewhorizon.gtnhlib.config.ConfigurationManager;
 import com.gtnewhorizon.gtnhlib.teams.Team;
@@ -66,7 +67,7 @@ import gregtech.api.modularui2.GTGuiTextures;
 import gregtech.api.modularui2.GTWidgetThemes;
 import gregtech.common.gui.modularui.multiblock.base.MTEMultiBlockBaseGui;
 
-public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
+public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine> {
 
     private final MTEVendingMachine base;
 
@@ -151,15 +152,18 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui {
         ModularPanel panel = new TradeMainPanel("MTEMultiBlockBase", this, guiData, syncManager)
             .size(178, CUSTOM_UI_HEIGHT)
             .padding(4);
-        panel.onCloseAction(() -> {
-            if (VendingMachine.proxy.isClient()) {
+
+        if (syncManager.isClient()) {
+            panel.onCloseAction(() -> {
                 FavouritesTracker.INSTANCE.saveFavourites();
-            }
-        });
+                VMMusicManager.stopVendingMachineMusic();
+            });
+            VMMusicManager.startVendingMachineMusic();
+        }
         panel.child(createCategoryTabs(this.tabController));
         Flow mainColumn = Flow.column()
             .width(170);
-        if (VendingMachine.proxy.isClient()) { // client side sort and filtering
+        if (syncManager.isClient()) { // client side sort and filtering
             panel.child(createQolButtonColumn());
             mainColumn.child(
                 createTitleTextStyle(

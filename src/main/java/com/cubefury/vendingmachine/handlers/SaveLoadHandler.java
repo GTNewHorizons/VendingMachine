@@ -170,7 +170,7 @@ public class SaveLoadHandler {
                 }
             }
             FileUtils.moveFile(oldTradeStateFile, new File(dirTradeState, playerId + "_migrated.json"));
-            VendingMachine.LOG.error("Successfully migrated trade state for {}", playerId);
+            VendingMachine.LOG.info("Successfully migrated trade state for {}", playerId);
             return true;
         } catch (Exception ex) {
             VendingMachine.LOG.error("Unable to migrate trade state for {}", playerId, ex);
