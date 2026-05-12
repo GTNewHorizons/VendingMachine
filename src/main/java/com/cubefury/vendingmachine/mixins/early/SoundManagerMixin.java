@@ -1,7 +1,11 @@
 package com.cubefury.vendingmachine.mixins.early;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.audio.*;
+import net.minecraft.client.audio.ISound;
+import net.minecraft.client.audio.PositionedSound;
+import net.minecraft.client.audio.SoundCategory;
+import net.minecraft.client.audio.SoundManager;
+import net.minecraft.client.audio.SoundPoolEntry;
 
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -20,7 +24,8 @@ public class SoundManagerMixin {
         method = "playSound",
         at = @At(
             value = "INVOKE",
-            target = "Lnet/minecraft/client/audio/SoundManager$SoundSystemStarterThread;play(Ljava/lang/String;)V"))
+            target = "Lnet/minecraft/client/audio/SoundManager$SoundSystemStarterThread;play(Ljava/lang/String;)V",
+            remap = false))
     private static void onPlaySound(ISound sound, CallbackInfo ci, @Local String s, @Local SoundCategory category,
         @Local SoundPoolEntry entry) {
         if (Minecraft.getMinecraft().theWorld == null) return;
