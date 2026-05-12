@@ -27,14 +27,16 @@ public final class VMMusicManager {
     private static AudioContext gameMusic;
     private static AudioContext vmMusic;
 
+    // If the vending machine GUI is open AND there is music to play
     private static boolean inVm;
+    // If we currently need to fade in/out any sounds
     private static boolean running = false;
+    // When the VM music started, to calculate fade volume
     private static long musicStartTime;
 
     public static void setCurrentGameMusic(AudioContext audioContext) {
         gameMusic = audioContext;
-        if(inVm)
-            running = true;
+        if (inVm) running = true;
     }
 
     public static void setCurrentVendingMusic(AudioContext audioContext) {
