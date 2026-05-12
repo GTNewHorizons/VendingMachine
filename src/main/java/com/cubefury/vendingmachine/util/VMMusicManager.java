@@ -2,14 +2,13 @@ package com.cubefury.vendingmachine.util;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.ISound;
-import net.minecraft.client.audio.ISound.AttenuationType;
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.audio.SoundCategory;
 import net.minecraft.client.audio.SoundHandler;
 import net.minecraft.client.audio.SoundPoolEntry;
-import net.minecraft.util.ResourceLocation;
 
-import com.cubefury.vendingmachine.VendingMachine;
+import com.cubefury.vendingmachine.VMConfig;
+import com.cubefury.vendingmachine.blocks.gui.MusicTrack;
 import com.cubefury.vendingmachine.mixins.early.SoundHandlerAccessor;
 import com.cubefury.vendingmachine.mixins.early.SoundManagerAccessor;
 import com.gtnewhorizon.gtnhlib.eventbus.EventBusSubscriber;
@@ -23,7 +22,6 @@ import paulscode.sound.SoundSystem;
 @EventBusSubscriber(side = Side.CLIENT)
 public final class VMMusicManager {
 
-    public static final ResourceLocation VM_MUSIC = new ResourceLocation(VendingMachine.MODID, "vendingmachine.music");
     private static final int FADE_TIME = 1000;
 
     private static AudioContext gameMusic;
@@ -41,30 +39,46 @@ public final class VMMusicManager {
         vmMusic = audioContext;
     }
 
-    public static void startVendingMachineMusic() {
+    public static void startVendingMachineMusic(boolean fade) {
+        if (VMConfig.music.current_track == MusicTrack.NONE) return;
         inVm = true;
         running = true;
         if (vmMusic == null) {
-            musicStartTime = System.currentTimeMillis();
+            musicStartTime = fade ? System.currentTimeMillis() : 0;
             SoundHandler soundHandler = Minecraft.getMinecraft()
                 .getSoundHandler();
-            soundHandler
-                .playSound(new PositionedSoundRecord(VM_MUSIC, 0.5f, 1f, true, 0, AttenuationType.NONE, 0, 0, 0));
+            soundHandler.playSound(PositionedSoundRecord.func_147673_a(VMConfig.music.current_track.getSoundLoc()));
         } else {
-            musicStartTime = Math.min(FADE_TIME - (System.currentTimeMillis() - musicStartTime), FADE_TIME);
+            musicStartTime = fade ? Math.min(FADE_TIME - (System.currentTimeMillis() - musicStartTime), FADE_TIME) : 0;
         }
     }
 
     public static void stopVendingMachineMusic() {
         inVm = false;
         running = true;
-        musicStartTime = System.currentTimeMillis();
+        if (VMConfig.music.current_track == MusicTrack.NONE) {
+            musicStartTime = 0;
+        } else {
+            musicStartTime = System.currentTimeMillis();
+        }
     }
 
     @SubscribeEvent
     public static void onRender(RenderTickEvent e) {
         if (e.phase == Phase.END) return;
-        if (!running) return;
+        if (!running) {
+            if (inVm) {
+                SoundSystem sys = getSoundManager().vendingmachine$getSoundSystem();
+                if (vmMusic != null && !sys.playing(vmMusic.id)) { // Loop music when it ends
+                    vmMusic = null;
+                    SoundHandler soundHandler = Minecraft.getMinecraft()
+                        .getSoundHandler();
+                    soundHandler
+                        .playSound(PositionedSoundRecord.func_147673_a(VMConfig.music.current_track.getSoundLoc()));
+                }
+            }
+            return;
+        }
         SoundSystem sys = getSoundManager().vendingmachine$getSoundSystem();
         int msPassed = (int) (System.currentTimeMillis() - musicStartTime);
         float volume = Math.min(msPassed / (float) FADE_TIME, 1);

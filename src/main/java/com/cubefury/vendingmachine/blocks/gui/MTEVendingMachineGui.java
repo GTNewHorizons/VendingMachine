@@ -158,7 +158,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
                 FavouritesTracker.INSTANCE.saveFavourites();
                 VMMusicManager.stopVendingMachineMusic();
             });
-            VMMusicManager.startVendingMachineMusic();
+            VMMusicManager.startVendingMachineMusic(true);
         }
         panel.child(createCategoryTabs(this.tabController));
         Flow mainColumn = Flow.column()
@@ -232,6 +232,31 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
                     builder.clearText();
                     builder.addLine(
                         IKey.lang("vendingmachine.gui.display_sort") + " " + VMConfig.gui.sort_mode.getLocalizedName());
+                    setForceRefresh();
+                })
+                .tooltipAutoUpdate(true));
+        buttonColumn.child(
+            new CycleButtonWidget().size(14)
+                .top(17 * 2)
+                .overlay(
+                    new DynamicDrawable(
+                        () -> VMConfig.music.current_track.getTexture()
+                            .size(14)))
+                .stateCount(MusicTrack.values().length)
+                .value(new IntValue.Dynamic(() -> VMConfig.music.current_track.ordinal(), val -> {
+                    VMConfig.music.current_track = MusicTrack.values()[val];
+                    if (VMConfig.music.current_track == MusicTrack.NONE) {
+                        VMMusicManager.stopVendingMachineMusic();
+                    } else {
+                        VMMusicManager.startVendingMachineMusic(false);
+                    }
+                    ConfigurationManager.save(VMConfig.class);
+                }))
+                .tooltipDynamic(builder -> {
+                    builder.clearText();
+                    builder.addLine(
+                        IKey.lang("vendingmachine.gui.display_track") + " "
+                            + VMConfig.music.current_track.getLocalizedName());
                     setForceRefresh();
                 })
                 .tooltipAutoUpdate(true));
@@ -713,7 +738,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
                 .overlay(
                     IKey.dynamicKey(() -> IKey.lang(walletMode.getLocalizedName()))
                         .scale(0.75f))
-                .stateCount(SortMode.values().length)
+                .stateCount(WalletMode.values().length)
                 .value(new Dynamic(() -> walletMode.ordinal(), val -> {
                     VMConfig.gui.wallet_mode = walletMode = WalletMode.values()[val];
                     shouldSyncWalletMode = true;

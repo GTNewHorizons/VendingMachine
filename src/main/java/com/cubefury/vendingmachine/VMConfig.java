@@ -3,6 +3,7 @@ package com.cubefury.vendingmachine;
 import java.io.File;
 
 import com.cubefury.vendingmachine.blocks.gui.DisplayType;
+import com.cubefury.vendingmachine.blocks.gui.MusicTrack;
 import com.cubefury.vendingmachine.blocks.gui.SortMode;
 import com.cubefury.vendingmachine.blocks.gui.WalletMode;
 import com.gtnewhorizon.gtnhlib.config.Config;
@@ -18,6 +19,9 @@ public class VMConfig {
 
     @Config.Comment("Team Settings")
     public static final TeamSettings team = new TeamSettings();
+
+    @Config.Comment("Music Settings")
+    public static final Music music = new Music();
 
     @Config.Comment("Developer Settings")
     public static final Developer developer = new Developer();
@@ -70,7 +74,13 @@ public class VMConfig {
         @Config.Comment("Allows using the team wallet in solo teams")
         @Config.DefaultBoolean(false)
         public boolean soloTeam = false;
+    }
 
+    public static class Music {
+
+        @Config.Comment("Music track to play in the vending machine, either NONE or LUNCH_BREAK. Case sensitive.")
+        @Config.DefaultEnum("LUNCH_BREAK")
+        public MusicTrack current_track = MusicTrack.LUNCH_BREAK;
     }
 
     public static class Developer {
