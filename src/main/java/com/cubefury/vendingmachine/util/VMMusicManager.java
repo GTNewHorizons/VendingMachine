@@ -7,6 +7,7 @@ import net.minecraft.client.audio.SoundCategory;
 import net.minecraft.client.audio.SoundHandler;
 import net.minecraft.client.audio.SoundPoolEntry;
 
+import com.cleanroommc.modularui.screen.GuiContainerWrapper;
 import com.cubefury.vendingmachine.VMConfig;
 import com.cubefury.vendingmachine.blocks.gui.MusicTrack;
 import com.cubefury.vendingmachine.mixins.early.SoundHandlerAccessor;
@@ -73,7 +74,7 @@ public final class VMMusicManager {
     public static void onRender(RenderTickEvent e) {
         if (e.phase == Phase.END) return;
         if (!running) {
-            if (inVm) {
+            if (validateInVm()) {
                 SoundSystem sys = getSoundManager().vendingmachine$getSoundSystem();
                 if (vmMusic != null && !sys.playing(vmMusic.id)) { // Loop music when it ends
                     vmMusic = null;
@@ -85,6 +86,7 @@ public final class VMMusicManager {
             }
             return;
         }
+        validateInVm();
         SoundSystem sys = getSoundManager().vendingmachine$getSoundSystem();
         int msPassed = (int) (System.currentTimeMillis() - musicStartTime);
         float volume = Math.min(msPassed / (float) FADE_TIME, 1);
@@ -121,6 +123,13 @@ public final class VMMusicManager {
     private static SoundManagerAccessor getSoundManager() {
         return (SoundManagerAccessor) ((SoundHandlerAccessor) Minecraft.getMinecraft()
             .getSoundHandler()).vendingmachine$getSoundManager();
+    }
+
+    private static boolean validateInVm() {
+        if (inVm) {
+            inVm = Minecraft.getMinecraft().currentScreen instanceof GuiContainerWrapper;
+        }
+        return inVm;
     }
 
     public static class AudioContext {
