@@ -1,7 +1,7 @@
 package com.cubefury.vendingmachine.blocks.gui;
 
-import static com.cubefury.vendingmachine.gui.GuiTextures.SORT_ALPHABET;
-import static com.cubefury.vendingmachine.gui.GuiTextures.SORT_SMART;
+import static com.cubefury.vendingmachine.gui.GuiTextures.WALLET_PERSONAL;
+import static com.cubefury.vendingmachine.gui.GuiTextures.WALLET_TEAM;
 
 import com.cleanroommc.modularui.api.drawable.IKey;
 import com.cleanroommc.modularui.drawable.Icon;
@@ -9,11 +9,11 @@ import com.cleanroommc.modularui.drawable.UITexture;
 
 public enum WalletMode {
 
-    PERSONAL("personal", SORT_SMART),
-    TEAM("team", SORT_ALPHABET);
+    PERSONAL("personal", WALLET_PERSONAL),
+    TEAM("team", WALLET_TEAM);
 
-    private String mode;
-    private Icon texture;
+    private final String mode;
+    private final Icon texture;
 
     WalletMode(String mode, UITexture texture) {
         this.mode = mode;
