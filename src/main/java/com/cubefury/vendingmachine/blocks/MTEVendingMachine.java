@@ -9,6 +9,9 @@ import static com.cubefury.vendingmachine.api.enums.Textures.VM_OVERLAY_ACTIVE;
 import static com.gtnewhorizon.structurelib.structure.StructureUtility.ofBlock;
 import static com.gtnewhorizon.structurelib.structure.StructureUtility.ofChain;
 import static gregtech.api.util.GTStructureUtility.ofHatchAdderOptional;
+import static mcp.mobius.waila.api.SpecialChars.GREEN;
+import static mcp.mobius.waila.api.SpecialChars.RED;
+import static net.minecraft.util.StatCollector.translateToLocal;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -76,6 +79,8 @@ import gregtech.api.util.GTUtil;
 import gregtech.api.util.GTUtility;
 import gregtech.api.util.MultiblockTooltipBuilder;
 import gregtech.common.blocks.BlockCasings11;
+import mcp.mobius.waila.api.IWailaConfigHandler;
+import mcp.mobius.waila.api.IWailaDataAccessor;
 
 public class MTEVendingMachine extends MTEMultiBlockBase
     implements ISurvivalConstructable, ISecondaryDescribable, IAlignment {
@@ -746,6 +751,17 @@ public class MTEVendingMachine extends MTEMultiBlockBase
     public void onRemoval() {
         super.onRemoval();
         if (getBaseMetaTileEntity().isClientSide()) OverlayHelper.clearVMOverlay(overlayTickets);
+    }
+
+    @Override
+    public void getWailaBody(ItemStack itemStack, List<String> currentTip, IWailaDataAccessor accessor,
+        IWailaConfigHandler config) {
+        final NBTTagCompound tag = accessor.getNBTData();
+        if (!tag.getBoolean("isActive")) {
+            currentTip.add(RED + translateToLocal("GT5U.waila.multiblock.status.incomplete"));
+        } else {
+            currentTip.add(GREEN + translateToLocal("GT5U.waila.multiblock.status.running_fine"));
+        }
     }
 
     @Override
