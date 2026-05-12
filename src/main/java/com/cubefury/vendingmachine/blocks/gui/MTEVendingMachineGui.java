@@ -25,8 +25,8 @@ import com.cleanroommc.modularui.screen.ModularPanel;
 import com.cleanroommc.modularui.screen.RichTooltip;
 import com.cleanroommc.modularui.screen.UISettings;
 import com.cleanroommc.modularui.utils.Alignment;
+import com.cleanroommc.modularui.value.BoolValue;
 import com.cleanroommc.modularui.value.IntValue;
-import com.cleanroommc.modularui.value.IntValue.Dynamic;
 import com.cleanroommc.modularui.value.sync.BooleanSyncValue;
 import com.cleanroommc.modularui.value.sync.EnumSyncValue;
 import com.cleanroommc.modularui.value.sync.IntSyncValue;
@@ -68,6 +68,7 @@ import com.gtnewhorizon.gtnhlib.teams.TeamManager;
 import gregtech.api.modularui2.GTGuiTextures;
 import gregtech.api.modularui2.GTWidgetThemes;
 import gregtech.common.gui.modularui.multiblock.base.MTEMultiBlockBaseGui;
+import gregtech.common.modularui2.widget.SelectButton;
 
 public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine> {
 
@@ -88,7 +89,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
     private final PagedWidget.Controller tabController;
     public IWidget favouritesTabWidget;
     private final SearchBar searchBar;
-    private CycleButtonWidget walletButton;
+    private Flow walletButtons;
 
     public static String lastSearch = "";
     public static int lastPage = 0;
@@ -732,28 +733,17 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
                     .width(COIN_COLUMN_WIDTH);
             }
         }
-        coinColumn.child(
-            walletButton = new CycleButtonWidget().width(COIN_COLUMN_WIDTH)
-                .marginTop(6)
-                .overlay(
-                    IKey.dynamicKey(() -> IKey.lang(walletMode.getLocalizedName()))
-                        .scale(0.75f))
-                .stateCount(WalletMode.values().length)
-                .value(new Dynamic(() -> walletMode.ordinal(), val -> {
-                    VMConfig.gui.wallet_mode = walletMode = WalletMode.values()[val];
-                    shouldSyncWalletMode = true;
-                    setForceRefresh();
-                }))
-                .tooltipDynamic(builder -> {
-                    builder.clearText();
-                    builder
-                        .addLine(IKey.lang("vendingmachine.gui.display_wallet") + " " + walletMode.getLocalizedName());
-                })
-                .tooltipAutoUpdate(true));
 
-        if (coinColumn.hasChildren()) {
-            parent.child(coinColumn.left(3 + COIN_COLUMN_WIDTH * (coinCount / COIN_COLUMN_ROW_COUNT)));
-        }
+        walletButtons = Flow.row()
+            .childPadding(2)
+            .coverChildren()
+            .marginTop(5)
+            .child(createWalletButton(WalletMode.PERSONAL))
+            .child(createWalletButton(WalletMode.TEAM));
+        coinColumn.child(walletButtons);
+
+        parent.child(coinColumn.left(3 + COIN_COLUMN_WIDTH * (coinCount / COIN_COLUMN_ROW_COUNT)));
+
         return parent;
     }
 
@@ -844,7 +834,10 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
         BooleanSyncValue hasTeamSyncer = new BooleanSyncValue(
             () -> team != null && (VMConfig.team.soloTeam || team.getMembers()
                 .size() > 1),
-            val -> walletButton.setEnabled(val));
+            val -> {
+                walletButtons.setEnabled(val);
+                if (!val) walletMode = WalletMode.PERSONAL;
+            });
         syncManager.syncValue("hasTeam", hasTeamSyncer);
 
         // Block modifications from server -> client
@@ -860,6 +853,17 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
     public void attemptPurchase(TradeItemDisplay display) {
         submitTradesToServer(display);
         forceRefresh = true;
+    }
+
+    private ToggleButton createWalletButton(WalletMode mode) {
+        return new SelectButton().value(new BoolValue.Dynamic(() -> walletMode == mode, value -> {
+            VMConfig.gui.wallet_mode = walletMode = mode;
+            shouldSyncWalletMode = true;
+            setForceRefresh();
+        }))
+            .size(16)
+            .overlay(mode.getTexture())
+            .tooltip(richTooltip -> richTooltip.add(IKey.lang(mode.getLocalizedName())));
     }
 
     private void submitTradesToServer(TradeItemDisplay trade) {

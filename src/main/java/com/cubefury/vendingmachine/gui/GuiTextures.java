@@ -105,6 +105,18 @@ public final class GuiTextures {
         .name("sort_alphabet")
         .build();
 
+    public static final UITexture WALLET_PERSONAL = UITexture.builder()
+        .location(VendingMachine.MODID, "gui/overlay/wallet_personal")
+        .imageSize(32, 32)
+        .name("wallet_personal")
+        .build();
+
+    public static final UITexture WALLET_TEAM = UITexture.builder()
+        .location(VendingMachine.MODID, "gui/overlay/wallet_team")
+        .imageSize(32, 32)
+        .name("wallet_team")
+        .build();
+
     public static final UITexture INPUT_SPRITE = UITexture.builder()
         .location(VendingMachine.MODID, "gui/background/input")
         .imageSize(30, 20)
