@@ -9,7 +9,13 @@ public enum Mixins implements IMixins {
 
     // spotless:off
     VENDING_MACHINE_MUSIC(new MixinBuilder("Helps control game music when the vending machine is opened")
-        .addClientMixins("SoundManagerMixin", "SoundManagerAccessor", "SoundHandlerAccessor")
+        .addClientMixins(
+            "SoundManagerMixin",
+            "SoundManagerAccessor",
+            "SoundHandlerAccessor",
+            "MusicTickerAccessor",
+            "MinecraftAccessor"
+        )
         .setPhase(Phase.EARLY))
     ;
     // spotless:on
