@@ -26,11 +26,12 @@ public class TradeItemDisplay {
     public boolean tradeableNowPersonal;
     public boolean tradeableNowTeam;
     public boolean isFavourite;
+    public int cdTradeCount;
 
     public TradeItemDisplay(List<CurrencyItem> fromCurrency, List<BigItemStack> fromItems, List<BigItemStack> ncItems,
         List<BigItemStack> toItems, ItemStack display, UUID tgID, int tradeGroupOrder, long cooldown,
         String cooldownText, boolean hasCooldown, boolean enabled, boolean tradeableNowPersonal,
-        boolean tradeableNowTeam) {
+        boolean tradeableNowTeam, int cdTradeCount) {
         this.fromCurrency = fromCurrency;
         this.fromItems = fromItems;
         this.ncItems = ncItems;
@@ -45,6 +46,7 @@ public class TradeItemDisplay {
         this.tradeableNowPersonal = tradeableNowPersonal;
         this.tradeableNowTeam = tradeableNowTeam;
         this.isFavourite = false;
+        this.cdTradeCount = cdTradeCount;
     }
 
     public boolean satisfiesSearch(ItemFilter filter, String searchStringNoCase) {

@@ -50,15 +50,17 @@ public class NetTradeDisplaySync {
         public boolean enabled;
         public boolean tradableNowPersonal;
         public boolean tradableNowTeam;
+        public int cdTradeCount;
 
         public Tradable(UUID tgID, int tradeGroupOrder, long cooldown, boolean enabled, boolean tradableNowPersonal,
-            boolean tradableNowTeam) {
+            boolean tradableNowTeam, int cdTradeCount) {
             this.tgID = tgID;
             this.tradeGroupOrder = tradeGroupOrder;
             this.cooldown = cooldown;
             this.enabled = enabled;
             this.tradableNowPersonal = tradableNowPersonal;
             this.tradableNowTeam = tradableNowTeam;
+            this.cdTradeCount = cdTradeCount;
         }
 
         public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
@@ -68,7 +70,7 @@ public class NetTradeDisplaySync {
             nbt.setBoolean("enabled", this.enabled);
             nbt.setBoolean("tradableNowPersonal", this.tradableNowPersonal);
             nbt.setBoolean("tradableNowTeam", this.tradableNowTeam);
-
+            nbt.setInteger("cdTradeCount", cdTradeCount);
             return nbt;
         }
 
@@ -79,10 +81,11 @@ public class NetTradeDisplaySync {
                 nbt.getLong("cooldown"),
                 nbt.getBoolean("enabled"),
                 nbt.getBoolean("tradableNowPersonal"),
-                nbt.getBoolean("tradableNowTeam"));
+                nbt.getBoolean("tradableNowTeam"),
+                nbt.getInteger("cdTradeCount"));
         }
 
-        public TradeItemDisplay formatItemDisplay() {
+        public TradeItemDisplay formatItemDisplay(int teamSize) {
             TradeGroup tg = TradeDatabase.INSTANCE.getTradeGroupFromId(this.tgID);
             Trade t = tg.getTrades()
                 .get(this.tradeGroupOrder);
@@ -95,11 +98,12 @@ public class NetTradeDisplaySync {
                 this.tgID,
                 this.tradeGroupOrder,
                 this.cooldown,
-                convertCooldownText(this.cooldown),
-                this.cooldown > 0,
+                convertCooldownText(this.cooldown <= 0 ? tg.cooldown : this.cooldown),
+                this.cooldown > 0 && this.cdTradeCount >= teamSize,
                 this.enabled,
                 this.tradableNowPersonal,
-                this.tradableNowTeam);
+                this.tradableNowTeam,
+                this.cooldown > 0 ? this.cdTradeCount : 0);
         }
 
         public static String convertCooldownText(long cd) {
@@ -126,10 +130,12 @@ public class NetTradeDisplaySync {
 
         NBTTagCompound payload = new NBTTagCompound();
         NBTTagList trades = new NBTTagList();
+        int teamSize = TradeManager.INSTANCE.getMaxTradesInCooldown(playerId);
         for (TradeGroup tg : availableGroups) {
             TradeHistory history = TradeManager.INSTANCE.getTradeState(playerId, tg);
             long lastTradeTime = history.lastTrade;
             long tradeCount = history.tradeCount;
+            int cdTradeCount = history.cooldownTradeCount;
 
             long cooldownRemaining;
             if (tg.cooldown != -1 && lastTradeTime != -1 && (currentTimestamp - lastTradeTime) / 1000 < tg.cooldown) {
@@ -153,10 +159,17 @@ public class NetTradeDisplaySync {
                     && base.inputCurrencySatisfied(trade.fromCurrency, playerId, WalletMode.TEAM);
 
                 trades.appendTag(
-                    new Tradable(tg.getId(), i, cooldownRemaining, enabled, tradableNowPersonal, tradableNowTeam)
-                        .writeToNBT(new NBTTagCompound()));
+                    new Tradable(
+                        tg.getId(),
+                        i,
+                        cooldownRemaining,
+                        enabled,
+                        tradableNowPersonal,
+                        tradableNowTeam,
+                        cdTradeCount).writeToNBT(new NBTTagCompound()));
             }
             payload.setTag("trades", trades);
+            payload.setInteger("teamSize", teamSize);
         }
         PacketSender.INSTANCE.sendToPlayers(new UnserializedPacket(ID_NAME, payload), player);
 
@@ -167,12 +180,14 @@ public class NetTradeDisplaySync {
         List<TradeItemDisplay> tradeData = TradeManager.INSTANCE.tradeData;
         tradeData.clear();
 
+        int teamSize = message.getInteger("teamSize");
         NBTTagList trades = message.getTagList("trades", Constants.NBT.TAG_COMPOUND);
         for (int i = 0; i < trades.tagCount(); i++) {
             tradeData.add(
                 Tradable.readFromNBT(trades.getCompoundTagAt(i))
-                    .formatItemDisplay());
+                    .formatItemDisplay(teamSize));
         }
+        MTEVendingMachineGui.setTeamSize(teamSize);
         MTEVendingMachineGui.setForceRefresh();
     }
 }

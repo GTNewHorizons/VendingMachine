@@ -13,6 +13,7 @@ import javax.annotation.Nullable;
 
 import net.minecraft.entity.player.EntityPlayerMP;
 
+import com.cubefury.vendingmachine.VMConfig;
 import com.cubefury.vendingmachine.api.trade.ICondition;
 import com.cubefury.vendingmachine.blocks.gui.TradeItemDisplay;
 import com.cubefury.vendingmachine.blocks.gui.WalletMode;
@@ -133,6 +134,15 @@ public class TradeManager {
         return teamData.getTradeState(tg.getId());
     }
 
+    public int getMaxTradesInCooldown(UUID player) {
+        if (player == null) return 0;
+        Team team = TeamManager.getTeamByPlayer(player);
+        if (team == null) return 0;
+        int teamSize = team.getMembers()
+            .size();
+        return VMConfig.team.maxTradeLimit < 1 ? teamSize : Math.min(VMConfig.team.maxTradeLimit, teamSize);
+    }
+
     public void setTradeState(@Nonnull UUID player, TradeGroup tg, TradeHistory history) {
         VMTeamData teamData = getTeamData(player);
         if (teamData == null) return;
@@ -149,7 +159,11 @@ public class TradeManager {
         long lastTradeTime = history.lastTrade;
         long tradeCount = history.tradeCount;
         long cooldownRemaining;
-        if (tg.cooldown != -1 && lastTradeTime != -1 && (currentTimestamp - lastTradeTime) / 1000 < tg.cooldown) {
+        if (
+            tg.cooldown != -1 && lastTradeTime != -1
+                && (currentTimestamp - lastTradeTime) / 1000 < tg.cooldown
+                && history.cooldownTradeCount >= getMaxTradesInCooldown(player)
+        ) {
             cooldownRemaining = tg.cooldown - (currentTimestamp - lastTradeTime) / 1000;
         } else {
             cooldownRemaining = -1;
@@ -162,7 +176,7 @@ public class TradeManager {
 
     public void executeTrade(@Nonnull UUID player, TradeGroup tg) {
         TradeHistory newTradeHistory = getTradeState(player, tg);
-        newTradeHistory.executeTrade(tg.maxTrades, tg.cooldown != -1);
+        newTradeHistory.executeTrade(tg.maxTrades, tg.cooldown);
         setTradeState(player, tg, newTradeHistory);
         if (newTradeHistory.notificationQueued) {
             addNotification(player, tg);

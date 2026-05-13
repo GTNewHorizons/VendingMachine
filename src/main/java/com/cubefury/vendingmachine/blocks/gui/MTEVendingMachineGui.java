@@ -75,6 +75,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
     private final MTEVendingMachine base;
 
     public static boolean forceRefresh = false;
+    public static int teamSize = 0;
 
     private boolean ejectItems = false;
     private boolean ejectCoins = false;
@@ -145,6 +146,10 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
 
     public static void setForceRefresh() {
         forceRefresh = true;
+    }
+
+    public static void setTeamSize(int teamSizeIn) {
+        teamSize = teamSizeIn;
     }
 
     @Override
@@ -598,8 +603,26 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
                             tg.getTrades()
                                 .size() - 1))
                         .style(IKey.AQUA, IKey.ITALIC));
+                builder.emptyLine();
             }
-            builder.emptyLine();
+
+            if (tg.cooldown != -1) {
+                builder.addLine(
+                    IKey.str(
+                        Translator.translate(
+                            "vendingmachine.gui.cooldown_remaining_tooltip",
+                            teamSize - cur.cdTradeCount,
+                            teamSize))
+                        .style(IKey.DARK_AQUA));
+                builder.addLine(
+                    IKey.str(
+                        Translator.translate(
+                            cur.cooldown > 0 ? "vendingmachine.gui.cooldown_started_tooltip"
+                                : "vendingmachine.gui.cooldown_idle_tooltip",
+                            cur.cooldownText))
+                        .style(IKey.DARK_AQUA));
+                builder.emptyLine();
+            }
 
             builder.addLine(
                 IKey.str(Translator.translate("vendingmachine.gui.trade_hint"))
@@ -867,9 +890,10 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
     }
 
     private void submitTradesToServer(TradeItemDisplay trade) {
-        if (!trade.isTradeableNow(walletMode) || !trade.enabled) {
+        if (!trade.isTradeableNow(walletMode) || !trade.enabled || trade.hasCooldown) {
             return;
         }
+        trade.cdTradeCount++;
         base.sendTradeRequest(trade, walletMode);
     }
 
