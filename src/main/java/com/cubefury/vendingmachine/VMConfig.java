@@ -74,6 +74,10 @@ public class VMConfig {
         @Config.Comment("Allows using the team wallet in solo teams")
         @Config.DefaultBoolean(false)
         public boolean soloTeam = false;
+
+        @Config.Comment("Each player on a team increases the cooldown trade limit by 1. Value of -1 keeps this uncapped.")
+        @Config.DefaultInt(-1)
+        public int maxTradeLimit = -1;
     }
 
     public static class Music {

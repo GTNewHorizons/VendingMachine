@@ -109,7 +109,7 @@ public class TradeMainPanel extends ModularPanel {
                 TradeItemDisplay cur = tradeMap.getOrDefault(tid.tgID, Collections.emptyMap())
                     .get(tid.tradeGroupOrder);
                 tid.enabled = cur != null && cur.enabled;
-                tid.hasCooldown = cur.cooldown > 0;
+                tid.hasCooldown = cur.cooldown > 0 && cur.cdTradeCount >= MTEVendingMachineGui.teamSize;
                 tid.cooldown = cur.cooldown;
                 tid.cooldownText = cur.cooldownText;
                 tid.tradeableNowPersonal = cur.tradeableNowPersonal;

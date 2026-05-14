@@ -117,6 +117,7 @@ public class VMTeamData implements ITeamData {
                 TradeHistory history = entry.getValue();
                 historyTag.setLong("lastTrade", history.lastTrade);
                 historyTag.setInteger("tradeCount", history.tradeCount);
+                historyTag.setInteger("cooldownTradeCount", history.cooldownTradeCount);
                 historyTag.setBoolean("notificationQueued", history.notificationQueued);
 
                 tradeHistoryList.appendTag(historyTag);
@@ -150,8 +151,9 @@ public class VMTeamData implements ITeamData {
 
                 long lastTrade = historyTag.getLong("lastTrade");
                 int tradeCount = historyTag.getInteger("tradeCount");
+                int cooldownTradeCount = historyTag.getInteger("cooldownTradeCount");
                 boolean notificationQueued = historyTag.getBoolean("notificationQueued");
-                tradeHistory.put(uuid, new TradeHistory(lastTrade, tradeCount, notificationQueued));
+                tradeHistory.put(uuid, new TradeHistory(lastTrade, tradeCount, cooldownTradeCount, notificationQueued));
             }
         }
     }
