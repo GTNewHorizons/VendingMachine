@@ -884,7 +884,8 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
             shouldSyncWalletMode = true;
             setForceRefresh();
         }))
-            .size(16)
+            .size(20)
+            .padding(1)
             .overlay(mode.getTexture())
             .tooltip(richTooltip -> richTooltip.add(IKey.lang(mode.getLocalizedName())));
     }
