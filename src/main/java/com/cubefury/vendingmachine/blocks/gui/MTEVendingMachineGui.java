@@ -201,6 +201,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
 
     public IWidget createQolButtonColumn() {
         return new Grid().left(-17 * 2 + 1)
+            .excludeAreaInRecipeViewer()
             .top(1)
             .minElementMargin(1)
             .coverChildren()
@@ -271,6 +272,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
 
     public IWidget createCategoryTabs(PagedWidget.Controller tabController) {
         Flow tabColumn = Flow.column()
+            .excludeAreaInRecipeViewer()
             .width(40)
             .height(300)
             .left(-29)
