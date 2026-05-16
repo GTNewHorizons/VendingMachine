@@ -88,6 +88,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
 
     private PosGuiData guiData;
     private final PagedWidget.Controller tabController;
+    private final List<ListWidget> tradeLists;
     public IWidget favouritesTabWidget;
     private final SearchBar searchBar;
     private Flow walletButtons;
@@ -122,6 +123,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
         this.tradeCategories.add(TradeCategory.FAVOURITES);
         this.tradeCategories.add(TradeCategory.ALL);
         this.tradeCategories.addAll(TradeDatabase.INSTANCE.getTradeCategories());
+        this.tradeLists = new ArrayList<>();
 
         for (TradeCategory c : this.tradeCategories) {
             displayedTradesTiles.put(c, new ArrayList<>(MTEVendingMachine.MAX_TRADES));
@@ -635,6 +637,13 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
         }
     }
 
+    public void resetTradeDisplayScroll() {
+        tradeLists.forEach(
+            list -> list.getScrollArea()
+                .getScrollY()
+                .scrollTo(list.getScrollArea(), 0));
+    }
+
     // spotless:off
     private IWidget createTradeUI(TradeMainPanel rootPanel, PagedWidget.Controller tabController) {
         PagedWidget<?> paged = new PagedWidget<>()
@@ -650,6 +659,8 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
                 .top(1)
                 .height(144)
                 .collapseDisabledChild(true);
+
+            this.tradeLists.add(tradeList);
 
             tradeList.child(Flow.row().height(2));
 
