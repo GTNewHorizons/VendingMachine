@@ -97,6 +97,7 @@ public class SearchBar extends BaseTextFieldWidget<SearchBar> {
         String curText = getText();
         if (!curText.equals(previousText)) {
             MTEVendingMachineGui.lastSearch = curText;
+            gui.resetTradeDisplayScroll();
             gui.setForceRefresh();
         }
         previousText = curText;
