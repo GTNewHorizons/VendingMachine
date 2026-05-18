@@ -361,6 +361,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
         wallet.resetCount(type);
         TradeManager.INSTANCE.saveTeamData(playerId);
         this.ejectSingleCoin.put(type, false);
+        base.playSoundEffect("vendingmachine:coin_drop");
     }
 
     private void doEjectCoins() {
@@ -391,6 +392,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
         wallet.resetAllCount();
         TradeManager.INSTANCE.saveTeamData(playerId);
         ejectCoins = false;
+        base.playSoundEffect("vendingmachine:coin_drop");
     }
 
     private void doEjectItems() {
@@ -448,6 +450,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
                                     GuiTextures.EJECT_COINS.asIcon()
                                         .size(14))
                                     .tooltipBuilder(t -> t.addLine(IKey.lang("vendingmachine.gui.coin_eject")))
+                                    .playClickSound(false)
                                     .syncHandler("ejectCoins")
                                     .left(6))
                             .top(98)
@@ -774,6 +777,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
             .childPadding(2)
             .coverChildren()
             .marginTop(5)
+            .rightRel(1, 2, 1)
             .child(createWalletButton(WalletMode.PERSONAL))
             .child(createWalletButton(WalletMode.TEAM));
         coinColumn.child(walletButtons);
@@ -792,6 +796,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
                         .size(12))
                     .size(12)
                     .left(0)
+                    .playClickSound(false)
                     .syncHandler("ejectCoin_" + type.id)
                     .tooltipDynamic((builder) -> {
                         builder.clearText();

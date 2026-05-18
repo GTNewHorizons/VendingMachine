@@ -29,8 +29,11 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.network.play.server.S29PacketSoundEffect;
 import net.minecraft.util.ChatComponentTranslation;
+import net.minecraft.world.IWorldAccess;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.oredict.OreDictionary;
@@ -353,7 +356,42 @@ public class MTEVendingMachine extends MTEMultiBlockBase
                 .get(tradeRequest.tradeGroup));
         this.sendTradeUpdate();
         this.markDirty();
+        playSoundEffect("vendingmachine:item_drop");
         return true;
+    }
+
+    /**
+     * Play a sound effect coming from the VM to all nearby players
+     * For the player currently using the vending machine, the sound is played at their location
+     */
+    public void playSoundEffect(String sound) {
+        IGregTechTileEntity te = getBaseMetaTileEntity();
+        if (te != null) {
+            World world = te.getWorld();
+            if (world instanceof WorldServer worldServer) {
+                EntityPlayer player = getCurrentUser();
+                for (IWorldAccess worldAccess : worldServer.worldAccesses) {
+                    worldAccess.playSoundToNearExcept(
+                        player,
+                        sound,
+                        te.getXCoord() + 0.5f,
+                        te.getYCoord() + 0.5f,
+                        te.getZCoord() + 0.5f,
+                        1f,
+                        1f);
+                }
+                if (player instanceof EntityPlayerMP mpPlayer) {
+                    S29PacketSoundEffect packet = new S29PacketSoundEffect(
+                        sound,
+                        player.posX,
+                        player.posY - player.yOffset,
+                        player.posZ,
+                        1f,
+                        1f);
+                    mpPlayer.playerNetServerHandler.sendPacket(packet);
+                }
+            }
+        }
     }
 
     public boolean fetchItemFromAE(ItemStack requiredStack, boolean simulate, String ore) {
