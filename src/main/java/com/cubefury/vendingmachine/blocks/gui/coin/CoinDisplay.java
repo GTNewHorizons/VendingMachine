@@ -15,7 +15,7 @@ import com.cubefury.vendingmachine.util.Translator;
 
 public class CoinDisplay extends Flow {
 
-    private static final int COIN_ANIM_TIME = 500;
+    private static final int COIN_ANIM_TIME = 200;
     private static final float DEFAULT_AMOUNT_SCALE = 0.8f;
     private static final float AMOUNT_SCALE_OFFSET = 0.1f;
 
