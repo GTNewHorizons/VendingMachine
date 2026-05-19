@@ -1,10 +1,37 @@
 {
-  "vendingmachine.lunch_break": {
+  "track.lunch_break": {
     "category": "record",
     "sounds": [
       {
         "name": "vendingmachine:lunch_break",
         "stream": true
+      }
+    ]
+  },
+  "coin_drop": {
+    "category": "block",
+    "sounds": [
+      {
+        "name": "vendingmachine:coin_drop",
+        "stream": false
+      }
+    ]
+  },
+  "coin_insert": {
+    "category": "block",
+    "sounds": [
+      {
+        "name": "vendingmachine:coin_insert",
+        "stream": false
+      }
+    ]
+  },
+  "item_drop": {
+    "category": "block",
+    "sounds": [
+      {
+        "name": "vendingmachine:item_drop",
+        "stream": false
       }
     ]
   }
