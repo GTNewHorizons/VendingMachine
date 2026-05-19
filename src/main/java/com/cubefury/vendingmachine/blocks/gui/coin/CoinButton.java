@@ -1,9 +1,10 @@
-package com.cubefury.vendingmachine.blocks.gui;
+package com.cubefury.vendingmachine.blocks.gui.coin;
 
 import org.jetbrains.annotations.NotNull;
 
 import com.cleanroommc.modularui.api.widget.Interactable;
 import com.cleanroommc.modularui.widgets.ToggleButton;
+import com.cubefury.vendingmachine.blocks.gui.TradeMainPanel;
 import com.cubefury.vendingmachine.trade.CurrencyType;
 
 public class CoinButton extends ToggleButton {
