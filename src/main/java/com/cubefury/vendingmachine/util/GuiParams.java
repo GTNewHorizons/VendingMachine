@@ -24,6 +24,9 @@ public enum GuiParams {
     trade_display_list_current_selected_color(0xAA039BE5),
     trade_display_text_color(0xFFFFFF),
 
+    // volume slider
+    volume_slider_background(0xFF000000),
+
     // new line to prevent merge conflicts
     ;
 
