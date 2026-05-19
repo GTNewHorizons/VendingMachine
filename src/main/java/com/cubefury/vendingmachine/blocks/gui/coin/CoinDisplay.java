@@ -11,6 +11,7 @@ import com.cleanroommc.modularui.value.sync.PanelSyncManager;
 import com.cleanroommc.modularui.widgets.TextWidget;
 import com.cleanroommc.modularui.widgets.ToggleButton;
 import com.cleanroommc.modularui.widgets.layout.Flow;
+import com.cubefury.vendingmachine.VMConfig;
 import com.cubefury.vendingmachine.blocks.gui.TradeMainPanel;
 import com.cubefury.vendingmachine.trade.CurrencyType;
 import com.cubefury.vendingmachine.util.Translator;
@@ -83,7 +84,7 @@ public class CoinDisplay extends Flow {
     }
 
     private Icon getCoinButtonIcon() {
-        if (oldCoinValue < 10) return coinIcon1;
+        if (!VMConfig.gui.update_coin_icon || oldCoinValue < 10) return coinIcon1;
         if (oldCoinValue < 100) return coinIcon10;
         if (oldCoinValue < 1000) return coinIcon100;
         if (oldCoinValue < 10000) return coinIcon1000;
