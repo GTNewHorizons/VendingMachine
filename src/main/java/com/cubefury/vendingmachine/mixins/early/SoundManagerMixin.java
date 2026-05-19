@@ -9,6 +9,7 @@ import net.minecraft.client.audio.SoundPoolEntry;
 
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.At.Shift;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
@@ -24,9 +25,10 @@ public class SoundManagerMixin {
         method = "playSound",
         at = @At(
             value = "INVOKE",
-            target = "Lnet/minecraft/client/audio/SoundManager$SoundSystemStarterThread;play(Ljava/lang/String;)V",
+            target = "Lnet/minecraft/client/audio/SoundManager$SoundSystemStarterThread;setVolume(Ljava/lang/String;F)V",
+            shift = Shift.AFTER,
             remap = false))
-    private static void onPlaySound(ISound sound, CallbackInfo ci, @Local String s, @Local SoundCategory category,
+    private static void onSetVolume(ISound sound, CallbackInfo ci, @Local String s, @Local SoundCategory category,
         @Local SoundPoolEntry entry) {
         if (Minecraft.getMinecraft().theWorld == null) return;
         if (VMMusicManager.tickingMusic) {

@@ -14,11 +14,14 @@ import java.util.stream.Collectors;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.common.util.Constants;
 
+import com.cleanroommc.modularui.api.IPanelHandler;
 import com.cleanroommc.modularui.api.drawable.IDrawable;
 import com.cleanroommc.modularui.api.drawable.IKey;
 import com.cleanroommc.modularui.api.widget.IWidget;
+import com.cleanroommc.modularui.api.widget.Interactable;
 import com.cleanroommc.modularui.drawable.DynamicDrawable;
 import com.cleanroommc.modularui.factory.PosGuiData;
 import com.cleanroommc.modularui.screen.ModularPanel;
@@ -93,6 +96,9 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
     public IWidget favouritesTabWidget;
     private final SearchBar searchBar;
     private Flow walletButtons;
+
+    private CycleButtonWidget volumeButton;
+    private IPanelHandler volumePanel;
 
     public static String lastSearch = "";
     public static int lastPage = 0;
@@ -185,6 +191,10 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
                 .child(createTradeUI((TradeMainPanel) panel, this.tabController));
             mainColumn.child(createCoinInventoryRow((TradeMainPanel) panel, syncManager));
         }
+        volumePanel = syncManager.syncedPanel(
+            "volume",
+            true,
+            (syncManager1, syncHandler) -> new VolumeControlGui().createPanel(syncManager1, volumeButton));
         mainColumn.child(createInventoryRow());
         panel.child(mainColumn);
         panel.child(
@@ -211,26 +221,38 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
             .matrix(
                 Arrays.asList(
                     Arrays.asList(
-                        new CycleButtonWidget().size(14)
+                        volumeButton = new CycleButtonWidget().size(14)
                             .overlay(
                                 new DynamicDrawable(
                                     () -> VMConfig.music.current_track.getTexture()
                                         .size(14)))
                             .stateCount(MusicTrack.values().length)
                             .value(new IntValue.Dynamic(() -> VMConfig.music.current_track.ordinal(), val -> {
-                                VMConfig.music.current_track = MusicTrack.values()[val];
-                                if (VMConfig.music.current_track == MusicTrack.NONE) {
-                                    VMMusicManager.stopVendingMachineMusic();
+                                if (Interactable.hasShiftDown()) {
+                                    volumePanel.togglePanel();
                                 } else {
-                                    VMMusicManager.startVendingMachineMusic(false);
+                                    VMConfig.music.current_track = MusicTrack.values()[val];
+                                    if (VMConfig.music.current_track == MusicTrack.NONE) {
+                                        VMMusicManager.stopVendingMachineMusic();
+                                    } else {
+                                        VMMusicManager.startVendingMachineMusic(false);
+                                    }
+                                    ConfigurationManager.save(VMConfig.class);
                                 }
-                                ConfigurationManager.save(VMConfig.class);
                             }))
                             .tooltipDynamic(builder -> {
                                 builder.clearText();
                                 builder.addLine(
                                     IKey.lang("vendingmachine.gui.display_track") + " "
                                         + VMConfig.music.current_track.getLocalizedName());
+                                builder.addLine(
+                                    IKey.lang(
+                                        "vendingmachine.gui.volume.tooltip_volume_display",
+                                        VolumeControlGui.getVolumeAsString())
+                                        .style(EnumChatFormatting.GRAY));
+                                builder.addLine(
+                                    IKey.lang("vendingmachine.gui.volume.tooltip_open_panel")
+                                        .style(EnumChatFormatting.GRAY));
                                 setForceRefresh();
                             })
                             .tooltipAutoUpdate(true),

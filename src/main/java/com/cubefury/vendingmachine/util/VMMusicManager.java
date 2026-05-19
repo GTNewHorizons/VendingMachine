@@ -44,6 +44,10 @@ public final class VMMusicManager {
 
     public static void setCurrentVendingMusic(AudioContext audioContext) {
         vmMusic = audioContext;
+        if (vmMusic.id != null) {
+            SoundSystem sys = getSoundManager().vendingmachine$getSoundSystem();
+            sys.setVolume(vmMusic.id, 0);
+        }
     }
 
     public static void startVendingMachineMusic(boolean fade) {
@@ -108,6 +112,10 @@ public final class VMMusicManager {
 
     public static boolean inVendingMachine() {
         return inVm;
+    }
+
+    public static void onVolumeChange() {
+        running = true;
     }
 
     public static void reset() {
