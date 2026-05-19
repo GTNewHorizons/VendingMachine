@@ -49,6 +49,7 @@ import com.cleanroommc.modularui.widgets.slot.ModularSlot;
 import com.cubefury.vendingmachine.VMConfig;
 import com.cubefury.vendingmachine.VendingMachine;
 import com.cubefury.vendingmachine.blocks.MTEVendingMachine;
+import com.cubefury.vendingmachine.blocks.gui.coin.CoinDisplay;
 import com.cubefury.vendingmachine.gui.GuiTextures;
 import com.cubefury.vendingmachine.gui.WidgetThemes;
 import com.cubefury.vendingmachine.network.handlers.NetTradeDisplaySync;
@@ -766,16 +767,6 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
     }
     // spotless:on
 
-    private static String getReadableStringFromCoinAmount(int amount) {
-        if (amount < 10000) {
-            return "" + amount;
-        } else if (amount < 1000000) {
-            return amount / 1000 + "K";
-        } else {
-            return amount / 1000000 + "M";
-        }
-    }
-
     private IWidget createCoinInventoryRow(TradeMainPanel panel, PanelSyncManager syncManager) {
         Flow parent = Flow.row()
             .width(162)
@@ -787,7 +778,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
         int coinCount = 0;
 
         for (CurrencyType type : CurrencyType.values()) {
-            coinColumn.child(createCoinDisplay(panel, type, syncManager));
+            coinColumn.child(new CoinDisplay(panel, type, syncManager));
             if (++coinCount % COIN_COLUMN_ROW_COUNT == 0) {
                 parent.child(coinColumn.left(3 + COIN_COLUMN_WIDTH * (coinCount / COIN_COLUMN_ROW_COUNT - 1)));
                 coinColumn = Flow.column()
@@ -807,36 +798,6 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
         parent.child(coinColumn.left(3 + COIN_COLUMN_WIDTH * (coinCount / COIN_COLUMN_ROW_COUNT)));
 
         return parent;
-    }
-
-    private IWidget createCoinDisplay(TradeMainPanel panel, CurrencyType type, PanelSyncManager syncManager) {
-        IntSyncValue coinSyncValue = syncManager.findSyncHandler("coinAmount_" + type.id, 0, IntSyncValue.class);
-        return Flow.row()
-            .child(
-                new CoinButton(panel, type).overlay(
-                    type.texture.asIcon()
-                        .size(12))
-                    .size(12)
-                    .left(0)
-                    .playClickSound(false)
-                    .syncHandler("ejectCoin_" + type.id)
-                    .tooltipDynamic((builder) -> {
-                        builder.clearText();
-                        builder.addLine(coinSyncValue.getValue() + " " + type.getLocalizedName());
-                        builder.emptyLine();
-                        builder.addLine(
-                            IKey.str(Translator.translate("vendingmachine.gui.single_coin_type_eject_hint"))
-                                .style(IKey.GRAY, IKey.ITALIC));
-                        builder.setAutoUpdate(true);
-                    }))
-            .child(
-                IKey.dynamic(() -> getReadableStringFromCoinAmount(coinSyncValue.getValue()))
-                    .scale(0.8f)
-                    .asWidget()
-                    .top(3)
-                    .left(14)
-                    .width(21))
-            .height(14);
     }
 
     // why is the original method private lmao
