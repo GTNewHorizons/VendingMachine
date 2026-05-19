@@ -52,18 +52,6 @@ vendingmachine.gui.volume.percent=%s%%
 vendingmachine.gui.error.incomplete_structure=Incomplete Structure.
 vendingmachine.gui.error.player_using=Someone is using the vending machine at the moment.
 
-# Info tooltips
-vendingmachine.info.vendingmachine.main=Who's even restocking this...
-vendingmachine.info.vendingmachine.structure_part.contoller=Middle
-vendingmachine.info.vendingmachine.structure_part.0=Tin Item Pipe Casings
-vendingmachine.info.vendingmachine.structure_part.1=Everything except the controller
-vendingmachine.info.vendingmachine.structure_part.2=ME Vending Uplink Hatch
-vendingmachine.info.vendingmachine.structure_part.3=Any Pipe Casing, Optional
-vendingmachine.info.vendingmachine.structure_part.info=Cannot be flipped onto its side
-
-vendingmachine.info.vendinguplink.structure_part.0=Vending Machine Uplink hatch.
-vendingmachine.info.vendinguplink.structure_part.1=Uses inputs directly from ME network.
-
 # Chat
 vendingmachine.chat.trade_restock=Vending Machine Restocked: %s
 

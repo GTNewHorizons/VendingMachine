@@ -422,16 +422,12 @@ public class MTEVendingMachine extends MTEMultiBlockBase
         if (tooltipBuilder == null) {
             tooltipBuilder = new MultiblockTooltipBuilder();
             tooltipBuilder.addMachineType("Vending Machine")
-                .addInfo(Translator.translate("vendingmachine.info.vendingmachine.main"))
+                .addInfo("Who even restocks this...")
                 .beginStructureBlock(2, 3, 1, false)
-                .addController(Translator.translate("vendingmachine.info.vendingmachine.structure_part.contoller"))
-                .addOtherStructurePart(
-                    Translator.translate("vendingmachine.info.vendingmachine.structure_part.0"),
-                    Translator.translate("vendingmachine.info.vendingmachine.structure_part.1"))
-                .addOtherStructurePart(
-                    Translator.translate("vendingmachine.info.vendingmachine.structure_part.2"),
-                    Translator.translate("vendingmachine.info.vendingmachine.structure_part.3"))
-                .addStructureInfo(Translator.translate("vendingmachine.info.vendingmachine.structure_part.info"))
+                .addController("Middle")
+                .addOtherStructurePart("Tin Item Pipe Casings", "Everything except the controller")
+                .addOtherStructurePart("ME Vending Uplink Hatch", "Any Pipe Casing, Optional")
+                .addStructureInfo("Cannot be flipped onto its side")
                 .toolTipFinisher(AUTHOR_CUBEFURY);
         }
         return tooltipBuilder;

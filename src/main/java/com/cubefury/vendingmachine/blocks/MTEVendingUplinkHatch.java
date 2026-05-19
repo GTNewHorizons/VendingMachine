@@ -16,7 +16,6 @@ import net.minecraftforge.oredict.OreDictionary;
 
 import com.cubefury.vendingmachine.VendingMachine;
 import com.cubefury.vendingmachine.items.VMItems;
-import com.cubefury.vendingmachine.util.Translator;
 
 import appeng.api.config.Actionable;
 import appeng.api.implementations.IPowerChannelState;
@@ -54,8 +53,7 @@ public class MTEVendingUplinkHatch extends MTEHatch implements IGridProxyable, I
             aNameRegional,
             mTier,
             0,
-            new String[] { Translator.translate("vendingmachine.info.vendinguplink.structure_part.0"),
-                Translator.translate("vendingmachine.info.vendinguplink.structure_part.1") });
+            new String[] { "Vending Machine Uplink hatch.", "Uses inputs directly from ME network." });
     }
 
     public MTEVendingUplinkHatch(MTEVendingUplinkHatch prototype) {
