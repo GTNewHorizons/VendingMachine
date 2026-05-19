@@ -13,7 +13,7 @@ import com.cubefury.vendingmachine.util.Wallet;
 
 public class InterceptingSlot extends ModularSlot {
 
-    private MTEVendingMachine vm;
+    private final MTEVendingMachine vm;
 
     public InterceptingSlot(ItemStackHandler inputItems, int index, MTEVendingMachine vm) {
         super(inputItems, index);
@@ -27,11 +27,12 @@ public class InterceptingSlot extends ModularSlot {
         }
         CurrencyItem mapped = mapToCurrency(newItem);
         if (mapped != null) {
-            this.putStack(null);
             if (!client) {
                 Wallet wallet = TradeManager.INSTANCE.getWallet(playerId, walletMode);
                 if (wallet != null) {
                     wallet.addCount(mapped.type, mapped.value);
+                    this.putStack(null);
+                    vm.playSoundEffect("vendingmachine:coin_insert");
                 }
                 TradeManager.INSTANCE.saveTeamData(playerId);
             }

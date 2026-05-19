@@ -14,12 +14,12 @@ import gregtech.api.modularui2.GTGuiTextures;
 public enum MusicTrack {
 
     NONE("none", null, GTGuiTextures.OVERLAY_BUTTON_MUFFLE_ON),
-    LUNCH_BREAK("lunch_break", new ResourceLocation(VendingMachine.MODID, "vendingmachine.lunch_break"),
+    LUNCH_BREAK("lunch_break", new ResourceLocation(VendingMachine.MODID, "track.lunch_break"),
         GTGuiTextures.OVERLAY_BUTTON_MUFFLE_OFF);
 
-    private String name;
-    private ResourceLocation sound;
-    private Icon texture;
+    private final String name;
+    private final ResourceLocation sound;
+    private final Icon texture;
 
     MusicTrack(String name, @Nullable ResourceLocation sound, UITexture texture) {
         this.name = name;
