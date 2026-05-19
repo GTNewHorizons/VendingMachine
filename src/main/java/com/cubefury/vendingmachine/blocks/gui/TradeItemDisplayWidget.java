@@ -12,6 +12,7 @@ import com.cleanroommc.modularui.drawable.DynamicDrawable;
 import com.cleanroommc.modularui.drawable.GuiDraw;
 import com.cleanroommc.modularui.screen.viewport.ModularGuiContext;
 import com.cleanroommc.modularui.theme.WidgetThemeEntry;
+import com.cleanroommc.modularui.utils.GlStateManager;
 import com.cleanroommc.modularui.utils.Platform;
 import com.cleanroommc.modularui.value.ObjectValue;
 import com.cleanroommc.modularui.widgets.ItemDisplayWidget;
@@ -92,6 +93,7 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
             if (this.displayType == DisplayType.TILE) {
                 GuiDraw.drawText(" " + this.display.display.stackSize, 4, 9, 1.0f, textColor, false);
                 GuiDraw.drawItem(item, 26, 4, 16, 16, context.getCurrentDrawingZ());
+                GlStateManager.color(1f, 1f, 1f, 1f);
                 if (this.display.isTradeableNow(rootPanel.getWalletMode())) {
                     GuiTextures.OVERLAY_TRADEABLE
                         .draw(0, 0, MTEVendingMachineGui.TILE_ITEM_WIDTH, MTEVendingMachineGui.TILE_ITEM_HEIGHT);
