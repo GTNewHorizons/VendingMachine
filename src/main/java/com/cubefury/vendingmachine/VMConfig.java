@@ -67,6 +67,10 @@ public class VMConfig {
         @Config.Comment("Default wallet mode, either PERSONAL or TEAM. Case sensitive.")
         @Config.DefaultEnum("PERSONAL")
         public WalletMode wallet_mode = WalletMode.PERSONAL;
+
+        @Config.Comment("Update coin icon depending on amount.")
+        @Config.DefaultBoolean(false)
+        public boolean update_coin_icon = false;
     }
 
     public static class TeamSettings {

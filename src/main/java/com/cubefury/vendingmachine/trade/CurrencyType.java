@@ -4,7 +4,6 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
 import com.cleanroommc.modularui.drawable.UITexture;
-import com.cubefury.vendingmachine.VendingMachine;
 import com.cubefury.vendingmachine.util.Translator;
 
 import cpw.mods.fml.relauncher.Side;
@@ -12,37 +11,50 @@ import cpw.mods.fml.relauncher.SideOnly;
 
 public enum CurrencyType {
 
-    ADVENTURE("adventure", "dreamcraft:CoinAdventure", "gui/icons/itemCoinAdventure.png"),
-    BEES("bees", "dreamcraft:CoinBees", "gui/icons/itemCoinBees.png"),
-    BLOOD("blood", "dreamcraft:CoinBlood", "gui/icons/itemCoinBlood.png"),
-    CHEMIST("chemist", "dreamcraft:CoinChemist", "gui/icons/itemCoinChemist.png"),
-    COOK("cook", "dreamcraft:CoinCook", "gui/icons/itemCoinCook.png"),
-    DARK_WIZARD("darkWizard", "dreamcraft:CoinDarkWizard", "gui/icons/itemCoinDarkWizard.png"),
-    FARMER("farmer", "dreamcraft:CoinFarmer", "gui/icons/itemCoinFarmer.png"),
-    FLOWER("flower", "dreamcraft:CoinFlower", "gui/icons/itemCoinFlower.png"),
-    FORESTRY("forestry", "dreamcraft:CoinForestry", "gui/icons/itemCoinForestry.png"),
-    SMITH("smith", "dreamcraft:CoinSmith", "gui/icons/itemCoinSmith.png"),
-    SPACE("space", "dreamcraft:CoinSpace", "gui/icons/itemCoinSpace.png"),
-    SURVIVOR("survivor", "dreamcraft:CoinSurvivor", "gui/icons/itemCoinSurvivor.png"),
-    TECHNICIAN("technician", "dreamcraft:CoinTechnician", "gui/icons/itemCoinTechnician.png"),
-    WITCH("witch", "dreamcraft:CoinWitch", "gui/icons/itemCoinWitch.png"),
+    ADVENTURE("adventure", "dreamcraft:CoinAdventure", "Adventure"),
+    BEES("bees", "dreamcraft:CoinBees", "Bees"),
+    BLOOD("blood", "dreamcraft:CoinBlood", "Blood"),
+    CHEMIST("chemist", "dreamcraft:CoinChemist", "Chemist"),
+    COOK("cook", "dreamcraft:CoinCook", "Cook"),
+    DARK_WIZARD("darkWizard", "dreamcraft:CoinDarkWizard", "DarkWizard"),
+    FARMER("farmer", "dreamcraft:CoinFarmer", "Farmer"),
+    FLOWER("flower", "dreamcraft:CoinFlower", "Flower"),
+    FORESTRY("forestry", "dreamcraft:CoinForestry", "Forestry"),
+    SMITH("smith", "dreamcraft:CoinSmith", "Smith"),
+    SPACE("space", "dreamcraft:CoinSpace", "Space"),
+    SURVIVOR("survivor", "dreamcraft:CoinSurvivor", "Survivor"),
+    TECHNICIAN("technician", "dreamcraft:CoinTechnician", "Technician"),
+    WITCH("witch", "dreamcraft:CoinWitch", "Witch"),
     // comment before semicolon to reduce merge conflicts
     ;
 
     public final String id;
     public final String itemPrefix;
-    public final UITexture texture;
 
-    CurrencyType(String id, String itemPrefix, String texture) {
+    public final UITexture coin1;
+    public final UITexture coin10;
+    public final UITexture coin100;
+    public final UITexture coin1000;
+    public final UITexture coin10000;
+
+    CurrencyType(String id, String itemPrefix, String textureName) {
         this.id = id;
         this.itemPrefix = itemPrefix;
-        this.texture = UITexture.builder()
-            .location(VendingMachine.MODID, texture)
-            .imageSize(32, 32)
-            .name("VM_UI_Coin_" + id)
-            .build();
+        coin1 = createCoinUITexture(textureName, "");
+        coin10 = createCoinUITexture(textureName, "I");
+        coin100 = createCoinUITexture(textureName, "II");
+        coin1000 = createCoinUITexture(textureName, "III");
+        coin10000 = createCoinUITexture(textureName, "IV");
 
         CurrencyItem.typeMap.put(this.id, this);
+    }
+
+    private static UITexture createCoinUITexture(String name, String suffix) {
+        return UITexture.builder()
+            .location("dreamcraft", "items/itemCoin" + name + suffix)
+            .imageSize(32, 32)
+            .name("VM_UI_Coin_" + name + suffix)
+            .build();
     }
 
     public static CurrencyType getTypeFromId(String type) {
