@@ -22,7 +22,7 @@ public class VolumeControlGui {
 
     public final ModularPanel createPanel(PanelSyncManager syncManager, IWidget parent) {
         ModularPanel panel = new ModularPanel("volume").coverChildren();
-        addWidgets(panel);
+        addWidgets(panel, syncManager);
         panel.child(ButtonWidget.panelCloseButton());
         if (syncManager.isClient()) {
             panel.relative(parent)
@@ -36,7 +36,8 @@ public class VolumeControlGui {
         return panel;
     }
 
-    private void addWidgets(ModularPanel panel) {
+    private void addWidgets(ModularPanel panel, PanelSyncManager syncManager) {
+        if (!syncManager.isClient()) return;
         panel.coverChildren()
             .padding(5)
             .child(
