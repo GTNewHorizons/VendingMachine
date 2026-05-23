@@ -588,10 +588,11 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
     }
 
     private TransformWidget getFallingItem(int index, int leftPadding, int fallDistance) {
-        Pos fallingPosition = new Pos(leftPadding, 0);
+        final Pos fallingPosition = new Pos(leftPadding, fallDistance);
         Animator fallingPositionAnimation = getAnimatedPosition(
             fallingPosition,
-            new Pos(leftPadding, fallDistance),
+            new Pos(leftPadding, 0),
+            fallingPosition,
             Interpolation.BOUNCE_OUT,
             1000);
         AtomicBoolean hasSetZ = new AtomicBoolean(false);
@@ -600,7 +601,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
                 .slotGroup("outputSlotGroup")
                 .changeListener((newitem, onlyAmountChanged, client, init) -> {
                     base.markDirty();
-                    if (newitem != null && !onlyAmountChanged) {
+                    if (!init && newitem != null && !onlyAmountChanged) {
                         fallingPositionAnimation.reset();
                         fallingPositionAnimation.animate();
                     }
@@ -636,8 +637,9 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
         }
     }
 
-    private static Animator getAnimatedPosition(Pos fromPos, Pos toPos, Interpolation interpolation, int duration) {
-        return new MutableObjectAnimator<>(fromPos, fromPos.copyOrImmutable(), toPos).bounds(0, 1)
+    private static Animator getAnimatedPosition(Pos animatedPos, Pos fromPos, Pos toPos, Interpolation interpolation,
+        int duration) {
+        return new MutableObjectAnimator<>(animatedPos, fromPos.copyOrImmutable(), toPos.copyOrImmutable()).bounds(0, 1)
             .curve(interpolation)
             .duration(duration);
     }
