@@ -7,17 +7,26 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.MathHelper;
 import net.minecraftforge.common.util.Constants;
 
+import org.lwjgl.opengl.GL11;
+
+import com.cleanroommc.modularui.animation.Animator;
+import com.cleanroommc.modularui.animation.IAnimatable;
+import com.cleanroommc.modularui.animation.MutableObjectAnimator;
 import com.cleanroommc.modularui.api.IPanelHandler;
+import com.cleanroommc.modularui.api.drawable.IDrawable;
 import com.cleanroommc.modularui.api.drawable.IKey;
 import com.cleanroommc.modularui.api.widget.IWidget;
 import com.cleanroommc.modularui.api.widget.Interactable;
@@ -26,7 +35,11 @@ import com.cleanroommc.modularui.factory.PosGuiData;
 import com.cleanroommc.modularui.screen.ModularPanel;
 import com.cleanroommc.modularui.screen.RichTooltip;
 import com.cleanroommc.modularui.screen.UISettings;
+import com.cleanroommc.modularui.screen.viewport.ModularGuiContext;
+import com.cleanroommc.modularui.theme.WidgetThemeEntry;
 import com.cleanroommc.modularui.utils.Alignment;
+import com.cleanroommc.modularui.utils.Interpolation;
+import com.cleanroommc.modularui.utils.Interpolations;
 import com.cleanroommc.modularui.value.BoolValue;
 import com.cleanroommc.modularui.value.IntValue;
 import com.cleanroommc.modularui.value.sync.BooleanSyncValue;
@@ -41,6 +54,7 @@ import com.cleanroommc.modularui.widgets.PagedWidget;
 import com.cleanroommc.modularui.widgets.SlotGroupWidget;
 import com.cleanroommc.modularui.widgets.TextWidget;
 import com.cleanroommc.modularui.widgets.ToggleButton;
+import com.cleanroommc.modularui.widgets.TransformWidget;
 import com.cleanroommc.modularui.widgets.layout.Flow;
 import com.cleanroommc.modularui.widgets.layout.Grid;
 import com.cleanroommc.modularui.widgets.slot.ItemSlot;
@@ -476,7 +490,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
                             .widthRel(1.0f))
                     .child(
                         Flow.row()
-                            .child(createOutputSlots().center())
+                            .child(createOutputSlots())
                             .bottom(6)
                             .height(18 * 4))
                     .right(1));
@@ -513,16 +527,111 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
             .build();
     }
 
-    private SlotGroupWidget createOutputSlots() {
-        return SlotGroupWidget.builder()
-            .matrix("II", "II", "II", "II")
-            .key('I', index -> {
-                return new ItemSlot().slot(
-                    new ModularSlot(base.outputItems, index).accessibility(false, true)
-                        .slotGroup("outputSlotGroup")
-                        .changeListener((newitem, onlyAmountChanged, client, init) -> { base.markDirty(); }));
-            })
-            .build();
+    private IWidget createOutputSlots() {
+        return new ParentWidget<>().fullHeight()
+            .fullWidth()
+            .paddingLeft(7)
+            .paddingRight(7)
+            .child(getFallingItem(0))
+            .child(getFallingItem(1))
+            .child(getFallingItem(2))
+            .child(getFallingItem(3))
+            .child(getFallingItem(4))
+            .child(getFallingItem(5))
+            .child(getFallingItem(6))
+            .child(getFallingItem(7));
+    }
+
+    static class Pos implements IAnimatable<Pos> {
+
+        private int x, y;
+
+        public Pos(int x, int y) {
+            this.x = x;
+            this.y = y;
+        }
+
+        @Override
+        public Pos interpolate(Pos start, Pos end, float t) {
+            this.x = Interpolations.lerp(start.x, end.x, t);
+            this.y = Interpolations.lerp(start.y, end.y, t);
+            return this;
+        }
+
+        @Override
+        public Pos copyOrImmutable() {
+            return new Pos(x, y);
+        }
+
+        public void set(Pos other) {
+            this.x = other.x;
+            this.y = other.y;
+        }
+
+        public int getX() {
+            return x;
+        }
+
+        public int getY() {
+            return y;
+        }
+    }
+
+    private TransformWidget getFallingItem(int index) {
+        Random random = new Random();
+        int left = MathHelper.getRandomIntegerInRange(random, 0, 25);
+        Pos fallingPosition = new Pos(left, 0);
+        Animator fallingPositionAnimation = getAnimatedPosition(
+            fallingPosition,
+            new Pos(left, 54),
+            Interpolation.BOUNCE_OUT,
+            1000);
+        AtomicBoolean hasSetZ = new AtomicBoolean(false);
+        IWidget widget = new ItemSlotWithDepth(index).slot(
+            new ModularSlot(base.outputItems, index).accessibility(false, true)
+                .slotGroup("outputSlotGroup")
+                .changeListener((newitem, onlyAmountChanged, client, init) -> {
+                    base.markDirty();
+                    if (newitem != null && !onlyAmountChanged) {
+                        fallingPositionAnimation.reset();
+                        fallingPositionAnimation.animate();
+                    }
+                }))
+            .background(IDrawable.EMPTY)
+            .disableHoverBackground()
+            .setEnabledIf(
+                slot -> slot.getSlot()
+                    .getHasStack());
+        return new TransformWidget(widget).transform(stack -> {
+
+            stack.translate((float) fallingPosition.getX(), (float) fallingPosition.getY());
+            if (!hasSetZ.get()) {
+                stack.translate(0, 0, 10f * index);
+                hasSetZ.set(true);
+            }
+        });
+    }
+
+    static class ItemSlotWithDepth extends ItemSlot {
+
+        private final int depth;
+
+        public ItemSlotWithDepth(int depth) {
+            this.depth = depth;
+        }
+
+        @Override
+        public void draw(ModularGuiContext context, WidgetThemeEntry<?> widgetTheme) {
+            GL11.glTranslatef(0f, 0f, depth);
+            super.draw(context, widgetTheme);
+            GL11.glTranslatef(0f, 0f, -depth);
+        }
+    }
+
+    private static Animator getAnimatedPosition(Pos fromPos, Pos toPos, Interpolation interpolation, int duration) {
+        return new MutableObjectAnimator<>(fromPos, fromPos.copyOrImmutable(), toPos).bounds(0, 1)
+            .curve(interpolation)
+            .duration(duration);
     }
 
     private void constructTradeTooltip(RichTooltip builder, TradeItemDisplay cur) {
