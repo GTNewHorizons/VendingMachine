@@ -123,12 +123,6 @@ public final class GuiTextures {
         .name("background_input")
         .build();
 
-    public static final UITexture OUTPUT_SPRITE = UITexture.builder()
-        .location(VendingMachine.MODID, "gui/background/output")
-        .imageSize(30, 20)
-        .name("background_output")
-        .build();
-
     public static final UITexture DISPENSER_OVERHANG = UITexture.builder()
         .location(VendingMachine.MODID, "gui/background/dispenser_overhang")
         .canApplyTheme()

@@ -549,7 +549,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
                 .height(20)
                 .widthRel(1.0f))
             .child(
-                GuiTextures.OUTPUT_SPRITE.asWidget()
+                GuiTextures.INPUT_SPRITE.asWidget()
                     .leftRel(0.5f)
                     .width(30)
                     .height(18));
