@@ -93,6 +93,7 @@ import gregtech.common.modularui2.widget.SelectButton;
 
 public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine> {
 
+    private static final int FALL_ANIMATION_DURATION = 1000;
     private final MTEVendingMachine base;
 
     public static boolean forceRefresh = false;
@@ -597,7 +598,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
             new Pos(leftPadding, 0),
             fallingPosition,
             Interpolation.BOUNCE_OUT,
-            1000);
+            FALL_ANIMATION_DURATION);
         AtomicBoolean hasSetZ = new AtomicBoolean(false);
         IWidget widget = new ItemSlotWithDepth(index).slot(
             new ModularSlot(base.outputItems, index).accessibility(false, true)
