@@ -3,9 +3,13 @@ package com.cubefury.vendingmachine.blocks;
 import static com.cubefury.vendingmachine.api.enums.Textures.VUPLINK_OVERLAY_ACTIVE;
 import static com.cubefury.vendingmachine.api.enums.Textures.VUPLINK_OVERLAY_INACTIVE;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.IntStream;
 
 import net.minecraft.entity.player.EntityPlayer;
@@ -14,13 +18,20 @@ import net.minecraft.util.ChatComponentTranslation;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.oredict.OreDictionary;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
+
 import com.cubefury.vendingmachine.VendingMachine;
 import com.cubefury.vendingmachine.items.VMItems;
+import com.cubefury.vendingmachine.trade.CurrencyItem;
+import com.cubefury.vendingmachine.trade.CurrencyType;
+import com.cubefury.vendingmachine.util.Wallet;
 
 import appeng.api.config.Actionable;
 import appeng.api.implementations.IPowerChannelState;
 import appeng.api.networking.GridFlags;
 import appeng.api.networking.IGridNode;
+import appeng.api.networking.energy.IEnergySource;
 import appeng.api.networking.security.IActionHost;
 import appeng.api.networking.security.MachineSource;
 import appeng.api.networking.storage.IStorageGrid;
@@ -31,6 +42,7 @@ import appeng.api.util.DimensionalCoord;
 import appeng.me.GridAccessException;
 import appeng.me.helpers.AENetworkProxy;
 import appeng.me.helpers.IGridProxyable;
+import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
 import gregtech.api.interfaces.ITexture;
 import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
@@ -43,6 +55,8 @@ public class MTEVendingUplinkHatch extends MTEHatch implements IGridProxyable, I
     protected AENetworkProxy gridProxy = null;
     protected boolean additionalConnection = false;
     private IItemList<IAEItemStack> cachedItems;
+    private Wallet pendingCoinInject = new Wallet();
+    private long lastOutputTick = 0;
 
     public static final int mTier = 3;
 
@@ -152,10 +166,50 @@ public class MTEVendingUplinkHatch extends MTEHatch implements IGridProxyable, I
 
     @Override
     public void onPostTick(IGregTechTileEntity baseMetaTileEntity, long tick) {
-        if (baseMetaTileEntity.isServerSide() && tick % 20 == 0) {
-            baseMetaTileEntity.setActive(isActive());
+        if (baseMetaTileEntity.isServerSide()) {
+            if (tick % 20 == 0) {
+                baseMetaTileEntity.setActive(isActive());
+            }
+            if (tick - lastOutputTick > 40) {
+                flushCoins(tick);
+            }
         }
         super.onPostTick(baseMetaTileEntity, tick);
+    }
+
+    private void flushCoins(long tick) {
+        AENetworkProxy proxy = getProxy();
+        if (!proxy.isActive()) return;
+        try {
+            final IEnergySource energy = proxy.getEnergy();
+            IStorageGrid storage = accessStorage();
+            if (storage == null) return;
+
+            MachineSource source = new MachineSource(this);
+            Wallet remainingWallet = new Wallet();
+            pendingCoinInject.getCurrencies()
+                .forEach(((type, amount) -> {
+                    if (amount == 0) return;
+                    for (ItemStack coinStack : new CurrencyItem(type, amount).itemize()) {
+                        IAEItemStack remain = Platform
+                            .poweredInsert(energy, storage.getItemInventory(), AEItemStack.create(coinStack), source);
+                        if (remain != null) {
+                            CurrencyItem remainingCoins = CurrencyItem.fromItemStack(remain.getItemStack());
+                            if (remainingCoins != null && remainingCoins.value > 0) {
+                                remainingWallet.addCount(type, remainingCoins.value);
+                            }
+                        }
+                    }
+                }));
+            pendingCoinInject.resetAllCount();
+            pendingCoinInject.merge(remainingWallet);
+        } catch (final GridAccessException ignored) {}
+        lastOutputTick = tick;
+    }
+
+    public void injectCoins(CurrencyItem ci) {
+        VendingMachine.LOG.info("Injected {} {} coins", ci.value, ci.type);
+        pendingCoinInject.addCount(ci.type, ci.value);
     }
 
     private void updateValidGridProxySides() {
@@ -192,6 +246,58 @@ public class MTEVendingUplinkHatch extends MTEHatch implements IGridProxyable, I
 
         cachedItems = storage.getItemInventory()
             .getStorageList();
+    }
+
+    public void updateCurrencyInto(Wallet wallet) {
+        if (cachedItems == null) return;
+        for (IAEItemStack aeStack : cachedItems) {
+            CurrencyItem ci = CurrencyItem.fromItemStack(aeStack.getItemStack());
+            if (ci == null) continue;
+            wallet.addCount(ci.type, ci.value);
+        }
+    }
+
+    public List<CurrencyItem> performTrade(Map<CurrencyType, Integer> currencies) {
+        Map<CurrencyType, Integer> extracted = new HashMap<>();
+
+        List<Pair<Integer, IAEItemStack>> candidateStacks = new ArrayList<>();
+        for (IAEItemStack stack : cachedItems) {
+            CurrencyItem curItem = CurrencyItem.fromItemStack(stack.getItemStack());
+            if (curItem == null || !currencies.containsKey(curItem.type)) continue;
+            ItemStack baseItem = stack.getItemStack()
+                .copy();
+            baseItem.stackSize = 1;
+            candidateStacks
+                .add(new ImmutablePair<>(Objects.requireNonNull(CurrencyItem.fromItemStack(baseItem)).value, stack));
+        }
+        candidateStacks.sort(Pair::compareTo);
+
+        currencies.forEach((type, amount) -> {
+            int valueLeft = amount;
+            for (Pair<Integer, IAEItemStack> candidate : candidateStacks) {
+                ItemStack stack = candidate.getRight()
+                    .getItemStack()
+                    .copy();
+                if (!type.isMatchingType(stack)) continue;
+
+                int coinValue = candidate.getLeft();
+                stack.stackSize = Math.min(stack.stackSize, valueLeft / coinValue + (amount % coinValue == 0 ? 0 : 1));
+                if (removeItem(stack, false, null)) {
+                    valueLeft -= coinValue * stack.stackSize;
+                    if (extracted.containsKey(type)) {
+                        extracted.put(type, extracted.get(type) + stack.stackSize * coinValue);
+                    } else {
+                        extracted.put(type, stack.stackSize * coinValue);
+                    }
+                }
+
+                if (valueLeft <= 0) break;
+            }
+        });
+
+        List<CurrencyItem> consumedItems = new ArrayList<>();
+        extracted.forEach((type, value) -> consumedItems.add(new CurrencyItem(type, value)));
+        return consumedItems;
     }
 
     public boolean removeItem(ItemStack remove, boolean simulate, String ore) {

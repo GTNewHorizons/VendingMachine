@@ -15,9 +15,11 @@ import static net.minecraft.util.StatCollector.translateToLocal;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -50,6 +52,7 @@ import com.cubefury.vendingmachine.blocks.gui.WalletMode;
 import com.cubefury.vendingmachine.network.handlers.NetTradeDisplaySync;
 import com.cubefury.vendingmachine.network.handlers.NetTradeRequestSync;
 import com.cubefury.vendingmachine.trade.CurrencyItem;
+import com.cubefury.vendingmachine.trade.CurrencyType;
 import com.cubefury.vendingmachine.trade.Trade;
 import com.cubefury.vendingmachine.trade.TradeDatabase;
 import com.cubefury.vendingmachine.trade.TradeManager;
@@ -67,6 +70,7 @@ import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
 import com.gtnewhorizon.structurelib.structure.IStructureDefinition;
 import com.gtnewhorizon.structurelib.structure.ISurvivalBuildEnvironment;
 
+import appeng.api.networking.IGrid;
 import gregtech.api.GregTechAPI;
 import gregtech.api.covers.CoverRegistry;
 import gregtech.api.enums.Textures;
@@ -104,6 +108,7 @@ public class MTEVendingMachine extends MTEMultiBlockBase
         .build();
 
     private final ArrayList<MTEVendingUplinkHatch> uplinkHatches = new ArrayList<>();
+    private final Wallet meCoinWallet = new Wallet();
 
     public static final int INPUT_SLOTS = 8;
     public static final int OUTPUT_SLOTS = 8;
@@ -280,9 +285,58 @@ public class MTEVendingMachine extends MTEMultiBlockBase
         }
 
         Wallet wallet = TradeManager.INSTANCE.getWallet(tradeRequest.playerID, tradeRequest.walletMode);
-        if (wallet == null || !wallet.performTrade(trade.fromCurrency)) {
+        Wallet newWallet = Wallet.copyOf(wallet);
+
+        Map<CurrencyType, Integer> remaining = new HashMap<>();
+        newWallet.performTrade(trade.fromCurrency)
+            .forEach(ci -> {
+                if (ci.value > 0) {
+                    remaining.put(ci.type, ci.value);
+                }
+            });
+
+        boolean success = true;
+        Map<MTEVendingUplinkHatch, List<CurrencyItem>> pulledCoins = new HashMap<>();
+        Map<MTEVendingUplinkHatch, List<CurrencyItem>> changeCoins = new HashMap<>();
+        Set<IGrid> visited = new HashSet<>();
+        for (MTEVendingUplinkHatch hatch : uplinkHatches) {
+            IGrid currentGrid = hatch.getGridNode(ForgeDirection.UNKNOWN)
+                .getGrid();
+            if (!visited.contains(currentGrid)) {
+                List<CurrencyItem> pulled = hatch.performTrade(remaining);
+                pulledCoins.put(hatch, pulled);
+
+                List<CurrencyItem> change = new ArrayList<>();
+                for (CurrencyItem pulledCurrency : pulled) {
+                    if (pulledCurrency.value - remaining.get(pulledCurrency.type) > 0) {
+                        change.add(
+                            new CurrencyItem(
+                                pulledCurrency.type,
+                                pulledCurrency.value - remaining.get(pulledCurrency.type)));
+                    }
+                    remaining.put(pulledCurrency.type, remaining.get(pulledCurrency.type) - pulledCurrency.value);
+                }
+                changeCoins.put(hatch, change);
+
+                visited.add(currentGrid);
+            }
+        }
+        for (Map.Entry<CurrencyType, Integer> entry : remaining.entrySet()) {
+            if (entry.getValue() > 0) {
+                success = false;
+                break;
+            }
+        }
+
+        if (!success) {
+            pulledCoins.forEach((hatch, ciList) -> { ciList.forEach(hatch::injectCoins); });
             return false;
         }
+
+        wallet.resetAllCount();
+        wallet.merge(newWallet);
+        changeCoins.forEach((hatch, ciList) -> { ciList.forEach(hatch::injectCoins); });
+
         TradeManager.INSTANCE.saveTeamData(tradeRequest.playerID);
 
         for (BigItemStack stack : trade.fromItems) {
@@ -647,7 +701,24 @@ public class MTEVendingMachine extends MTEMultiBlockBase
         aBaseMetaTileEntity.setActive(this.mMachine);
         if (!this.mMachine) return;
         dispenseItems();
-        if (this.ticksSinceTradeUpdate++ >= VMConfig.vendingMachineSettings.gui_refresh_interval) {
+        if (
+            this.currentUser != null
+                && this.ticksSinceTradeUpdate++ >= VMConfig.vendingMachineSettings.gui_refresh_interval
+        ) {
+            meCoinWallet.resetAllCount();
+
+            // Deduplicating currency if there are multiple
+            // hatches connected to the same network. Won't catch subnets though.
+            Set<IGrid> visited = new HashSet<>();
+            this.uplinkHatches.forEach(hatch -> {
+                IGrid currentGrid = hatch.getGridNode(ForgeDirection.UNKNOWN)
+                    .getGrid();
+                if (!visited.contains(currentGrid)) {
+                    hatch.updateCurrencyInto(meCoinWallet);
+                    visited.add(currentGrid);
+                }
+            });
+
             this.sendTradeUpdate();
         }
     }
@@ -730,8 +801,12 @@ public class MTEVendingMachine extends MTEMultiBlockBase
         if (wallet == null) {
             return false;
         }
-        // TODO: Add AE2 coin item support
-        return wallet.hasEnough(currencyItems);
+
+        Wallet combinedWallet = Wallet.copyOf(wallet);
+        // TODO: Add check toggle for using ME coins
+        combinedWallet.merge(meCoinWallet);
+
+        return combinedWallet.hasEnough(currencyItems);
     }
 
     public boolean getActive() {
