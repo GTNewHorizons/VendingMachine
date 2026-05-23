@@ -129,6 +129,12 @@ public final class GuiTextures {
         .name("background_output")
         .build();
 
+    public static final UITexture DISPENSER_OVERHANG = UITexture.builder()
+        .location(VendingMachine.MODID, "gui/background/dispenser_overhang")
+        .canApplyTheme()
+        .name("background_dispenser_overhang")
+        .build();
+
     public static final UITexture EJECT_COINS = UITexture.builder()
         .location(VendingMachine.MODID, "gui/overlay/coinEject")
         .imageSize(16, 16)

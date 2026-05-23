@@ -2,6 +2,7 @@ package com.cubefury.vendingmachine.blocks.gui;
 
 import static com.cleanroommc.modularui.drawable.GuiTextures.SLOT_ITEM;
 import static com.cubefury.vendingmachine.blocks.MTEVendingMachine.OUTPUT_SLOTS;
+import static com.cubefury.vendingmachine.gui.GuiTextures.DISPENSER_OVERHANG;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -548,7 +549,12 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
 
         outputSlots.forEach(index -> parentWidget.child(getFallingItem(index, outputSlotPositions.get(index))));
 
-        return parentWidget;
+        return parentWidget.child(
+            IDrawable.of(DISPENSER_OVERHANG)
+                .asWidget()
+                .top(0)
+                .height(20)
+                .widthRel(1.0f));
     }
 
     static class Pos implements IAnimatable<Pos> {
