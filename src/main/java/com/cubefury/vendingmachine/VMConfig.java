@@ -48,11 +48,6 @@ public class VMConfig {
         @Config.DefaultInt(10)
         @Config.RequiresWorldRestart
         public int dispense_frequency;
-
-        @Config.LangKey("vendingmachine.config.main.dispense_frequency")
-        @Config.DefaultInt(16)
-        @Config.RequiresWorldRestart
-        public int dispense_amount;
     }
 
     public static class GUI {

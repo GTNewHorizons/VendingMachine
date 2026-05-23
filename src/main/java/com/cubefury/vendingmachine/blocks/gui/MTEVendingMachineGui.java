@@ -382,9 +382,8 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
             this.ejectSingleCoin.put(type, false);
             return;
         }
-        for (ItemStack ejectable : new CurrencyItem(type, wallet.getCount(type)).itemize()) {
-            base.spawnItem(ejectable);
-        }
+        List<ItemStack> ejectables = new CurrencyItem(type, wallet.getCount(type)).itemize();
+        base.dispenseItemStacks(ejectables);
         wallet.resetCount(type);
         TradeManager.INSTANCE.saveTeamData(playerId);
         this.ejectSingleCoin.put(type, false);
@@ -407,14 +406,13 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
             ejectCoins = false;
             return;
         }
-
-        for (CurrencyType type : CurrencyType.values()) {
-            if (wallet.getCount(type) > 0) {
-                for (ItemStack ejectable : new CurrencyItem(type, wallet.getCount(type)).itemize()) {
-                    base.spawnItem(ejectable);
-                }
-            }
-        }
+        List<ItemStack> ejectables = Arrays.stream(CurrencyType.values())
+            .filter(type -> wallet.getCount(type) > 0)
+            .flatMap(
+                type -> new CurrencyItem(type, wallet.getCount(type)).itemize()
+                    .stream())
+            .collect(Collectors.toList());
+        base.dispenseItemStacks(ejectables);
 
         wallet.resetAllCount();
         TradeManager.INSTANCE.saveTeamData(playerId);
@@ -434,10 +432,23 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
         for (int i = 0; i < MTEVendingMachine.INPUT_SLOTS; i++) {
             ItemStack stack = base.inputItems.getStackInSlot(i);
             if (stack != null) {
-                base.inputItems.setStackInSlot(i, null);
                 base.spawnItem(stack.copy());
             }
         }
+        List<ItemStack> ejectables = IntStream.range(0, MTEVendingMachine.INPUT_SLOTS)
+            .mapToObj(base.inputItems::getStackInSlot)
+            .filter(Objects::nonNull)
+            .map(ItemStack::copy)
+            .collect(Collectors.toList());
+        base.dispenseItemStacks(ejectables);
+
+        for (int i = 0; i < MTEVendingMachine.INPUT_SLOTS; i++) {
+            ItemStack stack = base.inputItems.getStackInSlot(i);
+            if (stack != null) {
+                base.inputItems.setStackInSlot(i, null);
+            }
+        }
+
         ejectItems = false;
     }
 

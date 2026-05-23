@@ -127,9 +127,9 @@ public class MTEVendingMachine extends MTEMultiBlockBase
 
     private final boolean mIsAnimated;
 
-    public ItemStackHandler inputItems = new ItemStackHandler(INPUT_SLOTS);
-    public ItemStackHandler outputItems = new ItemStackHandler(OUTPUT_SLOTS);
-    public Queue<ItemStack> outputBuffer = new ConcurrentLinkedQueue<>();
+    public final ItemStackHandler inputItems = new ItemStackHandler(INPUT_SLOTS);
+    public final ItemStackHandler outputItems = new ItemStackHandler(OUTPUT_SLOTS);
+    private final Queue<ItemStack> outputBuffer = new ConcurrentLinkedQueue<>();
 
     public final Queue<TradeRequest> pendingTrades = new LinkedBlockingQueue<>();
     private boolean newBufferedOutputs = false;
@@ -194,61 +194,36 @@ public class MTEVendingMachine extends MTEMultiBlockBase
             this.newBufferedOutputs || (!this.outputBuffer.isEmpty()
                 && this.ticksSinceOutput % VMConfig.vendingMachineSettings.dispense_frequency == 0)
         ) {
-            int remainingDispensables = VMConfig.vendingMachineSettings.dispense_amount;
-            while (!this.outputBuffer.isEmpty() && remainingDispensables > 0) {
-                ItemStack next = this.outputBuffer.peek();
-
-                if (next == null) { // impossible, but just in case
-                    this.outputBuffer.poll();
-                } else {
-                    ItemStack nextCopy = next.copy();
-                    nextCopy.stackSize = 1;
-                    for (int i = 0; i < MTEVendingMachine.OUTPUT_SLOTS && remainingDispensables > 0
-                        && next.stackSize > 0; i++) {
-                        // check for existing stacks
-                        ItemStack cur = this.outputItems.getStackInSlot(i);
-                        if (cur != null) {
-                            ItemStack curCopy = cur.copy();
-                            curCopy.stackSize = 1;
-                            if (
-                                ItemStack.areItemStacksEqual(curCopy, nextCopy)
-                                    && ItemStack.areItemStackTagsEqual(curCopy, nextCopy)
-                            ) {
-                                int change = Math.min(
-                                    Math.min(remainingDispensables, curCopy.getMaxStackSize() - cur.stackSize),
-                                    next.stackSize);
-                                cur.stackSize += change;
-                                this.outputItems.setStackInSlot(i, cur);
-                                next.stackSize -= change;
-                                remainingDispensables -= change;
-                            }
-                        }
-                    }
-                    for (int i = 0; i < MTEVendingMachine.OUTPUT_SLOTS && remainingDispensables > 0
-                        && next.stackSize > 0; i++) {
-                        // make new stack
-                        ItemStack cur = this.outputItems.getStackInSlot(i);
-                        if (cur == null) {
-                            int change = Math.min(remainingDispensables, next.stackSize);
-                            ItemStack output = next.copy();
-                            output.stackSize = change;
-                            this.outputItems.setStackInSlot(i, output);
-                            remainingDispensables -= change;
-                            next.stackSize -= change;
-                        }
-                    }
-
-                    if (next.stackSize == 0) {
-                        this.outputBuffer.poll();
-                    } else { // outputs full or dispensed enough items this cycle
-                        break;
-                    }
-                }
-            }
+            doDispenseItems();
         }
         ticksSinceOutput = this.newBufferedOutputs ? 0 : ticksSinceOutput + 1;
         this.newBufferedOutputs = false;
         this.markDirty();
+    }
+
+    private void doDispenseItems() {
+        while (!this.outputBuffer.isEmpty()) {
+            ItemStack next = this.outputBuffer.peek();
+            if (next == null || next.stackSize <= 0) { // impossible, but just in case
+                this.outputBuffer.poll();
+            } else {
+                for (int i = 0; i < MTEVendingMachine.OUTPUT_SLOTS; i++) {
+                    // make new stack
+                    ItemStack cur = this.outputItems.getStackInSlot(i);
+                    if (cur == null) {
+                        ItemStack output = next.copy();
+                        output.stackSize = next.stackSize;
+                        next.stackSize = 0;
+                        this.outputItems.setStackInSlot(i, output);
+                        break;
+                    }
+                }
+                if (next.stackSize == 0) {
+                    this.outputBuffer.poll();
+                }
+                break;
+            }
+        }
     }
 
     private boolean processTradeOnServer(TradeRequest tradeRequest) {
@@ -347,8 +322,7 @@ public class MTEVendingMachine extends MTEMultiBlockBase
 
         for (BigItemStack toItem : trade.toItems) {
             if (toItem == null) continue;
-            this.outputBuffer.addAll(toItem.getCombinedStacks());
-            this.newBufferedOutputs = true;
+            dispenseItemStacks(toItem.getCombinedStacks());
         }
         TradeManager.INSTANCE.executeTrade(
             tradeRequest.playerID,
@@ -358,6 +332,11 @@ public class MTEVendingMachine extends MTEMultiBlockBase
         this.markDirty();
         playSoundEffect("vendingmachine:item_drop");
         return true;
+    }
+
+    public void dispenseItemStacks(List<ItemStack> itemStacks) {
+        this.outputBuffer.addAll(itemStacks);
+        this.newBufferedOutputs = true;
     }
 
     /**
