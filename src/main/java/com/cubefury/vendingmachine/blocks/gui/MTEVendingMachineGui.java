@@ -483,20 +483,10 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
                             .top(98)
                             .height(18))
                     .child(
-                        GuiTextures.OUTPUT_SPRITE.asWidget()
-                            .leftRel(0.5f)
-                            .bottom(73)
-                            .width(30)
-                            .height(20))
-                    .child(
-                        (IWidget) new TextWidget(IKey.lang("vendingmachine.gui.out")).textAlign(Alignment.CENTER)
-                            .bottom(81)
-                            .widthRel(1.0f))
-                    .child(
                         Flow.row()
                             .child(createDispenserChute())
                             .bottom(6)
-                            .height(18 * 4))
+                            .height(18 * 5))
                     .right(1));
     }
 
@@ -547,14 +537,19 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
             .marginRight(4)
             .background(SLOT_ITEM);
 
-        outputSlots.forEach(index -> parentWidget.child(getFallingItem(index, outputSlotPositions.get(index))));
+        outputSlots.forEach(index -> parentWidget.child(getFallingItem(index, outputSlotPositions.get(index), 18 * 4)));
 
         return parentWidget.child(
             IDrawable.of(DISPENSER_OVERHANG)
                 .asWidget()
                 .top(0)
                 .height(20)
-                .widthRel(1.0f));
+                .widthRel(1.0f))
+            .child(
+                GuiTextures.OUTPUT_SPRITE.asWidget()
+                    .leftRel(0.5f)
+                    .width(30)
+                    .height(18));
     }
 
     static class Pos implements IAnimatable<Pos> {
@@ -592,11 +587,11 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
         }
     }
 
-    private TransformWidget getFallingItem(int index, int leftPadding) {
+    private TransformWidget getFallingItem(int index, int leftPadding, int fallDistance) {
         Pos fallingPosition = new Pos(leftPadding, 0);
         Animator fallingPositionAnimation = getAnimatedPosition(
             fallingPosition,
-            new Pos(leftPadding, 54),
+            new Pos(leftPadding, fallDistance),
             Interpolation.BOUNCE_OUT,
             1000);
         AtomicBoolean hasSetZ = new AtomicBoolean(false);
