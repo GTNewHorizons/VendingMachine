@@ -202,12 +202,13 @@ public class MTEVendingMachine extends MTEMultiBlockBase
     }
 
     private int getDispensingDelay() {
+        int baseDelay = 10;
         int queueSize = outputBuffer.size();
-        double log = Math.log(queueSize);
-        if (log < 1) {
-            return 1;
+        double acceleration = Math.log(queueSize);
+        if (acceleration < 1) {
+            return baseDelay;
         }
-        return (int) (10 / log);
+        return (int) (baseDelay / acceleration);
     }
 
     private void doDispenseItems() {
