@@ -429,12 +429,6 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
             return;
         }
 
-        for (int i = 0; i < MTEVendingMachine.INPUT_SLOTS; i++) {
-            ItemStack stack = base.inputItems.getStackInSlot(i);
-            if (stack != null) {
-                base.spawnItem(stack.copy());
-            }
-        }
         List<ItemStack> ejectables = IntStream.range(0, MTEVendingMachine.INPUT_SLOTS)
             .mapToObj(base.inputItems::getStackInSlot)
             .filter(Objects::nonNull)

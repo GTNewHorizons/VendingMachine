@@ -23,7 +23,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.stream.IntStream;
 
-import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
@@ -827,34 +826,6 @@ public class MTEVendingMachine extends MTEMultiBlockBase
         if (this.currentUser == aPlayer) {
             this.currentUser = null;
         }
-    }
-
-    public void spawnItem(ItemStack stack) {
-        if (stack == null || this.getBaseMetaTileEntity() == null) {
-            return;
-        }
-        World world = this.getBaseMetaTileEntity()
-            .getWorld();
-        int posX = this.getBaseMetaTileEntity()
-            .getXCoord();
-        int posY = this.getBaseMetaTileEntity()
-            .getYCoord();
-        int posZ = this.getBaseMetaTileEntity()
-            .getZCoord();
-
-        ForgeDirection frontFacing = this.getBaseMetaTileEntity()
-            .getFrontFacing();
-        final EntityItem itemEntity = new EntityItem(
-            world,
-            posX + 0.5 + frontFacing.offsetX * 0.7,
-            posY + 0.5 + frontFacing.offsetY * 0.7,
-            posZ + 0.5 + frontFacing.offsetZ * 0.7,
-            stack);
-        itemEntity.delayBeforeCanPickup = 0;
-        itemEntity.motionX = 0.1f * frontFacing.offsetX;
-        itemEntity.motionY = 0.1f * frontFacing.offsetY;
-        itemEntity.motionZ = 0.1f * frontFacing.offsetZ;
-        world.spawnEntityInWorld(itemEntity);
     }
 
     private boolean addUplinkHatch(IGregTechTileEntity aBaseMetaTileEntity, int aBaseCasingIndex) {
