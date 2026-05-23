@@ -43,11 +43,6 @@ public class VMConfig {
         @Config.DefaultInt(200)
         @Config.RequiresWorldRestart
         public int restock_notifications_interval;
-
-        @Config.LangKey("vendingmachine.config.main.eject_frequency")
-        @Config.DefaultInt(10)
-        @Config.RequiresWorldRestart
-        public int dispense_frequency;
     }
 
     public static class GUI {

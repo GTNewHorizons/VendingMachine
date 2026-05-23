@@ -191,14 +191,24 @@ public class MTEVendingMachine extends MTEMultiBlockBase
             NetTradeRequestSync.sendAck(tradeRequest.player);
         }
         if (
-            this.newBufferedOutputs || (!this.outputBuffer.isEmpty()
-                && this.ticksSinceOutput % VMConfig.vendingMachineSettings.dispense_frequency == 0)
+            this.newBufferedOutputs
+                || (!this.outputBuffer.isEmpty() && this.ticksSinceOutput % getDispensingDelay() == 0)
         ) {
             doDispenseItems();
+            ticksSinceOutput = 0;
         }
         ticksSinceOutput = this.newBufferedOutputs ? 0 : ticksSinceOutput + 1;
         this.newBufferedOutputs = false;
         this.markDirty();
+    }
+
+    private int getDispensingDelay() {
+        int queueSize = outputBuffer.size();
+        double log = Math.log(queueSize);
+        if (log < 1) {
+            return 1;
+        }
+        return (int) (10 / log);
     }
 
     private void doDispenseItems() {
