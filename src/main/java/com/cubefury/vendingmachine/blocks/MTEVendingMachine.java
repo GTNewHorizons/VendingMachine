@@ -225,6 +225,7 @@ public class MTEVendingMachine extends MTEMultiBlockBase
                         output.stackSize = next.stackSize;
                         next.stackSize = 0;
                         this.outputItems.setStackInSlot(i, output);
+                        playSoundEffect(getSoundForDispensedItemstack(next));
                         break;
                     }
                 }
@@ -234,6 +235,10 @@ public class MTEVendingMachine extends MTEMultiBlockBase
                 break;
             }
         }
+    }
+
+    private static @NotNull String getSoundForDispensedItemstack(@NotNull ItemStack itemStack) {
+        return CurrencyItem.fromItemStack(itemStack) != null ? "vendingmachine:coin_drop" : "vendingmachine:item_drop";
     }
 
     private boolean processTradeOnServer(TradeRequest tradeRequest) {
@@ -340,7 +345,6 @@ public class MTEVendingMachine extends MTEMultiBlockBase
                 .get(tradeRequest.tradeGroup));
         this.sendTradeUpdate();
         this.markDirty();
-        playSoundEffect("vendingmachine:item_drop");
         return true;
     }
 

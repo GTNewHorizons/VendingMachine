@@ -387,7 +387,6 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
         wallet.resetCount(type);
         TradeManager.INSTANCE.saveTeamData(playerId);
         this.ejectSingleCoin.put(type, false);
-        base.playSoundEffect("vendingmachine:coin_drop");
     }
 
     private void doEjectCoins() {
@@ -417,7 +416,6 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
         wallet.resetAllCount();
         TradeManager.INSTANCE.saveTeamData(playerId);
         ejectCoins = false;
-        base.playSoundEffect("vendingmachine:coin_drop");
     }
 
     private void doEjectItems() {
