@@ -1,5 +1,8 @@
 package com.cubefury.vendingmachine.blocks.gui;
 
+import static com.cleanroommc.modularui.drawable.GuiTextures.SLOT_ITEM;
+import static com.cubefury.vendingmachine.blocks.MTEVendingMachine.OUTPUT_SLOTS;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -12,12 +15,12 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumChatFormatting;
-import net.minecraft.util.MathHelper;
 import net.minecraftforge.common.util.Constants;
 
 import org.lwjgl.opengl.GL11;
@@ -490,7 +493,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
                             .widthRel(1.0f))
                     .child(
                         Flow.row()
-                            .child(createOutputSlots())
+                            .child(createDispenserChute())
                             .bottom(6)
                             .height(18 * 4))
                     .right(1));
@@ -527,19 +530,25 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
             .build();
     }
 
-    private IWidget createOutputSlots() {
-        return new ParentWidget<>().fullHeight()
+    private IWidget createDispenserChute() {
+        List<Integer> outputSlots = IntStream.range(0, OUTPUT_SLOTS)
+            .boxed()
+            .collect(Collectors.toList());
+        int maxLeft = 24;
+        Random random = new Random(OUTPUT_SLOTS);
+        List<Integer> outputSlotPositions = random.ints(OUTPUT_SLOTS, 0, maxLeft)
+            .boxed()
+            .collect(Collectors.toList());
+
+        var parentWidget = new ParentWidget<>().fullHeight()
             .fullWidth()
-            .paddingLeft(7)
-            .paddingRight(7)
-            .child(getFallingItem(0))
-            .child(getFallingItem(1))
-            .child(getFallingItem(2))
-            .child(getFallingItem(3))
-            .child(getFallingItem(4))
-            .child(getFallingItem(5))
-            .child(getFallingItem(6))
-            .child(getFallingItem(7));
+            .marginLeft(5)
+            .marginRight(4)
+            .background(SLOT_ITEM);
+
+        outputSlots.forEach(index -> parentWidget.child(getFallingItem(index, outputSlotPositions.get(index))));
+
+        return parentWidget;
     }
 
     static class Pos implements IAnimatable<Pos> {
@@ -577,13 +586,11 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
         }
     }
 
-    private TransformWidget getFallingItem(int index) {
-        Random random = new Random();
-        int left = MathHelper.getRandomIntegerInRange(random, 0, 25);
-        Pos fallingPosition = new Pos(left, 0);
+    private TransformWidget getFallingItem(int index, int leftPadding) {
+        Pos fallingPosition = new Pos(leftPadding, 0);
         Animator fallingPositionAnimation = getAnimatedPosition(
             fallingPosition,
-            new Pos(left, 54),
+            new Pos(leftPadding, 54),
             Interpolation.BOUNCE_OUT,
             1000);
         AtomicBoolean hasSetZ = new AtomicBoolean(false);

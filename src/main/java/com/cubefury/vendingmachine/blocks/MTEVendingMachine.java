@@ -106,7 +106,7 @@ public class MTEVendingMachine extends MTEMultiBlockBase
     private final ArrayList<MTEVendingUplinkHatch> uplinkHatches = new ArrayList<>();
 
     public static final int INPUT_SLOTS = 8;
-    public static final int OUTPUT_SLOTS = 8;
+    public static final int OUTPUT_SLOTS = 100;
 
     public static final int MAX_TRADES = 300;
 
