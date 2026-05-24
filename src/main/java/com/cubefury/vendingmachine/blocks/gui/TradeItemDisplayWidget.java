@@ -87,10 +87,10 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
 
     @Override
     public void draw(ModularGuiContext context, WidgetThemeEntry<?> widgetTheme) {
-        String textColorStr = GuiParams.display_text_color.getColorString();
-        int textColor = textColorStr == null ? GuiParams.display_text_color.getColor(false) : 0xFFFFFF;
+        String textColorStr = GuiParams.display_text_color.getAngelicaColorString();
+        int textColor = GuiParams.display_text_color.getColor(false);
         String colorPrefix = textColorStr != null ? textColorStr : "";
-        String tradTextColorStr = GuiParams.trade_display_text_color.getColorString();
+        String tradTextColorStr = GuiParams.trade_display_text_color.getAngelicaColorString();
         ItemStack item = value.getValue();
         if (!Platform.isStackEmpty(item)) {
             if (this.displayType == DisplayType.TILE) {

@@ -94,20 +94,14 @@ public class NeiRecipeHandler extends TemplateRecipeHandler {
     }
 
     private void setTextColors() {
-        textColorStringConditionDefault = GuiParams.condition_default_color.getColorString();
-        textColorConditionDefault = textColorStringConditionDefault == null
-            ? GuiParams.condition_default_color.getColor(false)
-            : 0xFFFFFF;
+        textColorStringConditionDefault = GuiParams.condition_default_color.getAngelicaColorString();
+        textColorConditionDefault = GuiParams.condition_default_color.getColor(false);
 
-        textColorStringConditionSatisfied = GuiParams.condition_satisfied_color.getColorString();
-        textColorConditionSatisfied = textColorStringConditionSatisfied == null
-            ? GuiParams.condition_satisfied_color.getColor(false)
-            : 0xFFFFFF;
+        textColorStringConditionSatisfied = GuiParams.condition_satisfied_color.getAngelicaColorString();
+        textColorConditionSatisfied = GuiParams.condition_satisfied_color.getColor(false);
 
-        textColorStringConditionUnsatisfied = GuiParams.condition_unsatisfied_color.getColorString();
-        textColorConditionUnsatisfied = textColorStringConditionUnsatisfied == null
-            ? GuiParams.condition_unsatisfied_color.getColor(false)
-            : 0xFFFFFF;
+        textColorStringConditionUnsatisfied = GuiParams.condition_unsatisfied_color.getAngelicaColorString();
+        textColorConditionUnsatisfied = GuiParams.condition_unsatisfied_color.getColor(false);
     }
 
     @Override
@@ -299,8 +293,8 @@ public class NeiRecipeHandler extends TemplateRecipeHandler {
         float scale = 0.5f;
         GL11.glPushMatrix();
         GL11.glScalef(scale, scale, 1);
-        String ncColorStr = GuiParams.nc_inputs_overlay_color.getColorString();
-        int ncColor = ncColorStr == null ? GuiParams.nc_inputs_overlay_color.getColor(false) : 0xFFFFFF;
+        String ncColorStr = GuiParams.nc_inputs_overlay_color.getAngelicaColorString();
+        int ncColor = GuiParams.nc_inputs_overlay_color.getColor(false);
         String ncPrefix = ncColorStr != null ? ncColorStr : "";
         for (PositionedStack ps : recipe.ncInputs) {
             GuiDraw.fontRenderer.drawString(

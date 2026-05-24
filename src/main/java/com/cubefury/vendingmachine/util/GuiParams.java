@@ -2,9 +2,6 @@ package com.cubefury.vendingmachine.util;
 
 import static com.cubefury.vendingmachine.util.Translator.translate;
 
-import java.util.EnumSet;
-import java.util.Set;
-
 import com.cubefury.vendingmachine.VendingMachine;
 
 import cpw.mods.fml.common.Loader;
@@ -15,32 +12,31 @@ import cpw.mods.fml.relauncher.SideOnly;
 public enum GuiParams {
 
     // nei
-    display_text_color(0x000000, true),
-    condition_default_color(0x000000, true),
-    condition_satisfied_color(0x55D441, true),
-    condition_unsatisfied_color(0xA87A5E, true),
-    nc_inputs_overlay_color(0xFDD835, true),
+    display_text_color("000000", true),
+    condition_default_color("000000", true),
+    condition_satisfied_color("55D441", true),
+    condition_unsatisfied_color("A87A5E", true),
+    nc_inputs_overlay_color("FDD835", true),
 
     // trade display
-    trade_display_disabled_color(0xBB000000, false),
-    trade_display_list_tradable_now_color(0x883CFF00, false),
-    trade_display_list_untradable_now_color(0x88333333, false),
-    trade_display_list_current_selected_color(0xAA039BE5, false),
-    trade_display_text_color(0xFFFFFF, true),
+    trade_display_disabled_color("BB000000", false),
+    trade_display_list_tradable_now_color("883CFF00", false),
+    trade_display_list_untradable_now_color("88333333", false),
+    trade_display_list_current_selected_color("AA039BE5", false),
+    trade_display_text_color("FFFFFF", true),
 
     // volume slider
-    volume_slider_background(0xFF000000, false),
+    volume_slider_background("FF000000", false),
 
     // new line to prevent merge conflicts
     ;
 
-    private static final Set<GuiParams> warnedParams = EnumSet.noneOf(GuiParams.class);
     private static Boolean angelicaLoaded = null;
 
-    private final int value;
+    private final String value;
     private final boolean isTextColor;
 
-    GuiParams(final int value, final boolean isTextColor) {
+    GuiParams(final String value, final boolean isTextColor) {
         this.value = value;
         this.isTextColor = isTextColor;
     }
@@ -49,25 +45,15 @@ public enum GuiParams {
         String hex = translate(this.getUnlocalized());
         int bitMask = hasAlphaChannel ? 0xFFFFFFFF : 0xFFFFFF;
         if (hex.equals(this.getUnlocalized())) {
-            return this.value & bitMask;
+            return Integer.parseUnsignedInt(this.value, 16) & bitMask;
         }
 
-        if (isAngelicaFormatString(hex)) {
-            if (!isTextColor && warnedParams.add(this)) {
-                VendingMachine.LOG.warn(
-                    "GuiParams '" + getUnlocalized()
-                        + "' is not a text color and does not support Angelica color formatting; using default");
-            }
-            return this.value & bitMask;
-        }
-
-        int color = this.value;
         try {
-            color = Integer.parseUnsignedInt(hex, 16) & bitMask;
+            return Integer.parseUnsignedInt(hex, 16) & bitMask;
         } catch (NumberFormatException e) {
             VendingMachine.LOG.warn("Couldn't format color correctly for: " + getUnlocalized(), e);
+            return Integer.parseUnsignedInt(this.value, 16) & bitMask;
         }
-        return color;
     }
 
     /**
@@ -75,7 +61,7 @@ public enum GuiParams {
      * this is a text-color param, Angelica is loaded, and the lang override is a format string.
      * Returns null in all other cases; callers should fall back to {@link #getColor(boolean)}.
      */
-    public String getColorString() {
+    public String getAngelicaColorString() {
         if (!isTextColor) {
             return null;
         }
@@ -92,16 +78,15 @@ public enum GuiParams {
     public int getInt() {
         String rawInt = translate(this.getUnlocalized());
         if (rawInt.equals(this.getUnlocalized())) {
-            return this.value;
+            return Integer.parseInt(this.value);
         }
 
-        int value = this.value;
         try {
-            value = Integer.parseInt(rawInt);
+            return Integer.parseInt(rawInt);
         } catch (NumberFormatException e) {
             VendingMachine.LOG.warn("Couldn't fetch integer correctly for: " + getUnlocalized(), e);
+            return Integer.parseInt(this.value);
         }
-        return value;
     }
 
     public String getUnlocalized() {
