@@ -430,21 +430,28 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
             return;
         }
 
+        copyInputItemsIntoOutputBuffer();
+        clearAllInputItems();
+
+        ejectItems = false;
+    }
+
+    private void copyInputItemsIntoOutputBuffer() {
         List<ItemStack> ejectables = IntStream.range(0, MTEVendingMachine.INPUT_SLOTS)
             .mapToObj(base.inputItems::getStackInSlot)
             .filter(Objects::nonNull)
             .map(ItemStack::copy)
             .collect(Collectors.toList());
         base.dispenseItemStacks(ejectables);
+    }
 
+    private void clearAllInputItems() {
         for (int i = 0; i < MTEVendingMachine.INPUT_SLOTS; i++) {
             ItemStack stack = base.inputItems.getStackInSlot(i);
             if (stack != null) {
                 base.inputItems.setStackInSlot(i, null);
             }
         }
-
-        ejectItems = false;
     }
 
     private IWidget createIOColumn() {
