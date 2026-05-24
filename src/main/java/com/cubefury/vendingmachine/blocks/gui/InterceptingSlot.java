@@ -10,12 +10,9 @@ import com.cubefury.vendingmachine.blocks.MTEVendingMachine;
 import com.cubefury.vendingmachine.trade.CurrencyItem;
 import com.cubefury.vendingmachine.trade.TradeManager;
 import com.cubefury.vendingmachine.util.Wallet;
-import com.google.common.collect.ImmutableList;
 
 public class InterceptingSlot extends ModularSlot {
 
-    private static final ImmutableList<String> COIN_INSERT_SOUND_EFFECTS = ImmutableList
-        .of("vendingmachine:coin_insert_1", "vendingmachine:coin_insert_2", "vendingmachine:coin_insert_3");
     private final MTEVendingMachine vm;
 
     public InterceptingSlot(ItemStackHandler inputItems, int index, MTEVendingMachine vm) {
@@ -35,8 +32,7 @@ public class InterceptingSlot extends ModularSlot {
                 if (wallet != null) {
                     wallet.addCount(mapped.type, mapped.value);
                     this.putStack(null);
-                    vm.playSoundEffect(
-                        COIN_INSERT_SOUND_EFFECTS.get((int) (Math.random() * COIN_INSERT_SOUND_EFFECTS.size())));
+                    vm.playSoundEffect(MTEVendingMachine.getRandomCoinInsertSound());
                 }
                 TradeManager.INSTANCE.saveTeamData(playerId);
             }

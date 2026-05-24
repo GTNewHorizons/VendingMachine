@@ -8,11 +8,29 @@
       }
     ]
   },
-  "coin_drop": {
+  "coin_drop_1": {
     "category": "block",
     "sounds": [
       {
-        "name": "vendingmachine:coin_drop",
+        "name": "vendingmachine:coin_drop_1",
+        "stream": false
+      }
+    ]
+  },
+  "coin_drop_2": {
+    "category": "block",
+    "sounds": [
+      {
+        "name": "vendingmachine:coin_drop_2",
+        "stream": false
+      }
+    ]
+  },
+  "coin_drop_3": {
+    "category": "block",
+    "sounds": [
+      {
+        "name": "vendingmachine:coin_drop_3",
         "stream": false
       }
     ]

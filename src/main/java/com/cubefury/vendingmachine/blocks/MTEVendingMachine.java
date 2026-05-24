@@ -57,6 +57,7 @@ import com.cubefury.vendingmachine.util.BigItemStack;
 import com.cubefury.vendingmachine.util.OverlayHelper;
 import com.cubefury.vendingmachine.util.Translator;
 import com.cubefury.vendingmachine.util.Wallet;
+import com.google.common.collect.ImmutableList;
 import com.gtnewhorizon.structurelib.StructureLibAPI;
 import com.gtnewhorizon.structurelib.alignment.IAlignment;
 import com.gtnewhorizon.structurelib.alignment.IAlignmentLimits;
@@ -118,6 +119,11 @@ public class MTEVendingMachine extends MTEMultiBlockBase
         .addIcon(VM_MACHINE_FRONT_ON_GLOW)
         .glow()
         .build() };
+    private static final ImmutableList<String> COIN_INSERT_SOUND_EFFECTS = ImmutableList
+        .of("vendingmachine:coin_insert_1", "vendingmachine:coin_insert_2", "vendingmachine:coin_insert_3");
+    private static final ImmutableList<String> COIN_DROP_SOUND_EFFECTS = ImmutableList
+        .of("vendingmachine:coin_drop_1", "vendingmachine:coin_drop_2", "vendingmachine:coin_drop_3");
+
     protected final List<RenderOverlay.OverlayTicket> overlayTickets = new ArrayList<>();
 
     private MultiblockTooltipBuilder tooltipBuilder;
@@ -147,6 +153,18 @@ public class MTEVendingMachine extends MTEMultiBlockBase
     protected MTEVendingMachine(String aName) {
         super(aName);
         this.mIsAnimated = true;
+    }
+
+    public static String getRandomCoinInsertSound() {
+        return getRandomSoundFromList(COIN_INSERT_SOUND_EFFECTS);
+    }
+
+    public static String getRandomCoinDropSound() {
+        return getRandomSoundFromList(COIN_DROP_SOUND_EFFECTS);
+    }
+
+    private static String getRandomSoundFromList(List<String> coinInsertSoundEffects) {
+        return coinInsertSoundEffects.get((int) (Math.random() * coinInsertSoundEffects.size()));
     }
 
     @Override
@@ -238,7 +256,7 @@ public class MTEVendingMachine extends MTEMultiBlockBase
     }
 
     private static @NotNull String getSoundForDispensedItemstack(@NotNull ItemStack itemStack) {
-        return CurrencyItem.fromItemStack(itemStack) != null ? "vendingmachine:coin_drop" : "vendingmachine:item_drop";
+        return CurrencyItem.fromItemStack(itemStack) != null ? getRandomCoinDropSound() : "vendingmachine:item_drop";
     }
 
     private boolean processTradeOnServer(TradeRequest tradeRequest) {
@@ -363,6 +381,8 @@ public class MTEVendingMachine extends MTEMultiBlockBase
             World world = te.getWorld();
             if (world instanceof WorldServer worldServer) {
                 EntityPlayer player = getCurrentUser();
+                float volume = getRandomVolume();
+                float pitch = 1f;// getRandomPitch();
                 for (IWorldAccess worldAccess : worldServer.worldAccesses) {
                     worldAccess.playSoundToNearExcept(
                         player,
@@ -370,8 +390,8 @@ public class MTEVendingMachine extends MTEMultiBlockBase
                         te.getXCoord() + 0.5f,
                         te.getYCoord() + 0.5f,
                         te.getZCoord() + 0.5f,
-                        1f,
-                        1f);
+                        volume,
+                        pitch);
                 }
                 if (player instanceof EntityPlayerMP mpPlayer) {
                     S29PacketSoundEffect packet = new S29PacketSoundEffect(
@@ -379,12 +399,20 @@ public class MTEVendingMachine extends MTEMultiBlockBase
                         player.posX,
                         player.posY - player.yOffset,
                         player.posZ,
-                        1f,
-                        1f);
+                        volume,
+                        pitch);
                     mpPlayer.playerNetServerHandler.sendPacket(packet);
                 }
             }
         }
+    }
+
+    private static float getRandomPitch() {
+        return (float) (0.9d + (0.2d * Math.random()));
+    }
+
+    private static float getRandomVolume() {
+        return (float) (0.6d + (0.4d * Math.random()));
     }
 
     public boolean fetchItemFromAE(ItemStack requiredStack, boolean simulate, String ore) {
