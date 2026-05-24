@@ -87,11 +87,14 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
 
     @Override
     public void draw(ModularGuiContext context, WidgetThemeEntry<?> widgetTheme) {
-        int textColor = GuiParams.display_text_color.getColor(false);
+        String textColorStr = GuiParams.display_text_color.getColorString();
+        int textColor = textColorStr == null ? GuiParams.display_text_color.getColor(false) : 0xFFFFFF;
+        String colorPrefix = textColorStr != null ? textColorStr : "";
+        String tradTextColorStr = GuiParams.trade_display_text_color.getColorString();
         ItemStack item = value.getValue();
         if (!Platform.isStackEmpty(item)) {
             if (this.displayType == DisplayType.TILE) {
-                GuiDraw.drawText(" " + this.display.display.stackSize, 4, 9, 1.0f, textColor, false);
+                GuiDraw.drawText(colorPrefix + " " + this.display.display.stackSize, 4, 9, 1.0f, textColor, false);
                 GuiDraw.drawItem(item, 26, 4, 16, 16, context.getCurrentDrawingZ());
                 GlStateManager.color(1f, 1f, 1f, 1f);
                 if (this.display.isTradeableNow(rootPanel.getWalletMode())) {
@@ -106,21 +109,23 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
                     GuiTextures.OVERLAY_SELECTED
                         .draw(0, 0, MTEVendingMachineGui.TILE_ITEM_WIDTH, MTEVendingMachineGui.TILE_ITEM_HEIGHT);
                 }
+                String cooldownStr = display.hasCooldown ? this.display.cooldownText : "";
                 this.overlay(
-                    IKey.str(display.hasCooldown ? this.display.cooldownText : "")
-                        .color(GuiParams.trade_display_text_color.getColor(false)));
+                    tradTextColorStr != null ? IKey.str(tradTextColorStr + cooldownStr)
+                        : IKey.str(cooldownStr)
+                            .color(GuiParams.trade_display_text_color.getColor(false)));
                 if (this.display.isFavourite) {
                     GuiTextures.FAVOURITE_SPRITE.draw(context, 4, 4, 6, 6, widgetTheme.getTheme());
                 }
             } else if (this.displayType == DisplayType.LIST) {
-                GuiDraw.drawText("" + this.display.display.stackSize, 6, 4, 0.9f, textColor, false);
+                GuiDraw.drawText(colorPrefix + this.display.display.stackSize, 6, 4, 0.9f, textColor, false);
                 GuiDraw.drawItem(item, 24, 2, 9, 9, context.getCurrentDrawingZ());
                 GuiDraw.drawText(
-                    this.display.display.getDisplayName()
+                    colorPrefix + (this.display.display.getDisplayName()
                         .length() > 21
                             ? this.display.display.getDisplayName()
                                 .substring(0, 21) + "..."
-                            : this.display.display.getDisplayName(),
+                            : this.display.display.getDisplayName()),
                     36,
                     4,
                     0.9f,
@@ -150,10 +155,13 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
                         MTEVendingMachineGui.LIST_ITEM_HEIGHT - 2,
                         GuiParams.trade_display_list_current_selected_color.getColor(true));
                 }
+                String cooldownStr2 = display.hasCooldown && this.display.enabled ? this.display.cooldownText : "";
                 this.overlay(
-                    IKey.str(display.hasCooldown && this.display.enabled ? this.display.cooldownText : "")
-                        .color(GuiParams.trade_display_text_color.getColor(false))
-                        .scale(0.9f));
+                    tradTextColorStr != null ? IKey.str(tradTextColorStr + cooldownStr2)
+                        .scale(0.9f)
+                        : IKey.str(cooldownStr2)
+                            .color(GuiParams.trade_display_text_color.getColor(false))
+                            .scale(0.9f));
                 if (this.display.isFavourite) {
                     GuiTextures.FAVOURITE_SPRITE.draw(context, 139, 2, 10, 10, widgetTheme.getTheme());
                 }

@@ -65,6 +65,9 @@ public class NeiRecipeHandler extends TemplateRecipeHandler {
     private int textColorConditionDefault;
     private int textColorConditionSatisfied;
     private int textColorConditionUnsatisfied;
+    private String textColorStringConditionDefault;
+    private String textColorStringConditionSatisfied;
+    private String textColorStringConditionUnsatisfied;
 
     private int lastHoveredRecipeIndex = -1;
     private Rectangle lastHoveredTextArea = null;
@@ -91,9 +94,20 @@ public class NeiRecipeHandler extends TemplateRecipeHandler {
     }
 
     private void setTextColors() {
-        textColorConditionDefault = GuiParams.condition_default_color.getColor(false);
-        textColorConditionSatisfied = GuiParams.condition_satisfied_color.getColor(false);
-        textColorConditionUnsatisfied = GuiParams.condition_unsatisfied_color.getColor(false);
+        textColorStringConditionDefault = GuiParams.condition_default_color.getColorString();
+        textColorConditionDefault = textColorStringConditionDefault == null
+            ? GuiParams.condition_default_color.getColor(false)
+            : 0xFFFFFF;
+
+        textColorStringConditionSatisfied = GuiParams.condition_satisfied_color.getColorString();
+        textColorConditionSatisfied = textColorStringConditionSatisfied == null
+            ? GuiParams.condition_satisfied_color.getColor(false)
+            : 0xFFFFFF;
+
+        textColorStringConditionUnsatisfied = GuiParams.condition_unsatisfied_color.getColorString();
+        textColorConditionUnsatisfied = textColorStringConditionUnsatisfied == null
+            ? GuiParams.condition_unsatisfied_color.getColor(false)
+            : 0xFFFFFF;
     }
 
     @Override
@@ -285,18 +299,22 @@ public class NeiRecipeHandler extends TemplateRecipeHandler {
         float scale = 0.5f;
         GL11.glPushMatrix();
         GL11.glScalef(scale, scale, 1);
+        String ncColorStr = GuiParams.nc_inputs_overlay_color.getColorString();
+        int ncColor = ncColorStr == null ? GuiParams.nc_inputs_overlay_color.getColor(false) : 0xFFFFFF;
+        String ncPrefix = ncColorStr != null ? ncColorStr : "";
         for (PositionedStack ps : recipe.ncInputs) {
             GuiDraw.fontRenderer.drawString(
-                "NC",
+                ncPrefix + "NC", // TODO: Change to NEI NC
                 (int) (ps.relx / scale),
                 (int) (ps.rely / scale),
-                GuiParams.nc_inputs_overlay_color.getColor(false),
+                ncColor,
                 false);
         }
         GL11.glPopMatrix();
 
+        String headerPrefix = textColorStringConditionDefault != null ? textColorStringConditionDefault : "";
         GuiDraw.drawString(
-            Translator.translate("vendingmachine.gui.requirementHeader"),
+            headerPrefix + Translator.translate("vendingmachine.gui.requirementHeader"),
             2,
             63,
             textColorConditionDefault,
@@ -305,6 +323,7 @@ public class NeiRecipeHandler extends TemplateRecipeHandler {
         for (ICondition condition : recipe.requirements) {
             StringBuilder requirementString = new StringBuilder();
             int color = textColorConditionDefault;
+            String conditionPrefix = textColorStringConditionDefault != null ? textColorStringConditionDefault : "";
             if (VendingMachine.isBqLoaded && condition instanceof BqCondition) {
                 StringBuilder unformatted = new StringBuilder(
                     Translator.translate("vendingmachine.gui.requirement.betterquesting"));
@@ -324,9 +343,11 @@ public class NeiRecipeHandler extends TemplateRecipeHandler {
                         isMouseOverBqCondition(recipeIndex, y, questId, unformatted.toString()) ? UNDERLINE : "");
                     requirementString.append(unformatted);
                 }
-                color = BqAdapter.INSTANCE.checkPlayerCompletedQuest(getCurrentPlayerUUID(), questId)
-                    ? textColorConditionSatisfied
-                    : textColorConditionUnsatisfied;
+                boolean completed = BqAdapter.INSTANCE.checkPlayerCompletedQuest(getCurrentPlayerUUID(), questId);
+                color = completed ? textColorConditionSatisfied : textColorConditionUnsatisfied;
+                conditionPrefix = completed
+                    ? (textColorStringConditionSatisfied != null ? textColorStringConditionSatisfied : "")
+                    : (textColorStringConditionUnsatisfied != null ? textColorStringConditionUnsatisfied : "");
             } else {
                 requirementString.append(Translator.translate("vendingmachine.gui.requirement.unknown"));
             }
@@ -334,7 +355,7 @@ public class NeiRecipeHandler extends TemplateRecipeHandler {
             List<String> requirementsArray = GuiDraw.fontRenderer
                 .listFormattedStringToWidth(requirementString.toString(), GUI_WIDTH);
             for (String line : requirementsArray) {
-                GuiDraw.drawString(line, 2, y, color, false);
+                GuiDraw.drawString(conditionPrefix + line, 2, y, color, false);
                 y += LINE_SPACE;
             }
         }
