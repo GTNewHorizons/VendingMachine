@@ -382,7 +382,7 @@ public class MTEVendingMachine extends MTEMultiBlockBase
             if (world instanceof WorldServer worldServer) {
                 EntityPlayer player = getCurrentUser();
                 float volume = getRandomVolume();
-                float pitch = 1f;// getRandomPitch();
+                float pitch = getRandomPitch();
                 for (IWorldAccess worldAccess : worldServer.worldAccesses) {
                     worldAccess.playSoundToNearExcept(
                         player,
@@ -408,7 +408,7 @@ public class MTEVendingMachine extends MTEMultiBlockBase
     }
 
     private static float getRandomPitch() {
-        return (float) (0.9d + (0.2d * Math.random()));
+        return (float) (0.95d + (0.1d * Math.random()));
     }
 
     private static float getRandomVolume() {
