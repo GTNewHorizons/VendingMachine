@@ -7,6 +7,7 @@ import java.util.UUID;
 
 import javax.annotation.Nonnull;
 
+import com.gtnewhorizon.gtnhlib.teams.TeamDataTransferReason;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraftforge.common.util.Constants;
@@ -69,8 +70,8 @@ public class VMTeamData implements ITeamData {
     }
 
     @Override
-    public void copyData(Team prevTeam, Team newTeam, UUID playerId, ITeamData prevTeamData,
-        TeamDataCopyReason reason) {
+    public void transferData(Team prevTeam, Team newTeam, UUID playerId, ITeamData prevTeamData,
+                             TeamDataTransferReason reason) {
         VMTeamData oldTeamData = (VMTeamData) prevTeamData;
         VMPlayerData pd = oldTeamData.playerData.remove(playerId);
         if (pd != null) {
