@@ -865,12 +865,12 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
         syncManager.syncValue("hasTeam", hasTeamSyncer);
 
         // Block modifications from server -> client
-        EnumSyncValue<WalletMode> walletModeSyncer = new EnumSyncValue<>(
+        EnumSyncValue<WalletMode, ?> walletModeSyncer = new EnumSyncValue<>(
             WalletMode.class,
             () -> walletMode,
             newWalletMode -> {},
             () -> walletMode,
-            newWalletMode -> walletMode = newWalletMode);
+            newWalletMode -> walletMode = newWalletMode).allowC2S();
         syncManager.syncValue("walletMode", walletModeSyncer);
     }
 

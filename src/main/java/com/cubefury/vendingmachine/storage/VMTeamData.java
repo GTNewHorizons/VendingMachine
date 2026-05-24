@@ -72,7 +72,7 @@ public class VMTeamData implements ITeamData {
     public void copyData(Team prevTeam, Team newTeam, UUID playerId, ITeamData prevTeamData,
         TeamDataCopyReason reason) {
         VMTeamData oldTeamData = (VMTeamData) prevTeamData;
-        VMPlayerData pd = oldTeamData.playerData.getOrDefault(playerId, null);
+        VMPlayerData pd = oldTeamData.playerData.remove(playerId);
         if (pd != null) {
             playerData.put(playerId, pd);
         }
