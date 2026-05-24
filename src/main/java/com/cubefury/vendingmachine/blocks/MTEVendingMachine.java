@@ -38,6 +38,7 @@ import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.oredict.OreDictionary;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.lwjgl.input.Keyboard;
 
 import com.cleanroommc.modularui.utils.item.ItemStackHandler;
@@ -211,7 +212,7 @@ public class MTEVendingMachine extends MTEMultiBlockBase
             this.newBufferedOutputs
                 || (!this.outputBuffer.isEmpty() && this.ticksSinceOutput % getDispensingDelay() == 0)
         ) {
-            doDispenseItems();
+            dispenseFirstNonNullIem();
             ticksSinceOutput = 0;
         }
         ticksSinceOutput = this.newBufferedOutputs ? 0 : ticksSinceOutput + 1;
@@ -229,30 +230,44 @@ public class MTEVendingMachine extends MTEMultiBlockBase
         return (int) (baseDelay / acceleration);
     }
 
-    private void doDispenseItems() {
-        while (!this.outputBuffer.isEmpty()) {
-            ItemStack next = this.outputBuffer.peek();
-            if (next == null || next.stackSize <= 0) { // impossible, but just in case
+    private void dispenseFirstNonNullIem() {
+        ItemStack dispensableStack = getNextDispensable();
+        if (dispensableStack != null) {
+            int targetSlot = getFirstEmptyOutputSlot();
+            if (targetSlot != -1) {
+                outputIntoSlot(dispensableStack, targetSlot);
+                playSoundEffect(getSoundForDispensedItemstack(dispensableStack));
                 this.outputBuffer.poll();
-            } else {
-                for (int i = 0; i < MTEVendingMachine.OUTPUT_SLOTS; i++) {
-                    // make new stack
-                    ItemStack cur = this.outputItems.getStackInSlot(i);
-                    if (cur == null) {
-                        ItemStack output = next.copy();
-                        output.stackSize = next.stackSize;
-                        next.stackSize = 0;
-                        this.outputItems.setStackInSlot(i, output);
-                        playSoundEffect(getSoundForDispensedItemstack(next));
-                        break;
-                    }
-                }
-                if (next.stackSize == 0) {
-                    this.outputBuffer.poll();
-                }
-                break;
             }
         }
+    }
+
+    private @Nullable ItemStack getNextDispensable() {
+        while (!this.outputBuffer.isEmpty()) {
+            ItemStack next = this.outputBuffer.peek();
+            if (next != null && next.stackSize > 0) {
+                return next;
+            }
+            // impossible, but just in case
+            this.outputBuffer.poll();
+        }
+        return null;
+    }
+
+    private int getFirstEmptyOutputSlot() {
+        for (int i = 0; i < MTEVendingMachine.OUTPUT_SLOTS; i++) {
+            if (this.outputItems.getStackInSlot(i) == null) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private void outputIntoSlot(ItemStack next, int slotIndex) {
+        ItemStack output = next.copy();
+        output.stackSize = next.stackSize;
+        next.stackSize = 0;
+        this.outputItems.setStackInSlot(slotIndex, output);
     }
 
     private static @NotNull String getSoundForDispensedItemstack(@NotNull ItemStack itemStack) {
