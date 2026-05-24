@@ -812,7 +812,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
             if (this.ejectItems) {
                 doEjectItems();
             }
-        });
+        }).allowC2S();
         syncManager.syncValue("ejectItems", ejectItemsSyncer);
 
         BooleanSyncValue ejectCoinsSyncer = new BooleanSyncValue(() -> this.ejectCoins, val -> {
@@ -820,7 +820,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
             if (this.ejectCoins) {
                 doEjectCoins();
             }
-        });
+        }).allowC2S();
         syncManager.syncValue("ejectCoins", ejectCoinsSyncer);
 
         UUID playerId = NameCache.INSTANCE.getUUIDFromPlayer(getBase().getCurrentUser());
@@ -836,7 +836,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
                 if (val) {
                     doEjectCoin(type);
                 }
-            });
+            }).allowC2S();
             syncManager.syncValue("ejectCoin_" + type.id, ejectCoinSyncer);
         }
 
@@ -851,12 +851,12 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
         syncManager.syncValue("hasTeam", hasTeamSyncer);
 
         // Block modifications from server -> client
-        EnumSyncValue<WalletMode> walletModeSyncer = new EnumSyncValue<>(
+        EnumSyncValue<WalletMode, ?> walletModeSyncer = new EnumSyncValue<>(
             WalletMode.class,
             () -> walletMode,
             newWalletMode -> {},
             () -> walletMode,
-            newWalletMode -> walletMode = newWalletMode);
+            newWalletMode -> walletMode = newWalletMode).allowC2S();
         syncManager.syncValue("walletMode", walletModeSyncer);
     }
 
