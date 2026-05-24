@@ -909,4 +909,21 @@ public class MTEVendingMachine extends MTEMultiBlockBase
             outputItems.setStackInSlot(aIndex - INPUT_SLOTS, aStack);
         }
     }
+
+    public void fillPlayerInventoryWithDispensedItems() {
+        EntityPlayer player = getCurrentUser();
+        if (player == null) {
+            return;
+        }
+        for (int i = 0; i < OUTPUT_SLOTS; i++) {
+            ItemStack stack = outputItems.getStackInSlot(i);
+            if (stack == null) continue;
+            ItemStack toAdd = stack.copy();
+            boolean fullyAdded = player.inventory.addItemStackToInventory(toAdd);
+            outputItems.setStackInSlot(i, toAdd.stackSize <= 0 ? null : toAdd);
+            if (!fullyAdded) {
+                break;
+            }
+        }
+    }
 }

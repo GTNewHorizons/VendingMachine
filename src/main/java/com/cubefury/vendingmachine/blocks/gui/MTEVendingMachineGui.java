@@ -49,9 +49,11 @@ import com.cleanroommc.modularui.value.IntValue;
 import com.cleanroommc.modularui.value.sync.BooleanSyncValue;
 import com.cleanroommc.modularui.value.sync.EnumSyncValue;
 import com.cleanroommc.modularui.value.sync.IntSyncValue;
+import com.cleanroommc.modularui.value.sync.InteractionSyncHandler;
 import com.cleanroommc.modularui.value.sync.PanelSyncManager;
 import com.cleanroommc.modularui.widget.ParentWidget;
 import com.cleanroommc.modularui.widget.SingleChildWidget;
+import com.cleanroommc.modularui.widgets.ButtonWidget;
 import com.cleanroommc.modularui.widgets.CycleButtonWidget;
 import com.cleanroommc.modularui.widgets.ListWidget;
 import com.cleanroommc.modularui.widgets.PagedWidget;
@@ -539,7 +541,8 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
             .fullWidth()
             .marginLeft(5)
             .marginRight(4)
-            .background(SLOT_ITEM);
+            .background(SLOT_ITEM)
+            .child(getFillPlayerInventoryButton());
 
         outputSlots.forEach(index -> parentWidget.child(getFallingItem(index, outputSlotPositions.get(index), 18 * 4)));
 
@@ -554,6 +557,18 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
                     .leftRel(0.5f)
                     .width(30)
                     .height(18));
+    }
+
+    private IWidget getFillPlayerInventoryButton() {
+        return new ButtonWidget<>().fullHeight()
+            .fullWidth()
+            .invisible()
+            .playClickSound(false)
+            .syncHandler(new InteractionSyncHandler().setOnMousePressed((mousePressed -> {
+                if (Interactable.hasShiftDown()) {
+                    base.fillPlayerInventoryWithDispensedItems();
+                }
+            })));
     }
 
     static class Pos implements IAnimatable<Pos> {
