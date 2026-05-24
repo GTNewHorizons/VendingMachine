@@ -18,7 +18,6 @@ import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.common.util.Constants;
 
 import com.cleanroommc.modularui.api.IPanelHandler;
-import com.cleanroommc.modularui.api.drawable.IDrawable;
 import com.cleanroommc.modularui.api.drawable.IKey;
 import com.cleanroommc.modularui.api.widget.IWidget;
 import com.cleanroommc.modularui.api.widget.Interactable;
@@ -307,20 +306,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
         for (int i = 0; i < this.tradeCategories.size(); i++) {
             int index = i;
             tabColumn.child(
-                new VendingPageButton(i, tabController).tab(GuiTextures.TAB_LEFT, -1)
-                    .overlay(new DynamicDrawable(() -> {
-
-                        if (highlightedTabs.contains(this.tradeCategories.get(index))) {
-                            return GuiTextures.TAB_HIGHLIGHT.asIcon()
-                                .size(20, 20);
-                        }
-                        return IDrawable.EMPTY;
-                    }),
-                        this.tradeCategories.get(index)
-                            .getTexture()
-                            .asIcon()
-                            .margin(6)
-                            .center())
+                new VendingPageButton(i, tabController, tradeCategories, highlightedTabs).tab(GuiTextures.TAB_LEFT, -1)
                     .tooltipBuilder(builder -> {
                         builder.clearText();
                         builder.addLine(
@@ -826,7 +812,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
             if (this.ejectItems) {
                 doEjectItems();
             }
-        });
+        }).allowC2S();
         syncManager.syncValue("ejectItems", ejectItemsSyncer);
 
         BooleanSyncValue ejectCoinsSyncer = new BooleanSyncValue(() -> this.ejectCoins, val -> {
@@ -834,7 +820,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
             if (this.ejectCoins) {
                 doEjectCoins();
             }
-        });
+        }).allowC2S();
         syncManager.syncValue("ejectCoins", ejectCoinsSyncer);
 
         UUID playerId = NameCache.INSTANCE.getUUIDFromPlayer(getBase().getCurrentUser());
@@ -850,7 +836,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
                 if (val) {
                     doEjectCoin(type);
                 }
-            });
+            }).allowC2S();
             syncManager.syncValue("ejectCoin_" + type.id, ejectCoinSyncer);
         }
 
