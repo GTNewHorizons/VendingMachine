@@ -17,11 +17,29 @@
       }
     ]
   },
-  "coin_insert": {
+  "coin_insert_1": {
     "category": "block",
     "sounds": [
       {
-        "name": "vendingmachine:coin_insert",
+        "name": "vendingmachine:coin_insert_1",
+        "stream": false
+      }
+    ]
+  },
+  "coin_insert_2": {
+    "category": "block",
+    "sounds": [
+      {
+        "name": "vendingmachine:coin_insert_2",
+        "stream": false
+      }
+    ]
+  },
+  "coin_insert_3": {
+    "category": "block",
+    "sounds": [
+      {
+        "name": "vendingmachine:coin_insert_3",
         "stream": false
       }
     ]
