@@ -7,7 +7,6 @@ import java.util.UUID;
 
 import javax.annotation.Nonnull;
 
-import com.gtnewhorizon.gtnhlib.teams.TeamDataTransferReason;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraftforge.common.util.Constants;
@@ -17,7 +16,7 @@ import com.cubefury.vendingmachine.trade.TradeHistory;
 import com.cubefury.vendingmachine.util.Wallet;
 import com.gtnewhorizon.gtnhlib.teams.ITeamData;
 import com.gtnewhorizon.gtnhlib.teams.Team;
-import com.gtnewhorizon.gtnhlib.teams.TeamDataCopyReason;
+import com.gtnewhorizon.gtnhlib.teams.TeamDataTransferReason;
 
 public class VMTeamData implements ITeamData {
 
@@ -71,7 +70,7 @@ public class VMTeamData implements ITeamData {
 
     @Override
     public void transferData(Team prevTeam, Team newTeam, UUID playerId, ITeamData prevTeamData,
-                             TeamDataTransferReason reason) {
+        TeamDataTransferReason reason) {
         VMTeamData oldTeamData = (VMTeamData) prevTeamData;
         VMPlayerData pd = oldTeamData.playerData.remove(playerId);
         if (pd != null) {
