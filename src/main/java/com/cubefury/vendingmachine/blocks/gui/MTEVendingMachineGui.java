@@ -24,6 +24,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.common.util.Constants;
 
+import org.jetbrains.annotations.NotNull;
 import org.lwjgl.opengl.GL11;
 
 import com.cleanroommc.modularui.animation.Animator;
@@ -108,7 +109,6 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
     public final Map<TradeCategory, List<TradeItemDisplayWidget>> displayedTradesList = new HashMap<>();
     public final Set<TradeCategory> highlightedTabs = new HashSet<>();
     private final List<TradeCategory> tradeCategories = new ArrayList<>();
-    private final List<InterceptingSlot> inputSlots = new ArrayList<>();
 
     private PosGuiData guiData;
     private final PagedWidget.Controller tabController;
@@ -500,31 +500,50 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
         UUID playerId = NameCache.INSTANCE.getUUIDFromPlayer(getBase().getCurrentUser());
         return SlotGroupWidget.builder()
             .matrix("II", "II", "II", "II")
-            .key('I', index -> {
-                InterceptingSlot slot = new InterceptingSlot(base.inputItems, index, this.base);
-                this.inputSlots.add(slot);
-                return new ItemSlot().slot(
-                    slot.slotGroup("inputSlotGroup")
-                        .changeListener((newItem, onlyAmountChanged, client, init) -> {
-                            boolean hasCoin = slot.intercept(newItem, client, playerId, walletMode);
-                            if (client) {
-                                return;
-                            }
-                            // server side force refresh
-                            // Not syncing the trades to client on slot change will cause a short refresh delay, but
-                            // might be worth
-                            // for huge AE systems
-                            NetTradeDisplaySync.syncTradesToClient(
-                                (EntityPlayerMP) this.getBase()
-                                    .getCurrentUser(),
-                                this.getBase());
-                            if (hasCoin) {
-                                this.refreshInputSlots();
-                            }
-                            base.markDirty();
-                        }));
-            })
+            .key('I', index -> makeInterceptingSlot(index, playerId))
             .build();
+    }
+
+    private ItemSlot makeInterceptingSlot(int index, UUID playerId) {
+        ModularSlot slot = new ModularSlot(base.inputItems, index);
+        return new ItemSlot().slot(
+            slot.slotGroup("inputSlotGroup")
+                .changeListener((newItem, onlyAmountChanged, client, init) -> {
+                    if (client || newItem == null || !base.getActive()) {
+                        return;
+                    }
+                    CurrencyItem currencyItem = CurrencyItem.fromItemStack(newItem);
+                    if (currencyItem != null) {
+                        Wallet wallet = TradeManager.INSTANCE.getWallet(playerId, walletMode);
+                        if (wallet != null) {
+                            insertCoin(playerId, currencyItem, wallet);
+                            forceClearSlot(slot);
+                        }
+                    }
+                }));
+    }
+
+    private void insertCoin(UUID playerId, CurrencyItem currencyItem, @NotNull Wallet wallet) {
+        wallet.addCount(currencyItem.type, currencyItem.value);
+        base.playSoundEffect(MTEVendingMachine.getRandomCoinInsertSound());
+        TradeManager.INSTANCE.saveTeamData(playerId);
+    }
+
+    private void forceClearSlot(ModularSlot slot) {
+        slot.putStack(null);
+        // server-side sync for that input slot
+        // during next tick after any input
+        slot.getSyncHandler()
+            .forceSyncItem();
+        // server side force refresh
+        // Not syncing the trades to client on slot change will cause a short refresh delay, but
+        // might be worth
+        // for huge AE systems
+        NetTradeDisplaySync.syncTradesToClient(
+            (EntityPlayerMP) this.getBase()
+                .getCurrentUser(),
+            this.getBase());
+        base.markDirty();
     }
 
     private IWidget createDispenserChute() {
@@ -1120,15 +1139,6 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
 
     public SearchBar getSearchBar() {
         return this.searchBar;
-    }
-
-    // server-side sync for all input slots
-    // during next tick after any input
-    private void refreshInputSlots() {
-        for (InterceptingSlot slot : this.inputSlots) {
-            slot.getSyncHandler()
-                .forceSyncItem();
-        }
     }
 
 }
