@@ -568,7 +568,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
             .invisible()
             .playClickSound(false)
             .syncHandler(new InteractionSyncHandler().setOnMousePressed((mousePressed -> {
-                if (Interactable.hasShiftDown()) {
+                if (mousePressed.mouseButton == 0 && mousePressed.shift) {
                     base.fillPlayerInventoryWithDispensedItems();
                 }
             })));
