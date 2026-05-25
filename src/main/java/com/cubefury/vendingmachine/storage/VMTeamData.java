@@ -16,7 +16,7 @@ import com.cubefury.vendingmachine.trade.TradeHistory;
 import com.cubefury.vendingmachine.util.Wallet;
 import com.gtnewhorizon.gtnhlib.teams.ITeamData;
 import com.gtnewhorizon.gtnhlib.teams.Team;
-import com.gtnewhorizon.gtnhlib.teams.TeamDataCopyReason;
+import com.gtnewhorizon.gtnhlib.teams.TeamDataTransferReason;
 
 public class VMTeamData implements ITeamData {
 
@@ -69,10 +69,10 @@ public class VMTeamData implements ITeamData {
     }
 
     @Override
-    public void copyData(Team prevTeam, Team newTeam, UUID playerId, ITeamData prevTeamData,
-        TeamDataCopyReason reason) {
+    public void transferData(Team prevTeam, Team newTeam, UUID playerId, ITeamData prevTeamData,
+        TeamDataTransferReason reason) {
         VMTeamData oldTeamData = (VMTeamData) prevTeamData;
-        VMPlayerData pd = oldTeamData.playerData.getOrDefault(playerId, null);
+        VMPlayerData pd = oldTeamData.playerData.remove(playerId);
         if (pd != null) {
             playerData.put(playerId, pd);
         }
