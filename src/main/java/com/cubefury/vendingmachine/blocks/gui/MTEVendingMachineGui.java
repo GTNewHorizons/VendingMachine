@@ -551,9 +551,8 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
             .background(SLOT_ITEM)
             .child(getFillPlayerInventoryButton());
         addAllItemSlotsAsChildren(parentWidget);
-        // Adding these at the end so they display over the item slots
-        return parentWidget.child(getDispenserOverhang())
-            .child(getOutputArrow());
+        // Adding this at the end so it displays over the item slots
+        return parentWidget.child(getDispenserOverhang());
     }
 
     private void addAllItemSlotsAsChildren(ParentWidget<?> parentWidget) {
@@ -578,15 +577,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
         return IDrawable.of(DISPENSER_OVERHANG)
             .asWidget()
             .top(0)
-            .height(20)
             .widthRel(1.0f);
-    }
-
-    private static Widget<?> getOutputArrow() {
-        return GuiTextures.INPUT_SPRITE.asWidget()
-            .leftRel(0.5f)
-            .width(30)
-            .height(18);
     }
 
     private void constructTradeTooltip(RichTooltip builder, TradeItemDisplay cur) {

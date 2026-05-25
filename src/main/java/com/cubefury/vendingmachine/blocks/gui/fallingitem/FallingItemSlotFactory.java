@@ -64,7 +64,7 @@ public class FallingItemSlotFactory {
     }
 
     private static Animator fallingItemAnimation(Pos animatedPos) {
-        return new MutableObjectAnimator<>(animatedPos, new Pos(animatedPos.getX(), 0), animatedPos.copyOrImmutable())
+        return new MutableObjectAnimator<>(animatedPos, new Pos(animatedPos.getX(), -1), animatedPos.copyOrImmutable())
             .bounds(0, 1)
             .curve(Interpolation.BOUNCE_OUT)
             .duration(FallingItemSlotFactory.FALL_ANIMATION_DURATION);
