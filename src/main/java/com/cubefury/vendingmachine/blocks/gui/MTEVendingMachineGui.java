@@ -11,10 +11,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -25,11 +23,7 @@ import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.common.util.Constants;
 
 import org.jetbrains.annotations.NotNull;
-import org.lwjgl.opengl.GL11;
 
-import com.cleanroommc.modularui.animation.Animator;
-import com.cleanroommc.modularui.animation.IAnimatable;
-import com.cleanroommc.modularui.animation.MutableObjectAnimator;
 import com.cleanroommc.modularui.api.IPanelHandler;
 import com.cleanroommc.modularui.api.drawable.IDrawable;
 import com.cleanroommc.modularui.api.drawable.IKey;
@@ -40,11 +34,7 @@ import com.cleanroommc.modularui.factory.PosGuiData;
 import com.cleanroommc.modularui.screen.ModularPanel;
 import com.cleanroommc.modularui.screen.RichTooltip;
 import com.cleanroommc.modularui.screen.UISettings;
-import com.cleanroommc.modularui.screen.viewport.ModularGuiContext;
-import com.cleanroommc.modularui.theme.WidgetThemeEntry;
 import com.cleanroommc.modularui.utils.Alignment;
-import com.cleanroommc.modularui.utils.Interpolation;
-import com.cleanroommc.modularui.utils.Interpolations;
 import com.cleanroommc.modularui.value.BoolValue;
 import com.cleanroommc.modularui.value.IntValue;
 import com.cleanroommc.modularui.value.sync.BooleanSyncValue;
@@ -54,6 +44,7 @@ import com.cleanroommc.modularui.value.sync.InteractionSyncHandler;
 import com.cleanroommc.modularui.value.sync.PanelSyncManager;
 import com.cleanroommc.modularui.widget.ParentWidget;
 import com.cleanroommc.modularui.widget.SingleChildWidget;
+import com.cleanroommc.modularui.widget.Widget;
 import com.cleanroommc.modularui.widgets.ButtonWidget;
 import com.cleanroommc.modularui.widgets.CycleButtonWidget;
 import com.cleanroommc.modularui.widgets.ListWidget;
@@ -61,7 +52,6 @@ import com.cleanroommc.modularui.widgets.PagedWidget;
 import com.cleanroommc.modularui.widgets.SlotGroupWidget;
 import com.cleanroommc.modularui.widgets.TextWidget;
 import com.cleanroommc.modularui.widgets.ToggleButton;
-import com.cleanroommc.modularui.widgets.TransformWidget;
 import com.cleanroommc.modularui.widgets.layout.Flow;
 import com.cleanroommc.modularui.widgets.layout.Grid;
 import com.cleanroommc.modularui.widgets.slot.ItemSlot;
@@ -70,6 +60,7 @@ import com.cubefury.vendingmachine.VMConfig;
 import com.cubefury.vendingmachine.VendingMachine;
 import com.cubefury.vendingmachine.blocks.MTEVendingMachine;
 import com.cubefury.vendingmachine.blocks.gui.coin.CoinDisplay;
+import com.cubefury.vendingmachine.blocks.gui.fallingitem.FallingItemSlotFactory;
 import com.cubefury.vendingmachine.gui.GuiTextures;
 import com.cubefury.vendingmachine.gui.WidgetThemes;
 import com.cubefury.vendingmachine.network.handlers.NetTradeDisplaySync;
@@ -96,7 +87,6 @@ import gregtech.common.modularui2.widget.SelectButton;
 
 public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine> {
 
-    private static final int FALL_ANIMATION_DURATION = 1000;
     private final MTEVendingMachine base;
 
     public static boolean forceRefresh = false;
@@ -554,35 +544,22 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
     }
 
     private IWidget createDispenserChute() {
-        List<Integer> outputSlots = IntStream.range(0, OUTPUT_SLOTS)
-            .boxed()
-            .collect(Collectors.toList());
-        int maxLeft = 24;
-        Random random = new Random(OUTPUT_SLOTS);
-        List<Integer> outputSlotPositions = random.ints(OUTPUT_SLOTS, 0, maxLeft)
-            .boxed()
-            .collect(Collectors.toList());
-
-        var parentWidget = new ParentWidget<>().fullHeight()
+        ParentWidget<?> parentWidget = new ParentWidget<>().fullHeight()
             .fullWidth()
             .marginLeft(5)
             .marginRight(4)
             .background(SLOT_ITEM)
             .child(getFillPlayerInventoryButton());
+        addAllItemSlotsAsChildren(parentWidget);
+        // Adding these at the end so they display over the item slots
+        return parentWidget.child(getDispenserOverhang())
+            .child(getOutputArrow());
+    }
 
-        outputSlots.forEach(index -> parentWidget.child(getFallingItem(index, outputSlotPositions.get(index), 18 * 4)));
-
-        return parentWidget.child(
-            IDrawable.of(DISPENSER_OVERHANG)
-                .asWidget()
-                .top(0)
-                .height(20)
-                .widthRel(1.0f))
-            .child(
-                GuiTextures.INPUT_SPRITE.asWidget()
-                    .leftRel(0.5f)
-                    .width(30)
-                    .height(18));
+    private void addAllItemSlotsAsChildren(ParentWidget<?> parentWidget) {
+        FallingItemSlotFactory fallingItemSlotFactory = new FallingItemSlotFactory(base.outputItems, 18 * 4);
+        IntStream.range(0, OUTPUT_SLOTS)
+            .forEach(index -> parentWidget.child(fallingItemSlotFactory.getFallingItemSlot(index)));
     }
 
     private IWidget getFillPlayerInventoryButton() {
@@ -597,96 +574,19 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
             })));
     }
 
-    static class Pos implements IAnimatable<Pos> {
-
-        private int x, y;
-
-        public Pos(int x, int y) {
-            this.x = x;
-            this.y = y;
-        }
-
-        @Override
-        public Pos interpolate(Pos start, Pos end, float t) {
-            this.x = Interpolations.lerp(start.x, end.x, t);
-            this.y = Interpolations.lerp(start.y, end.y, t);
-            return this;
-        }
-
-        @Override
-        public Pos copyOrImmutable() {
-            return new Pos(x, y);
-        }
-
-        public void set(Pos other) {
-            this.x = other.x;
-            this.y = other.y;
-        }
-
-        public int getX() {
-            return x;
-        }
-
-        public int getY() {
-            return y;
-        }
+    private static Widget<?> getDispenserOverhang() {
+        return IDrawable.of(DISPENSER_OVERHANG)
+            .asWidget()
+            .top(0)
+            .height(20)
+            .widthRel(1.0f);
     }
 
-    private TransformWidget getFallingItem(int index, int leftPadding, int fallDistance) {
-        final Pos fallingPosition = new Pos(leftPadding, fallDistance);
-        Animator fallingPositionAnimation = getAnimatedPosition(
-            fallingPosition,
-            new Pos(leftPadding, 0),
-            fallingPosition,
-            Interpolation.BOUNCE_OUT,
-            FALL_ANIMATION_DURATION);
-        AtomicBoolean hasSetZ = new AtomicBoolean(false);
-        IWidget widget = new ItemSlotWithDepth(index).slot(
-            new ModularSlot(base.outputItems, index).accessibility(false, true)
-                .slotGroup("outputSlotGroup")
-                .changeListener((newitem, onlyAmountChanged, client, init) -> {
-                    base.markDirty();
-                    if (!init && newitem != null && !onlyAmountChanged) {
-                        fallingPositionAnimation.reset();
-                        fallingPositionAnimation.animate();
-                    }
-                }))
-            .background(IDrawable.EMPTY)
-            .disableHoverBackground()
-            .setEnabledIf(
-                slot -> slot.getSlot()
-                    .getHasStack());
-        return new TransformWidget(widget).transform(stack -> {
-
-            stack.translate((float) fallingPosition.getX(), (float) fallingPosition.getY());
-            if (!hasSetZ.get()) {
-                stack.translate(0, 0, 10f * index);
-                hasSetZ.set(true);
-            }
-        });
-    }
-
-    static class ItemSlotWithDepth extends ItemSlot {
-
-        private final int depth;
-
-        public ItemSlotWithDepth(int depth) {
-            this.depth = depth;
-        }
-
-        @Override
-        public void draw(ModularGuiContext context, WidgetThemeEntry<?> widgetTheme) {
-            GL11.glTranslatef(0f, 0f, depth);
-            super.draw(context, widgetTheme);
-            GL11.glTranslatef(0f, 0f, -depth);
-        }
-    }
-
-    private static Animator getAnimatedPosition(Pos animatedPos, Pos fromPos, Pos toPos, Interpolation interpolation,
-        int duration) {
-        return new MutableObjectAnimator<>(animatedPos, fromPos.copyOrImmutable(), toPos.copyOrImmutable()).bounds(0, 1)
-            .curve(interpolation)
-            .duration(duration);
+    private static Widget<?> getOutputArrow() {
+        return GuiTextures.INPUT_SPRITE.asWidget()
+            .leftRel(0.5f)
+            .width(30)
+            .height(18);
     }
 
     private void constructTradeTooltip(RichTooltip builder, TradeItemDisplay cur) {
