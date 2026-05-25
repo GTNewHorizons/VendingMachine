@@ -41,6 +41,7 @@ import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.oredict.OreDictionary;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.lwjgl.input.Keyboard;
 
 import com.cleanroommc.modularui.utils.item.ItemStackHandler;
@@ -278,122 +279,32 @@ public class MTEVendingMachine extends MTEMultiBlockBase
             return false;
         }
 
-        ItemStack[] inputSlots = new ItemStack[MTEVendingMachine.INPUT_SLOTS];
-        for (int i = 0; i < MTEVendingMachine.INPUT_SLOTS; i++) {
-            ItemStack curStack = this.inputItems.getStackInSlot(i);
-            inputSlots[i] = curStack == null ? null : curStack.copy();
-        }
-
         Wallet wallet = TradeManager.INSTANCE.getWallet(tradeRequest.playerID, tradeRequest.walletMode);
-        Wallet newWallet = Wallet.copyOf(wallet);
+        if (wallet == null) return false;
 
-        Map<CurrencyType, Integer> remaining = new HashMap<>();
-        newWallet.performTrade(trade.fromCurrency)
-            .forEach(ci -> {
-                if (ci.value > 0) {
-                    remaining.put(ci.type, ci.value);
-                }
-            });
-
-        boolean success = true;
+        // successWallet is only committed if the trade goes through
+        Wallet successWallet = Wallet.copyOf(wallet);
         Map<MTEVendingUplinkHatch, List<CurrencyItem>> pulledCoins = new HashMap<>();
         Map<MTEVendingUplinkHatch, List<CurrencyItem>> changeCoins = new HashMap<>();
-        Set<IGrid> visited = new HashSet<>();
-        for (MTEVendingUplinkHatch hatch : uplinkHatches) {
-            IGrid currentGrid = hatch.getGridNode(ForgeDirection.UNKNOWN)
-                .getGrid();
-            if (!visited.contains(currentGrid)) {
-                List<CurrencyItem> pulled = hatch.performTrade(remaining);
-                pulledCoins.put(hatch, pulled);
 
-                List<CurrencyItem> change = new ArrayList<>();
-                for (CurrencyItem pulledCurrency : pulled) {
-                    if (pulledCurrency.value - remaining.get(pulledCurrency.type) > 0) {
-                        change.add(
-                            new CurrencyItem(
-                                pulledCurrency.type,
-                                pulledCurrency.value - remaining.get(pulledCurrency.type)));
-                    }
-                    remaining.put(pulledCurrency.type, remaining.get(pulledCurrency.type) - pulledCurrency.value);
-                }
-                changeCoins.put(hatch, change);
-
-                visited.add(currentGrid);
-            }
-        }
-        for (Map.Entry<CurrencyType, Integer> entry : remaining.entrySet()) {
-            if (entry.getValue() > 0) {
-                success = false;
-                break;
-            }
-        }
-
-        if (!success) {
-            pulledCoins.forEach((hatch, ciList) -> { ciList.forEach(hatch::injectCoins); });
+        if (!extractCoinsFromWalletAndME(wallet, trade, successWallet, pulledCoins, changeCoins)) {
+            depositCoins(pulledCoins);
             return false;
         }
 
-        wallet.resetAllCount();
-        wallet.merge(newWallet);
-        changeCoins.forEach((hatch, ciList) -> { ciList.forEach(hatch::injectCoins); });
-
-        TradeManager.INSTANCE.saveTeamData(tradeRequest.playerID);
+        final ItemStack[] inputSlots = getCopyOfInputSlotItems();
 
         for (BigItemStack stack : trade.fromItems) {
-            ItemStack requiredStack = stack.getBaseStack();
-            int requiredAmount = stack.stackSize;
-            // Remove items from last stacks if possible (exact matches)
-            for (int i = MTEVendingMachine.INPUT_SLOTS - 1; i >= 0 && requiredAmount > 0; i--) {
-                if (inputSlots[i] == null) {
-                    continue;
-                }
-                if (requiredStack.isItemEqual(inputSlots[i])) {
-                    if (requiredAmount >= inputSlots[i].stackSize) {
-                        requiredAmount -= inputSlots[i].stackSize;
-                        inputSlots[i] = null;
-                    } else {
-                        inputSlots[i].stackSize -= requiredAmount;
-                        requiredAmount = 0;
-                    }
-                }
-            }
-            // Remove items from last stacks if possible (oredict matches)
-            if (requiredAmount > 0 && stack.hasOreDict()) {
-                String ore = stack.getOreDict();
-                for (int i = MTEVendingMachine.INPUT_SLOTS - 1; i >= 0 && requiredAmount > 0; i--) {
-                    if (inputSlots[i] == null) {
-                        continue;
-                    }
-                    if (
-                        IntStream.of(OreDictionary.getOreIDs(inputSlots[i]))
-                            .mapToObj(OreDictionary::getOreName)
-                            .anyMatch(s -> s.equals(ore))
-                    ) {
-                        if (
-                            requiredStack.isItemStackDamageable()
-                                && requiredStack.getItemDamage() != inputSlots[i].getItemDamage()
-                        ) {
-                            continue;
-                        }
-                        if (requiredAmount >= inputSlots[i].stackSize) {
-                            requiredAmount -= inputSlots[i].stackSize;
-                            inputSlots[i] = null;
-                        } else {
-                            inputSlots[i].stackSize -= requiredAmount;
-                            requiredAmount = 0;
-                        }
-                    }
-                }
-            }
-
-            requiredStack.stackSize = requiredAmount;
-            if (
-                requiredAmount > 0
-                    && !fetchItemFromAE(requiredStack, false, stack.hasOreDict() ? stack.getOreDict() : null)
-            ) {
+            if (!extractItemStackFromInputsAndME(stack, inputSlots)) {
+                depositCoins(pulledCoins);
                 return false;
             }
         }
+
+        wallet.resetAllCount();
+        wallet.merge(successWallet);
+        depositCoins(changeCoins);
+        TradeManager.INSTANCE.saveTeamData(tradeRequest.playerID);
 
         for (int i = 0; i < MTEVendingMachine.INPUT_SLOTS; i++) {
             this.inputItems.setStackInSlot(i, inputSlots[i]);
@@ -408,10 +319,124 @@ public class MTEVendingMachine extends MTEMultiBlockBase
             tradeRequest.playerID,
             TradeDatabase.INSTANCE.getTradeGroups()
                 .get(tradeRequest.tradeGroup));
+
         this.sendTradeUpdate();
         this.markDirty();
         playSoundEffect("vendingmachine:item_drop");
         return true;
+    }
+
+    private void depositCoins(Map<MTEVendingUplinkHatch, List<CurrencyItem>> depositMap) {
+        depositMap.forEach((hatch, ciList) -> { ciList.forEach(hatch::injectCoins); });
+    }
+
+    private boolean extractItemStackFromInputsAndME(BigItemStack stack, ItemStack[] inputSlots) {
+        ItemStack requiredStack = stack.getBaseStack();
+        int requiredAmount = stack.stackSize;
+        // Remove items from last stacks if possible (exact matches)
+        requiredAmount = fetchItemFromInputSlots(inputSlots, requiredAmount, requiredStack, null);
+        // Remove items from last stacks if possible (oredict matches)
+
+        if (requiredAmount > 0 && stack.hasOreDict()) {
+            requiredAmount = fetchItemFromInputSlots(
+                inputSlots,
+                requiredAmount,
+                requiredStack,
+                stack.hasOreDict() ? stack.getOreDict() : null);
+        }
+
+        requiredStack.stackSize = requiredAmount;
+        return requiredAmount <= 0
+            || fetchItemFromAE(requiredStack, false, stack.hasOreDict() ? stack.getOreDict() : null);
+    }
+
+    private static int fetchItemFromInputSlots(ItemStack[] inputSlots, int requiredAmount, ItemStack requiredStack,
+        @Nullable String oreDict) {
+        for (int i = MTEVendingMachine.INPUT_SLOTS - 1; i >= 0 && requiredAmount > 0; i--) {
+            if (inputSlots[i] == null) continue;
+            if (
+                oreDict == null && requiredStack.isItemEqual(inputSlots[i])
+                    || IntStream.of(OreDictionary.getOreIDs(inputSlots[i]))
+                        .mapToObj(OreDictionary::getOreName)
+                        .anyMatch(s -> s.equals(oreDict))
+            ) {
+
+                if (
+                    requiredStack.isItemStackDamageable()
+                        && requiredStack.getItemDamage() != inputSlots[i].getItemDamage()
+                ) {
+                    continue;
+                }
+
+                if (requiredAmount >= inputSlots[i].stackSize) {
+                    requiredAmount -= inputSlots[i].stackSize;
+                    inputSlots[i] = null;
+                } else {
+                    inputSlots[i].stackSize -= requiredAmount;
+                    requiredAmount = 0;
+                }
+            }
+        }
+        return requiredAmount;
+    }
+
+    private boolean extractCoinsFromWalletAndME(Wallet wallet, Trade trade, Wallet successWallet,
+        Map<MTEVendingUplinkHatch, List<CurrencyItem>> pulledCoins,
+        Map<MTEVendingUplinkHatch, List<CurrencyItem>> changeCoins) {
+        Wallet newWallet = Wallet.copyOf(wallet);
+
+        Map<CurrencyType, Integer> remaining = new HashMap<>();
+        newWallet.performTrade(trade.fromCurrency)
+            .forEach(ci -> {
+                if (ci.value > 0) {
+                    remaining.put(ci.type, ci.value);
+                }
+            });
+
+        if (remaining.isEmpty()) return true;
+
+        Set<IGrid> visited = new HashSet<>();
+        for (MTEVendingUplinkHatch hatch : uplinkHatches) {
+            IGrid currentGrid = hatch.getGridNode(ForgeDirection.UNKNOWN)
+                .getGrid();
+            if (!visited.contains(currentGrid)) {
+                executeMECoinPull(hatch, remaining, pulledCoins, changeCoins);
+                visited.add(currentGrid);
+            }
+        }
+        for (Map.Entry<CurrencyType, Integer> entry : remaining.entrySet()) {
+            if (entry.getValue() > 0) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static void executeMECoinPull(MTEVendingUplinkHatch hatch, Map<CurrencyType, Integer> remaining,
+        Map<MTEVendingUplinkHatch, List<CurrencyItem>> pulledCoins,
+        Map<MTEVendingUplinkHatch, List<CurrencyItem>> changeCoins) {
+        List<CurrencyItem> pulled = hatch.performTrade(remaining);
+        pulledCoins.put(hatch, pulled);
+
+        List<CurrencyItem> change = new ArrayList<>();
+        for (CurrencyItem pulledCurrency : pulled) {
+            if (pulledCurrency.value - remaining.get(pulledCurrency.type) > 0) {
+                change.add(
+                    new CurrencyItem(pulledCurrency.type, pulledCurrency.value - remaining.get(pulledCurrency.type)));
+            }
+            remaining.put(pulledCurrency.type, remaining.get(pulledCurrency.type) - pulledCurrency.value);
+        }
+        changeCoins.put(hatch, change);
+    }
+
+    private ItemStack @NotNull [] getCopyOfInputSlotItems() {
+        ItemStack[] inputSlots = new ItemStack[MTEVendingMachine.INPUT_SLOTS];
+        for (int i = 0; i < MTEVendingMachine.INPUT_SLOTS; i++) {
+            ItemStack curStack = this.inputItems.getStackInSlot(i);
+            inputSlots[i] = curStack == null ? null : curStack.copy();
+        }
+        return inputSlots;
     }
 
     /**
