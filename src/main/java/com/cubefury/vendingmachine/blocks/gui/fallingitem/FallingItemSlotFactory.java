@@ -2,9 +2,8 @@ package com.cubefury.vendingmachine.blocks.gui.fallingitem;
 
 import static com.cubefury.vendingmachine.blocks.MTEVendingMachine.OUTPUT_SLOTS;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
-import java.util.stream.Collectors;
 
 import com.cleanroommc.modularui.animation.Animator;
 import com.cleanroommc.modularui.animation.MutableObjectAnimator;
@@ -25,10 +24,13 @@ public class FallingItemSlotFactory {
     private final int fallDistance;
 
     static {
-        Random random = new Random(OUTPUT_SLOTS);
-        OUTPUT_SLOT_X_POSITIONS = random.ints(OUTPUT_SLOTS, 0, MAX_X_POS)
-            .boxed()
-            .collect(Collectors.toList());
+        // Golden ratio conjugate: each new slot fills the largest remaining gap, giving even coverage with a non-linear
+        // appearance.
+        final double phi = (Math.sqrt(5) - 1) / 2.0;
+        OUTPUT_SLOT_X_POSITIONS = new ArrayList<>(OUTPUT_SLOTS);
+        for (int i = 0; i < OUTPUT_SLOTS; i++) {
+            OUTPUT_SLOT_X_POSITIONS.add((int) ((i * phi % 1.0) * MAX_X_POS));
+        }
     }
 
     public FallingItemSlotFactory(ItemStackHandler outputItems, int fallDistance) {
