@@ -15,14 +15,13 @@ import static net.minecraft.util.StatCollector.translateToLocal;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.function.Consumer;
 import java.util.stream.IntStream;
 
 import net.minecraft.entity.item.EntityItem;
@@ -40,8 +39,8 @@ import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.oredict.OreDictionary;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.lwjgl.input.Keyboard;
 
 import com.cleanroommc.modularui.utils.item.ItemStackHandler;
@@ -53,11 +52,10 @@ import com.cubefury.vendingmachine.blocks.gui.WalletMode;
 import com.cubefury.vendingmachine.network.handlers.NetTradeDisplaySync;
 import com.cubefury.vendingmachine.network.handlers.NetTradeRequestSync;
 import com.cubefury.vendingmachine.trade.CurrencyItem;
-import com.cubefury.vendingmachine.trade.CurrencyType;
-import com.cubefury.vendingmachine.trade.Trade;
 import com.cubefury.vendingmachine.trade.TradeDatabase;
 import com.cubefury.vendingmachine.trade.TradeManager;
 import com.cubefury.vendingmachine.trade.TradeRequest;
+import com.cubefury.vendingmachine.trade.Transaction;
 import com.cubefury.vendingmachine.util.BigItemStack;
 import com.cubefury.vendingmachine.util.OverlayHelper;
 import com.cubefury.vendingmachine.util.Translator;
@@ -71,7 +69,7 @@ import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
 import com.gtnewhorizon.structurelib.structure.IStructureDefinition;
 import com.gtnewhorizon.structurelib.structure.ISurvivalBuildEnvironment;
 
-import appeng.api.networking.IGrid;
+import appeng.api.storage.data.IAEItemStack;
 import gregtech.api.GregTechAPI;
 import gregtech.api.covers.CoverRegistry;
 import gregtech.api.enums.Textures;
@@ -108,7 +106,7 @@ public class MTEVendingMachine extends MTEMultiBlockBase
                 ofBlock(GregTechAPI.sBlockCasings11, 0)))
         .build();
 
-    private final ArrayList<MTEVendingUplinkHatch> uplinkHatches = new ArrayList<>();
+    private MTEVendingUplinkHatch uplinkHatch = null;
     private final Wallet meCoinWallet = new Wallet();
 
     public static final int INPUT_SLOTS = 8;
@@ -257,60 +255,27 @@ public class MTEVendingMachine extends MTEMultiBlockBase
         this.markDirty();
     }
 
-    private boolean processTradeOnServer(TradeRequest tradeRequest) {
-        if (
-            tradeRequest == null || !TradeManager.INSTANCE.canExecuteTrade(
-                tradeRequest.playerID,
-                TradeDatabase.INSTANCE.getTradeGroupFromId(tradeRequest.tradeGroup))
-        ) {
-            return false;
+    public void executeOnMeUplinkHatchIfPresent(Consumer<MTEVendingUplinkHatch> consumer) {
+        if (this.uplinkHatch != null) {
+            consumer.accept(uplinkHatch);
         }
+    }
+
+    private boolean processTradeOnServer(TradeRequest tradeRequest) {
+        if (tradeRequest == null) return false;
+
         this.refreshInputSlotCache();
 
-        Trade trade = TradeDatabase.INSTANCE.getTradeGroupFromId(tradeRequest.tradeGroup)
-            .getTrades()
-            .get(tradeRequest.tradeGroupOrder);
+        Transaction tx = new Transaction(this, tradeRequest);
+        if (!tx.validate()) return false;
 
-        if (
-            !this.inputCurrencySatisfied(trade.fromCurrency, tradeRequest.playerID, tradeRequest.walletMode)
-                || !this.inputItemsSatisfied(trade.fromItems)
-                || !this.inputItemsSatisfied(trade.nonConsumedItems)
-        ) {
-            return false;
-        }
-
-        Wallet wallet = TradeManager.INSTANCE.getWallet(tradeRequest.playerID, tradeRequest.walletMode);
-        if (wallet == null) return false;
-
-        // successWallet is only committed if the trade goes through
-        Wallet successWallet = Wallet.copyOf(wallet);
-        Map<MTEVendingUplinkHatch, List<CurrencyItem>> pulledCoins = new HashMap<>();
-        Map<MTEVendingUplinkHatch, List<CurrencyItem>> changeCoins = new HashMap<>();
-
-        if (!extractCoinsFromWalletAndME(wallet, trade, successWallet, pulledCoins, changeCoins)) {
-            depositCoins(pulledCoins);
-            return false;
-        }
-
-        final ItemStack[] inputSlots = getCopyOfInputSlotItems();
-
-        for (BigItemStack stack : trade.fromItems) {
-            if (!extractItemStackFromInputsAndME(stack, inputSlots)) {
-                depositCoins(pulledCoins);
-                return false;
+        tx.commit(updatedSlots -> {
+            for (int i = 0; i < MTEVendingMachine.INPUT_SLOTS; i++) {
+                this.inputItems.setStackInSlot(i, updatedSlots[i]);
             }
-        }
+        });
 
-        wallet.resetAllCount();
-        wallet.merge(successWallet);
-        depositCoins(changeCoins);
-        TradeManager.INSTANCE.saveTeamData(tradeRequest.playerID);
-
-        for (int i = 0; i < MTEVendingMachine.INPUT_SLOTS; i++) {
-            this.inputItems.setStackInSlot(i, inputSlots[i]);
-        }
-
-        for (BigItemStack toItem : trade.toItems) {
+        for (BigItemStack toItem : tx.getTrade().toItems) {
             if (toItem == null) continue;
             this.outputBuffer.addAll(toItem.getCombinedStacks());
             this.newBufferedOutputs = true;
@@ -326,111 +291,7 @@ public class MTEVendingMachine extends MTEMultiBlockBase
         return true;
     }
 
-    private void depositCoins(Map<MTEVendingUplinkHatch, List<CurrencyItem>> depositMap) {
-        depositMap.forEach((hatch, ciList) -> { ciList.forEach(hatch::injectCoins); });
-    }
-
-    private boolean extractItemStackFromInputsAndME(BigItemStack stack, ItemStack[] inputSlots) {
-        ItemStack requiredStack = stack.getBaseStack();
-        int requiredAmount = stack.stackSize;
-        // Remove items from last stacks if possible (exact matches)
-        requiredAmount = fetchItemFromInputSlots(inputSlots, requiredAmount, requiredStack, null);
-        // Remove items from last stacks if possible (oredict matches)
-
-        if (requiredAmount > 0 && stack.hasOreDict()) {
-            requiredAmount = fetchItemFromInputSlots(
-                inputSlots,
-                requiredAmount,
-                requiredStack,
-                stack.hasOreDict() ? stack.getOreDict() : null);
-        }
-
-        requiredStack.stackSize = requiredAmount;
-        return requiredAmount <= 0
-            || fetchItemFromAE(requiredStack, false, stack.hasOreDict() ? stack.getOreDict() : null);
-    }
-
-    private static int fetchItemFromInputSlots(ItemStack[] inputSlots, int requiredAmount, ItemStack requiredStack,
-        @Nullable String oreDict) {
-        for (int i = MTEVendingMachine.INPUT_SLOTS - 1; i >= 0 && requiredAmount > 0; i--) {
-            if (inputSlots[i] == null) continue;
-            if (
-                oreDict == null && requiredStack.isItemEqual(inputSlots[i])
-                    || IntStream.of(OreDictionary.getOreIDs(inputSlots[i]))
-                        .mapToObj(OreDictionary::getOreName)
-                        .anyMatch(s -> s.equals(oreDict))
-            ) {
-
-                if (
-                    requiredStack.isItemStackDamageable()
-                        && requiredStack.getItemDamage() != inputSlots[i].getItemDamage()
-                ) {
-                    continue;
-                }
-
-                if (requiredAmount >= inputSlots[i].stackSize) {
-                    requiredAmount -= inputSlots[i].stackSize;
-                    inputSlots[i] = null;
-                } else {
-                    inputSlots[i].stackSize -= requiredAmount;
-                    requiredAmount = 0;
-                }
-            }
-        }
-        return requiredAmount;
-    }
-
-    private boolean extractCoinsFromWalletAndME(Wallet wallet, Trade trade, Wallet successWallet,
-        Map<MTEVendingUplinkHatch, List<CurrencyItem>> pulledCoins,
-        Map<MTEVendingUplinkHatch, List<CurrencyItem>> changeCoins) {
-        Wallet newWallet = Wallet.copyOf(wallet);
-
-        Map<CurrencyType, Integer> remaining = new HashMap<>();
-        newWallet.performTrade(trade.fromCurrency)
-            .forEach(ci -> {
-                if (ci.value > 0) {
-                    remaining.put(ci.type, ci.value);
-                }
-            });
-
-        if (remaining.isEmpty()) return true;
-
-        Set<IGrid> visited = new HashSet<>();
-        for (MTEVendingUplinkHatch hatch : uplinkHatches) {
-            IGrid currentGrid = hatch.getGridNode(ForgeDirection.UNKNOWN)
-                .getGrid();
-            if (!visited.contains(currentGrid)) {
-                executeMECoinPull(hatch, remaining, pulledCoins, changeCoins);
-                visited.add(currentGrid);
-            }
-        }
-        for (Map.Entry<CurrencyType, Integer> entry : remaining.entrySet()) {
-            if (entry.getValue() > 0) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    private static void executeMECoinPull(MTEVendingUplinkHatch hatch, Map<CurrencyType, Integer> remaining,
-        Map<MTEVendingUplinkHatch, List<CurrencyItem>> pulledCoins,
-        Map<MTEVendingUplinkHatch, List<CurrencyItem>> changeCoins) {
-        List<CurrencyItem> pulled = hatch.performTrade(remaining);
-        pulledCoins.put(hatch, pulled);
-
-        List<CurrencyItem> change = new ArrayList<>();
-        for (CurrencyItem pulledCurrency : pulled) {
-            if (pulledCurrency.value - remaining.get(pulledCurrency.type) > 0) {
-                change.add(
-                    new CurrencyItem(pulledCurrency.type, pulledCurrency.value - remaining.get(pulledCurrency.type)));
-            }
-            remaining.put(pulledCurrency.type, remaining.get(pulledCurrency.type) - pulledCurrency.value);
-        }
-        changeCoins.put(hatch, change);
-    }
-
-    private ItemStack @NotNull [] getCopyOfInputSlotItems() {
+    public ItemStack @NotNull [] getCopyOfInputSlotItems() {
         ItemStack[] inputSlots = new ItemStack[MTEVendingMachine.INPUT_SLOTS];
         for (int i = 0; i < MTEVendingMachine.INPUT_SLOTS; i++) {
             ItemStack curStack = this.inputItems.getStackInSlot(i);
@@ -473,13 +334,12 @@ public class MTEVendingMachine extends MTEMultiBlockBase
         }
     }
 
-    public boolean fetchItemFromAE(ItemStack requiredStack, boolean simulate, String ore) {
-        for (MTEVendingUplinkHatch hatch : this.uplinkHatches) {
-            if (hatch.removeItem(requiredStack, simulate, ore)) {
-                return true;
-            }
-        }
-        return false;
+    public boolean trackedFetchItemStackFromAE(ItemStack requiredStack, boolean simulate, String ore,
+        Consumer<Pair<MTEVendingUplinkHatch, IAEItemStack>> pullTracker) {
+        if (requiredStack.stackSize == 0) return true;
+        executeOnMeUplinkHatchIfPresent(
+            hatch -> { requiredStack.stackSize = hatch.removeItem(requiredStack, simulate, ore, pullTracker); });
+        return requiredStack.stackSize == 0;
     }
 
     @Override
@@ -698,7 +558,7 @@ public class MTEVendingMachine extends MTEMultiBlockBase
             VendingMachine.LOG.warn("Check machine failed as Base MTE is null");
             return false;
         }
-        this.uplinkHatches.clear();
+        this.uplinkHatch = null;
         return STRUCTURE_DEFINITION.check(
             this,
             "main",
@@ -731,19 +591,7 @@ public class MTEVendingMachine extends MTEMultiBlockBase
                 && this.ticksSinceTradeUpdate++ >= VMConfig.vendingMachineSettings.gui_refresh_interval
         ) {
             meCoinWallet.resetAllCount();
-
-            // Deduplicating currency if there are multiple
-            // hatches connected to the same network. Won't catch subnets though.
-            Set<IGrid> visited = new HashSet<>();
-            this.uplinkHatches.forEach(hatch -> {
-                IGrid currentGrid = hatch.getGridNode(ForgeDirection.UNKNOWN)
-                    .getGrid();
-                if (!visited.contains(currentGrid)) {
-                    hatch.updateCurrencyInto(meCoinWallet);
-                    visited.add(currentGrid);
-                }
-            });
-
+            executeOnMeUplinkHatchIfPresent(hatch -> hatch.updateCurrencyInto(meCoinWallet));
             this.sendTradeUpdate();
         }
     }
@@ -771,6 +619,16 @@ public class MTEVendingMachine extends MTEMultiBlockBase
         this.inputSlotCache = items;
     }
 
+    public static boolean matchItem(ItemStack base, ItemStack candidate, String oreDict) {
+        if (oreDict == null) return base.isItemEqual(candidate);
+        if (
+            IntStream.of(OreDictionary.getOreIDs(candidate))
+                .mapToObj(OreDictionary::getOreName)
+                .noneMatch(s -> s.equals(oreDict))
+        ) return false;
+        return !base.isItemStackDamageable() || base.getItemDamage() == candidate.getItemDamage();
+    }
+
     public boolean inputItemsSatisfied(List<BigItemStack> fromItems) {
         for (BigItemStack bis : fromItems) {
             BigItemStack base = bis.copy();
@@ -789,20 +647,12 @@ public class MTEVendingMachine extends MTEMultiBlockBase
                 String ore = bis.getOreDict();
                 for (Map.Entry<BigItemStack, Integer> item : this.inputSlotCache.entrySet()) {
                     if (
-                        IntStream.of(
-                            OreDictionary.getOreIDs(
-                                item.getKey()
-                                    .getBaseStack()))
-                            .mapToObj(OreDictionary::getOreName)
-                            .anyMatch(s -> s.equals(ore))
+                        matchItem(
+                            aeStackSearch,
+                            item.getKey()
+                                .getBaseStack(),
+                            ore)
                     ) {
-                        if (
-                            aeStackSearch.isItemStackDamageable() && aeStackSearch.getItemDamage() != item.getKey()
-                                .getBaseStack()
-                                .getItemDamage()
-                        ) {
-                            continue;
-                        }
                         aeStackSearch.stackSize = Math.max(aeStackSearch.stackSize - item.getValue(), 0);
                     }
                 }
@@ -810,7 +660,13 @@ public class MTEVendingMachine extends MTEMultiBlockBase
             if (aeStackSearch.stackSize == 0) {
                 continue;
             }
-            if (!this.fetchItemFromAE(aeStackSearch, true, hasOreDict ? bis.getOreDict() : null)) {
+            if (
+                !this.trackedFetchItemStackFromAE(
+                    aeStackSearch,
+                    true,
+                    hasOreDict ? bis.getOreDict() : null,
+                    fetchedStack -> {})
+            ) {
                 return false;
             }
         }
@@ -969,20 +825,19 @@ public class MTEVendingMachine extends MTEMultiBlockBase
     }
 
     private boolean addUplinkHatch(IGregTechTileEntity aBaseMetaTileEntity, int aBaseCasingIndex) {
+        if (this.uplinkHatch != null) return false;
         if (aBaseMetaTileEntity == null) return false;
         IMetaTileEntity aMetaTileEntity = aBaseMetaTileEntity.getMetaTileEntity();
         if (aMetaTileEntity == null) return false;
         if (!(aMetaTileEntity instanceof MTEVendingUplinkHatch uplinkHatch)) return false;
         uplinkHatch.updateTexture(aBaseCasingIndex);
         uplinkHatch.updateCraftingIcon(uplinkHatch.getMachineCraftingIcon());
-        this.uplinkHatches.add(uplinkHatch);
+        this.uplinkHatch = uplinkHatch;
         return true;
     }
 
     public void refreshMeItemCache() {
-        for (MTEVendingUplinkHatch hatch : this.uplinkHatches) {
-            hatch.refreshStorageContents();
-        }
+        if (this.uplinkHatch != null) this.uplinkHatch.refreshStorageContents();
     }
 
     @Override

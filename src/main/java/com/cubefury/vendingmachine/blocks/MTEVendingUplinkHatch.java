@@ -10,13 +10,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.IntStream;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ChatComponentTranslation;
 import net.minecraftforge.common.util.ForgeDirection;
-import net.minecraftforge.oredict.OreDictionary;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -55,7 +56,7 @@ public class MTEVendingUplinkHatch extends MTEHatch implements IGridProxyable, I
     protected AENetworkProxy gridProxy = null;
     protected boolean additionalConnection = false;
     private IItemList<IAEItemStack> cachedItems;
-    private Wallet pendingCoinInject = new Wallet();
+    private final LinkedList<IAEItemStack> pendingItemInject = new LinkedList<>();
     private long lastOutputTick = 0;
 
     public static final int mTier = 3;
@@ -171,45 +172,66 @@ public class MTEVendingUplinkHatch extends MTEHatch implements IGridProxyable, I
                 baseMetaTileEntity.setActive(isActive());
             }
             if (tick - lastOutputTick > 40) {
-                flushCoins(tick);
+                flushInjectBuffer(tick);
             }
         }
         super.onPostTick(baseMetaTileEntity, tick);
     }
 
-    private void flushCoins(long tick) {
+    private Function<IAEItemStack, IAEItemStack> getAENetworkInserter() {
         AENetworkProxy proxy = getProxy();
-        if (!proxy.isActive()) return;
+        if (!proxy.isActive()) return null;
         try {
-            final IEnergySource energy = proxy.getEnergy();
+            IEnergySource energy = proxy.getEnergy();
             IStorageGrid storage = accessStorage();
-            if (storage == null) return;
-
+            if (storage == null) return null;
             MachineSource source = new MachineSource(this);
-            Wallet remainingWallet = new Wallet();
-            pendingCoinInject.getCurrencies()
-                .forEach(((type, amount) -> {
-                    if (amount == 0) return;
-                    for (ItemStack coinStack : new CurrencyItem(type, amount).itemize()) {
-                        IAEItemStack remain = Platform
-                            .poweredInsert(energy, storage.getItemInventory(), AEItemStack.create(coinStack), source);
-                        if (remain != null) {
-                            CurrencyItem remainingCoins = CurrencyItem.fromItemStack(remain.getItemStack());
-                            if (remainingCoins != null && remainingCoins.value > 0) {
-                                remainingWallet.addCount(type, remainingCoins.value);
-                            }
-                        }
-                    }
-                }));
-            pendingCoinInject.resetAllCount();
-            pendingCoinInject.merge(remainingWallet);
-        } catch (final GridAccessException ignored) {}
+            return stack -> Platform.poweredInsert(energy, storage.getItemInventory(), stack, source);
+        } catch (final GridAccessException ignored) {
+            return null;
+        }
+    }
+
+    private static List<IAEItemStack> toAEStacks(List<ItemStack> stacks) {
+        return stacks.stream()
+            .map(AEItemStack::create)
+            .collect(Collectors.toList());
+    }
+
+    private void flushInjectBuffer(long tick) {
+        Function<IAEItemStack, IAEItemStack> networkInserter = getAENetworkInserter();
+        if (networkInserter == null) return;
+        while (!pendingItemInject.isEmpty()) {
+            IAEItemStack remain = networkInserter.apply(pendingItemInject.removeFirst());
+            if (remain != null) {
+                pendingItemInject.addFirst(remain);
+                break;
+            }
+            pendingItemInject.remove(0);
+        }
         lastOutputTick = tick;
+
     }
 
     public void injectCoins(CurrencyItem ci) {
-        VendingMachine.LOG.info("Injected {} {} coins", ci.value, ci.type);
-        pendingCoinInject.addCount(ci.type, ci.value);
+        if (ci.value == 0) return;
+        injectItems(toAEStacks(ci.itemize()));
+    }
+
+    public void injectItems(List<IAEItemStack> stackList) {
+        stackList.forEach(stack -> {
+            for (IAEItemStack existing : pendingItemInject) {
+                if (
+                    existing.getItem()
+                        .equals(stack.getItem())
+                        && ItemStack.areItemStackTagsEqual(existing.getItemStack(), stack.getItemStack())
+                ) {
+                    existing.setStackSize(existing.getStackSize() + stack.getStackSize());
+                    return;
+                }
+            }
+            pendingItemInject.addLast(stack);
+        });
     }
 
     private void updateValidGridProxySides() {
@@ -282,7 +304,7 @@ public class MTEVendingUplinkHatch extends MTEHatch implements IGridProxyable, I
 
                 int coinValue = candidate.getLeft();
                 stack.stackSize = Math.min(stack.stackSize, valueLeft / coinValue + (amount % coinValue == 0 ? 0 : 1));
-                if (removeItem(stack, false, null)) {
+                if (removeItem(stack, false, null, tracker -> {}) == 0) {
                     valueLeft -= coinValue * stack.stackSize;
                     if (extracted.containsKey(type)) {
                         extracted.put(type, extracted.get(type) + stack.stackSize * coinValue);
@@ -300,70 +322,43 @@ public class MTEVendingUplinkHatch extends MTEHatch implements IGridProxyable, I
         return consumedItems;
     }
 
-    public boolean removeItem(ItemStack remove, boolean simulate, String ore) {
-        if (remove == null || remove.stackSize <= 0) return true;
+    public int removeItem(ItemStack remove, boolean simulate, String ore,
+        Consumer<Pair<MTEVendingUplinkHatch, IAEItemStack>> pullTracker) {
+        if (remove == null || remove.stackSize == 0) return 0;
         IStorageGrid storage = accessStorage();
-        if (storage == null) return false;
+        if (storage == null) return remove.stackSize;
 
         MachineSource source = new MachineSource(this);
 
-        // shortcut for exact item matches to save compute for majority of trades
-        if (!remove.isItemStackDamageable() && ore == null) {
+        int remain = remove.stackSize;
+        // Skip this branch if itemstack is damageable because AE's extractItems doesn't work for those
+        if (!remove.isItemStackDamageable()) {
             IAEItemStack stack = storage.getItemInventory()
                 .extractItems(AEItemStack.create(remove), simulate ? Actionable.SIMULATE : Actionable.MODULATE, source);
-            return stack != null && stack.getStackSize() >= remove.stackSize;
+            if (stack != null) remain -= (int) stack.getStackSize();
+            if (!simulate) pullTracker.accept(new ImmutablePair<>(this, stack));
         }
 
-        if (cachedItems == null) {
-            return false;
-        }
+        if (ore == null) return remain;
 
-        List<IAEItemStack> modulateList = new LinkedList<>();
+        if (cachedItems == null) return remove.stackSize;
 
-        long remain = remove.stackSize;
         for (IAEItemStack stack : cachedItems) {
-            if (
-                ore == null && stack.getItem() != remove.getItem()
-                    || ore != null && IntStream.of(OreDictionary.getOreIDs(stack.getItemStack()))
-                        .mapToObj(OreDictionary::getOreName)
-                        .noneMatch(s -> s.equals(ore))
-            ) {
-                continue;
-            }
-
-            if (remove.isItemStackDamageable() && stack.getItemDamage() != remove.getItemDamage()) {
-                continue;
-            }
+            if (!MTEVendingMachine.matchItem(remove, stack.getItemStack(), ore)) continue;
 
             IAEItemStack copy = stack.copy();
             copy.setStackSize(Math.min(stack.getStackSize(), remain));
-            if (
-                storage.getItemInventory()
-                    .extractItems(copy, Actionable.SIMULATE, source) == null
-            ) {
-                continue;
-            }
-            remain -= copy.getStackSize();
 
-            if (stack.getItem() == remove.getItem()) {
-                modulateList.add(0, copy);
-            } else {
-                modulateList.add(copy);
-            }
+            IAEItemStack removed = storage.getItemInventory()
+                .extractItems(copy, simulate ? Actionable.SIMULATE : Actionable.MODULATE, source);
+            if (removed == null) continue;
+            if (!simulate) pullTracker.accept(new ImmutablePair<>(this, removed));
+            remain -= (int) copy.getStackSize();
 
-            if (remain <= 0) {
-                break;
-            }
+            if (remain == 0) break;
         }
 
-        if (simulate || remain > 0) {
-            return remain <= 0;
-        }
+        return remain;
 
-        for (IAEItemStack modulate : modulateList) {
-            storage.getItemInventory()
-                .extractItems(modulate, Actionable.MODULATE, source);
-        }
-        return true;
     }
 }
