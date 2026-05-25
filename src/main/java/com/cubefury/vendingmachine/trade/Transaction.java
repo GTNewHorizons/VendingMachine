@@ -72,7 +72,7 @@ public class Transaction {
     }
 
     private void depositCoins(Map<MTEVendingUplinkHatch, List<CurrencyItem>> depositMap) {
-        depositMap.forEach((hatch, ciList) -> { ciList.forEach(hatch::injectCoins); });
+        depositMap.forEach((hatch, ciList) -> ciList.forEach(hatch::injectCoins));
     }
 
     private void depositPulledItems() {
@@ -87,7 +87,7 @@ public class Transaction {
         vm.executeOnMeUplinkHatchIfPresent(hatch -> this.executeTrackedMECoinPull(hatch, remaining));
         return remaining.values()
             .stream()
-            .anyMatch(v -> v > 0);
+            .allMatch(v -> v <= 0);
     }
 
     private void executeTrackedMECoinPull(MTEVendingUplinkHatch hatch, Map<CurrencyType, Integer> remaining) {
