@@ -255,10 +255,7 @@ public class MTEVendingUplinkHatch extends MTEHatch implements IGridProxyable, I
     private IStorageGrid accessStorage() {
         try {
             return getProxy().getStorage();
-        } catch (GridAccessException gae) {
-            VendingMachine.LOG.warn("Could not access storage: ", gae);
-            gae.printStackTrace();
-        }
+        } catch (GridAccessException ignored) {}
         return null;
     }
 
