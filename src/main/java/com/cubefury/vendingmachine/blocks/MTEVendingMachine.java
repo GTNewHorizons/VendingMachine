@@ -39,7 +39,6 @@ import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.oredict.OreDictionary;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.input.Keyboard;
 
@@ -335,10 +334,10 @@ public class MTEVendingMachine extends MTEMultiBlockBase
     }
 
     public boolean trackedFetchItemStackFromAE(ItemStack requiredStack, boolean simulate, String ore,
-        Consumer<Pair<MTEVendingUplinkHatch, IAEItemStack>> pullTracker) {
+        Consumer<IAEItemStack> pulledStackTracker) {
         if (requiredStack.stackSize == 0) return true;
         executeOnMeUplinkHatchIfPresent(
-            hatch -> { requiredStack.stackSize = hatch.removeItem(requiredStack, simulate, ore, pullTracker); });
+            hatch -> { requiredStack.stackSize = hatch.removeItem(requiredStack, simulate, ore, pulledStackTracker); });
         return requiredStack.stackSize == 0;
     }
 

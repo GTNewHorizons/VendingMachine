@@ -25,9 +25,9 @@ public class Transaction {
 
     private final Wallet preWallet;
     private final Wallet postWallet;
-    private final Map<MTEVendingUplinkHatch, List<CurrencyItem>> pulledCoins = new HashMap<>();
-    private final Map<MTEVendingUplinkHatch, List<CurrencyItem>> changeCoins = new HashMap<>();
-    private final Map<MTEVendingUplinkHatch, List<IAEItemStack>> pulledStacks = new HashMap<>();
+    private final List<CurrencyItem> pulledCoins = new ArrayList<>();
+    private final List<CurrencyItem> changeCoins = new ArrayList<>();
+    private final List<IAEItemStack> pulledStacks = new ArrayList<>();
     private final ItemStack[] postInputSlots;
 
     public Transaction(MTEVendingMachine vm, TradeRequest tradeRequest) {
@@ -71,12 +71,12 @@ public class Transaction {
         return true;
     }
 
-    private void depositCoins(Map<MTEVendingUplinkHatch, List<CurrencyItem>> depositMap) {
-        depositMap.forEach((hatch, ciList) -> ciList.forEach(hatch::injectCoins));
+    private void depositCoins(List<CurrencyItem> deposit) {
+        deposit.forEach(ci -> vm.executeOnMeUplinkHatchIfPresent(hatch -> hatch.injectCoins(ci)));
     }
 
     private void depositPulledItems() {
-        pulledStacks.forEach(MTEVendingUplinkHatch::injectItems);
+        vm.executeOnMeUplinkHatchIfPresent(hatch -> hatch.injectItems(pulledStacks));
     }
 
     private boolean trackedExtractCoinsFromWalletAndME() {
@@ -92,7 +92,7 @@ public class Transaction {
 
     private void executeTrackedMECoinPull(MTEVendingUplinkHatch hatch, Map<CurrencyType, Integer> remaining) {
         List<CurrencyItem> pulled = hatch.performTrade(remaining);
-        pulledCoins.put(hatch, pulled);
+        pulledCoins.addAll(pulled);
 
         List<CurrencyItem> change = new ArrayList<>();
         for (CurrencyItem pulledCurrency : pulled) {
@@ -102,7 +102,7 @@ public class Transaction {
             }
             remaining.put(pulledCurrency.type, remaining.get(pulledCurrency.type) - pulledCurrency.value);
         }
-        changeCoins.put(hatch, change);
+        changeCoins.addAll(change);
     }
 
     private boolean trackedExtractItemStackFromInputsAndME(BigItemStack stack) {
@@ -118,26 +118,18 @@ public class Transaction {
             requiredStack,
             false,
             stack.hasOreDict() ? stack.getOreDict() : null,
-            tracker -> {
-                if (tracker.getLeft() == null || tracker.getRight() == null) return;
-                this.pulledStacks.putIfAbsent(tracker.getLeft(), new ArrayList<>());
-                for (IAEItemStack existingStack : this.pulledStacks.get(tracker.getLeft())) {
+            aePulledStack -> {
+                if (aePulledStack == null) return;
+                for (IAEItemStack existingStack : this.pulledStacks) {
                     if (
                         existingStack.getItem()
-                            .equals(
-                                tracker.getRight()
-                                    .getItem())
+                            .equals(aePulledStack.getItem())
                     ) {
-                        existingStack.setStackSize(
-                            existingStack.getStackSize() + tracker.getRight()
-                                .getStackSize());
+                        existingStack.setStackSize(existingStack.getStackSize() + aePulledStack.getStackSize());
                         return;
                     }
                 }
-                this.pulledStacks.get(tracker.getLeft())
-                    .add(
-                        tracker.getRight()
-                            .copy());
+                this.pulledStacks.add(aePulledStack.copy());
             });
     }
 

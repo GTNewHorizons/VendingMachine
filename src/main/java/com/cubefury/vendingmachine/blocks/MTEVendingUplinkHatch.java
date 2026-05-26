@@ -317,8 +317,7 @@ public class MTEVendingUplinkHatch extends MTEHatch implements IGridProxyable, I
         return consumedItems;
     }
 
-    public int removeItem(ItemStack remove, boolean simulate, String ore,
-        Consumer<Pair<MTEVendingUplinkHatch, IAEItemStack>> pullTracker) {
+    public int removeItem(ItemStack remove, boolean simulate, String ore, Consumer<IAEItemStack> pulledStackTracker) {
         if (remove == null || remove.stackSize == 0) return 0;
         IStorageGrid storage = accessStorage();
         if (storage == null) return remove.stackSize;
@@ -331,12 +330,10 @@ public class MTEVendingUplinkHatch extends MTEHatch implements IGridProxyable, I
             IAEItemStack stack = storage.getItemInventory()
                 .extractItems(AEItemStack.create(remove), simulate ? Actionable.SIMULATE : Actionable.MODULATE, source);
             if (stack != null) remain -= (int) stack.getStackSize();
-            if (!simulate) pullTracker.accept(new ImmutablePair<>(this, stack));
+            if (!simulate) pulledStackTracker.accept(stack);
         }
 
-        if (ore == null) return remain;
-
-        if (cachedItems == null) return remove.stackSize;
+        if (remain == 0 || ore == null || cachedItems == null) return remain;
 
         for (IAEItemStack stack : cachedItems) {
             if (!MTEVendingMachine.matchItem(remove, stack.getItemStack(), ore)) continue;
@@ -347,7 +344,7 @@ public class MTEVendingUplinkHatch extends MTEHatch implements IGridProxyable, I
             IAEItemStack removed = storage.getItemInventory()
                 .extractItems(copy, simulate ? Actionable.SIMULATE : Actionable.MODULATE, source);
             if (removed == null) continue;
-            if (!simulate) pullTracker.accept(new ImmutablePair<>(this, removed));
+            if (!simulate) pulledStackTracker.accept(removed);
             remain -= (int) copy.getStackSize();
 
             if (remain == 0) break;
