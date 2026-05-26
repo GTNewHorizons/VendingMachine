@@ -22,7 +22,6 @@ import net.minecraftforge.common.util.ForgeDirection;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
-import com.cubefury.vendingmachine.VendingMachine;
 import com.cubefury.vendingmachine.items.VMItems;
 import com.cubefury.vendingmachine.trade.CurrencyItem;
 import com.cubefury.vendingmachine.trade.CurrencyType;
@@ -207,7 +206,6 @@ public class MTEVendingUplinkHatch extends MTEHatch implements IGridProxyable, I
                 pendingItemInject.addFirst(remain);
                 break;
             }
-            pendingItemInject.remove(0);
         }
         lastOutputTick = tick;
 
