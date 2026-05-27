@@ -123,6 +123,12 @@ public final class GuiTextures {
         .name("background_input")
         .build();
 
+    public static final UITexture DISPENSER_BACKGROUND = UITexture.builder()
+        .location(VendingMachine.MODID, "gui/background/dispenser_background")
+        .canApplyTheme()
+        .name("background_dispenser_background")
+        .build();
+
     public static final UITexture DISPENSER_OVERHANG = UITexture.builder()
         .location(VendingMachine.MODID, "gui/background/dispenser_overhang")
         .canApplyTheme()

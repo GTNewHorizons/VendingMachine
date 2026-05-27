@@ -1,7 +1,7 @@
 package com.cubefury.vendingmachine.blocks.gui;
 
-import static com.cleanroommc.modularui.drawable.GuiTextures.SLOT_ITEM;
 import static com.cubefury.vendingmachine.blocks.MTEVendingMachine.OUTPUT_SLOTS;
+import static com.cubefury.vendingmachine.gui.GuiTextures.DISPENSER_BACKGROUND;
 import static com.cubefury.vendingmachine.gui.GuiTextures.DISPENSER_OVERHANG;
 
 import java.util.ArrayList;
@@ -549,7 +549,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
             .fullWidth()
             .marginLeft(5)
             .marginRight(4)
-            .background(SLOT_ITEM)
+            .background(DISPENSER_BACKGROUND)
             .child(getFillPlayerInventoryButton());
         addAllItemSlotsAsChildren(parentWidget);
         // Adding this at the end so it displays over the item slots
