@@ -8,54 +8,34 @@
       }
     ]
   },
-  "coin_drop_1": {
+  "coin_drop": {
     "category": "block",
     "sounds": [
       {
         "name": "vendingmachine:coin_drop_1",
         "stream": false
-      }
-    ]
-  },
-  "coin_drop_2": {
-    "category": "block",
-    "sounds": [
+      },
       {
         "name": "vendingmachine:coin_drop_2",
         "stream": false
-      }
-    ]
-  },
-  "coin_drop_3": {
-    "category": "block",
-    "sounds": [
+      },
       {
         "name": "vendingmachine:coin_drop_3",
         "stream": false
       }
     ]
   },
-  "coin_insert_1": {
+  "coin_insert": {
     "category": "block",
     "sounds": [
       {
         "name": "vendingmachine:coin_insert_1",
         "stream": false
-      }
-    ]
-  },
-  "coin_insert_2": {
-    "category": "block",
-    "sounds": [
+      },
       {
         "name": "vendingmachine:coin_insert_2",
         "stream": false
-      }
-    ]
-  },
-  "coin_insert_3": {
-    "category": "block",
-    "sounds": [
+      },
       {
         "name": "vendingmachine:coin_insert_3",
         "stream": false

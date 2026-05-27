@@ -128,6 +128,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
 
     private static final int COIN_COLUMN_WIDTH = 40;
     private static final int COIN_COLUMN_ROW_COUNT = 4;
+    private static final String COIN_INSERT_SOUND = "vendingmachine:coin_insert";
 
     public MTEVendingMachineGui(MTEVendingMachine base) {
         super(base);
@@ -522,7 +523,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
 
     private void insertCoin(UUID playerId, CurrencyItem currencyItem, @NotNull Wallet wallet) {
         wallet.addCount(currencyItem.type, currencyItem.value);
-        base.playSoundEffect(MTEVendingMachine.getRandomCoinInsertSound());
+        base.playSoundEffect(COIN_INSERT_SOUND);
         TradeManager.INSTANCE.saveTeamData(playerId);
     }
 

@@ -58,7 +58,6 @@ import com.cubefury.vendingmachine.util.BigItemStack;
 import com.cubefury.vendingmachine.util.OverlayHelper;
 import com.cubefury.vendingmachine.util.Translator;
 import com.cubefury.vendingmachine.util.Wallet;
-import com.google.common.collect.ImmutableList;
 import com.gtnewhorizon.structurelib.StructureLibAPI;
 import com.gtnewhorizon.structurelib.alignment.IAlignment;
 import com.gtnewhorizon.structurelib.alignment.IAlignmentLimits;
@@ -120,10 +119,8 @@ public class MTEVendingMachine extends MTEMultiBlockBase
         .addIcon(VM_MACHINE_FRONT_ON_GLOW)
         .glow()
         .build() };
-    private static final ImmutableList<String> COIN_INSERT_SOUND_EFFECTS = ImmutableList
-        .of("vendingmachine:coin_insert_1", "vendingmachine:coin_insert_2", "vendingmachine:coin_insert_3");
-    private static final ImmutableList<String> COIN_DROP_SOUND_EFFECTS = ImmutableList
-        .of("vendingmachine:coin_drop_1", "vendingmachine:coin_drop_2", "vendingmachine:coin_drop_3");
+    private static final String COIN_DROP_SOUND = "vendingmachine:coin_drop";
+    private static final String ITEM_DROP_SOUND = "vendingmachine:item_drop";
 
     protected final List<RenderOverlay.OverlayTicket> overlayTickets = new ArrayList<>();
 
@@ -154,18 +151,6 @@ public class MTEVendingMachine extends MTEMultiBlockBase
     protected MTEVendingMachine(String aName) {
         super(aName);
         this.mIsAnimated = true;
-    }
-
-    public static String getRandomCoinInsertSound() {
-        return getRandomSoundFromList(COIN_INSERT_SOUND_EFFECTS);
-    }
-
-    public static String getRandomCoinDropSound() {
-        return getRandomSoundFromList(COIN_DROP_SOUND_EFFECTS);
-    }
-
-    private static String getRandomSoundFromList(List<String> coinInsertSoundEffects) {
-        return coinInsertSoundEffects.get((int) (Math.random() * coinInsertSoundEffects.size()));
     }
 
     @Override
@@ -271,7 +256,7 @@ public class MTEVendingMachine extends MTEMultiBlockBase
     }
 
     private static @NotNull String getSoundForDispensedItemstack(@NotNull ItemStack itemStack) {
-        return CurrencyItem.fromItemStack(itemStack) != null ? getRandomCoinDropSound() : "vendingmachine:item_drop";
+        return CurrencyItem.fromItemStack(itemStack) != null ? COIN_DROP_SOUND : ITEM_DROP_SOUND;
     }
 
     private boolean processTradeOnServer(TradeRequest tradeRequest) {
