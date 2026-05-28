@@ -694,9 +694,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
                             cur.cooldownText))
                         .style(IKey.DARK_AQUA));
                 builder.addLine(
-                    IKey.str(
-                            Translator.translate(
-                                "vendingmachine.gui.trades_scale_tooltip"))
+                    IKey.str(Translator.translate("vendingmachine.gui.trades_scale_tooltip"))
                         .style(IKey.DARK_AQUA));
                 builder.emptyLine();
             }
