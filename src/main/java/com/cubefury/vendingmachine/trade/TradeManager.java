@@ -138,9 +138,10 @@ public class TradeManager {
         if (player == null) return 0;
         Team team = TeamManager.getTeamByPlayer(player);
         if (team == null) return 0;
-        int teamSize = team.getMembers()
-            .size();
-        return VMConfig.team.maxTradeLimit < 1 ? teamSize : Math.min(VMConfig.team.maxTradeLimit, teamSize);
+
+        int[] count = {0};
+        TeamManager.forEachOnlineTeamMember(team, $ -> count[0]++);
+        return VMConfig.team.maxTradeLimit < 1 ? count[0] : Math.min(VMConfig.team.maxTradeLimit, count[0]);
     }
 
     public void setTradeState(@Nonnull UUID player, TradeGroup tg, TradeHistory history) {

@@ -693,6 +693,11 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
                                 : "vendingmachine.gui.cooldown_idle_tooltip",
                             cur.cooldownText))
                         .style(IKey.DARK_AQUA));
+                builder.addLine(
+                    IKey.str(
+                            Translator.translate(
+                                "vendingmachine.gui.trades_scale_tooltip"))
+                        .style(IKey.DARK_AQUA));
                 builder.emptyLine();
             }
 
