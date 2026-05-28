@@ -3,24 +3,37 @@ package com.cubefury.vendingmachine.blocks;
 import static com.cubefury.vendingmachine.api.enums.Textures.VUPLINK_OVERLAY_ACTIVE;
 import static com.cubefury.vendingmachine.api.enums.Textures.VUPLINK_OVERLAY_INACTIVE;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.IntStream;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ChatComponentTranslation;
 import net.minecraftforge.common.util.ForgeDirection;
-import net.minecraftforge.oredict.OreDictionary;
 
-import com.cubefury.vendingmachine.VendingMachine;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
+
 import com.cubefury.vendingmachine.items.VMItems;
+import com.cubefury.vendingmachine.trade.CurrencyItem;
+import com.cubefury.vendingmachine.trade.CurrencyType;
+import com.cubefury.vendingmachine.trade.Transaction;
+import com.cubefury.vendingmachine.util.BigItemStack;
+import com.cubefury.vendingmachine.util.Wallet;
 
 import appeng.api.config.Actionable;
 import appeng.api.implementations.IPowerChannelState;
 import appeng.api.networking.GridFlags;
 import appeng.api.networking.IGridNode;
+import appeng.api.networking.energy.IEnergySource;
 import appeng.api.networking.security.IActionHost;
 import appeng.api.networking.security.MachineSource;
 import appeng.api.networking.storage.IStorageGrid;
@@ -31,6 +44,7 @@ import appeng.api.util.DimensionalCoord;
 import appeng.me.GridAccessException;
 import appeng.me.helpers.AENetworkProxy;
 import appeng.me.helpers.IGridProxyable;
+import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
 import gregtech.api.interfaces.ITexture;
 import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
@@ -43,6 +57,10 @@ public class MTEVendingUplinkHatch extends MTEHatch implements IGridProxyable, I
     protected AENetworkProxy gridProxy = null;
     protected boolean additionalConnection = false;
     private IItemList<IAEItemStack> cachedItems;
+    private final LinkedList<IAEItemStack> pendingItemInject = new LinkedList<>();
+    private long lastOutputTick = 0;
+    private final Wallet meWallet = new Wallet();
+    private boolean refreshCache = true;
 
     public static final int mTier = 3;
 
@@ -152,10 +170,80 @@ public class MTEVendingUplinkHatch extends MTEHatch implements IGridProxyable, I
 
     @Override
     public void onPostTick(IGregTechTileEntity baseMetaTileEntity, long tick) {
-        if (baseMetaTileEntity.isServerSide() && tick % 20 == 0) {
-            baseMetaTileEntity.setActive(isActive());
+        if (baseMetaTileEntity.isServerSide()) {
+            if (tick % 20 == 0) {
+                baseMetaTileEntity.setActive(isActive());
+                if (refreshCache) {
+                    refreshStorageCache();
+                    meWallet.resetAllCount();
+                    updateCurrencyInto(meWallet);
+                    refreshCache = false;
+                }
+            }
+            if (tick - lastOutputTick > 40) {
+                flushInjectBuffer(tick);
+            }
         }
         super.onPostTick(baseMetaTileEntity, tick);
+    }
+
+    public void setRefreshCache() {
+        refreshCache = true;
+    }
+
+    private Function<IAEItemStack, IAEItemStack> getAENetworkInserter() {
+        AENetworkProxy proxy = getProxy();
+        if (!proxy.isActive()) return null;
+        try {
+            IEnergySource energy = proxy.getEnergy();
+            IStorageGrid storage = accessStorage();
+            if (storage == null) return null;
+            MachineSource source = new MachineSource(this);
+            return stack -> Platform.poweredInsert(energy, storage.getItemInventory(), stack, source);
+        } catch (final GridAccessException ignored) {
+            return null;
+        }
+    }
+
+    private static List<IAEItemStack> toAEStacks(List<ItemStack> stacks) {
+        return stacks.stream()
+            .map(AEItemStack::create)
+            .collect(Collectors.toList());
+    }
+
+    private void flushInjectBuffer(long tick) {
+        Function<IAEItemStack, IAEItemStack> networkInserter = getAENetworkInserter();
+        if (networkInserter == null) return;
+        while (!pendingItemInject.isEmpty()) {
+            IAEItemStack remain = networkInserter.apply(pendingItemInject.removeFirst());
+            if (remain != null) {
+                pendingItemInject.addFirst(remain);
+                break;
+            }
+        }
+        lastOutputTick = tick;
+
+    }
+
+    public void injectCoins(CurrencyItem ci) {
+        if (ci.value == 0) return;
+        injectItems(toAEStacks(ci.itemize()));
+    }
+
+    public void injectItems(List<IAEItemStack> stackList) {
+        stackList.forEach(stack -> {
+            for (IAEItemStack existing : pendingItemInject) {
+                if (
+                    existing.getItem()
+                        .equals(stack.getItem())
+                        && ItemStack.areItemStackTagsEqual(existing.getItemStack(), stack.getItemStack())
+                ) {
+                    existing.setStackSize(existing.getStackSize() + stack.getStackSize());
+                    return;
+                }
+            }
+            pendingItemInject.addLast(stack);
+        });
     }
 
     private void updateValidGridProxySides() {
@@ -179,14 +267,11 @@ public class MTEVendingUplinkHatch extends MTEHatch implements IGridProxyable, I
     private IStorageGrid accessStorage() {
         try {
             return getProxy().getStorage();
-        } catch (GridAccessException gae) {
-            VendingMachine.LOG.warn("Could not access storage: ", gae);
-            gae.printStackTrace();
-        }
+        } catch (GridAccessException ignored) {}
         return null;
     }
 
-    public void refreshStorageContents() {
+    public void refreshStorageCache() {
         IStorageGrid storage = accessStorage();
         if (storage == null) return;
 
@@ -194,70 +279,106 @@ public class MTEVendingUplinkHatch extends MTEHatch implements IGridProxyable, I
             .getStorageList();
     }
 
-    public boolean removeItem(ItemStack remove, boolean simulate, String ore) {
-        if (remove == null || remove.stackSize <= 0) return true;
+    public void updateCurrencyInto(Wallet wallet) {
+        if (cachedItems == null) return;
+        for (IAEItemStack aeStack : cachedItems) {
+            CurrencyItem ci = CurrencyItem.fromItemStack(aeStack.getItemStack());
+            if (ci == null) continue;
+            wallet.addCount(ci.type, ci.value);
+        }
+    }
+
+    public boolean executeTrade(List<BigItemStack> nonConsumedItems, List<BigItemStack> fromItems,
+        List<CurrencyItem> fromCurrency, boolean simulate) {
+        Transaction tx = new Transaction(this, nonConsumedItems, fromItems, fromCurrency, simulate);
+        if (!tx.validate()) return false;
+        tx.commit();
+        return true;
+    }
+
+    public boolean checkSufficientCurrency(List<CurrencyItem> currency) {
+        return meWallet.hasEnough(currency);
+    }
+
+    public List<CurrencyItem> removeCoins(Map<CurrencyType, Integer> currencies) {
+        Map<CurrencyType, Integer> extracted = new HashMap<>();
+
+        List<Pair<Integer, IAEItemStack>> candidateStacks = new ArrayList<>();
+        for (IAEItemStack stack : cachedItems) {
+            CurrencyItem curItem = CurrencyItem.fromItemStack(stack.getItemStack());
+            if (curItem == null || !currencies.containsKey(curItem.type)) continue;
+            ItemStack baseItem = stack.getItemStack()
+                .copy();
+            baseItem.stackSize = 1;
+            candidateStacks
+                .add(new ImmutablePair<>(Objects.requireNonNull(CurrencyItem.fromItemStack(baseItem)).value, stack));
+        }
+        candidateStacks.sort(Pair::compareTo);
+
+        currencies.forEach((type, amount) -> {
+            int valueLeft = amount;
+            for (Pair<Integer, IAEItemStack> candidate : candidateStacks) {
+                ItemStack stack = candidate.getRight()
+                    .getItemStack()
+                    .copy();
+                if (!type.isMatchingType(stack)) continue;
+
+                int coinValue = candidate.getLeft();
+                stack.stackSize = Math
+                    .min(stack.stackSize, valueLeft / coinValue + (valueLeft % coinValue == 0 ? 0 : 1));
+                if (removeItem(stack, false, null, tracker -> {}) == 0) {
+                    valueLeft -= coinValue * stack.stackSize;
+                    if (extracted.containsKey(type)) {
+                        extracted.put(type, extracted.get(type) + stack.stackSize * coinValue);
+                    } else {
+                        extracted.put(type, stack.stackSize * coinValue);
+                    }
+                }
+
+                if (valueLeft <= 0) break;
+            }
+        });
+
+        List<CurrencyItem> consumedItems = new ArrayList<>();
+        extracted.forEach((type, value) -> consumedItems.add(new CurrencyItem(type, value)));
+        return consumedItems;
+    }
+
+    public int removeItem(ItemStack remove, boolean simulate, String ore, Consumer<IAEItemStack> pulledStackTracker) {
+        if (remove == null || remove.stackSize == 0) return 0;
         IStorageGrid storage = accessStorage();
-        if (storage == null) return false;
+        if (storage == null) return remove.stackSize;
 
         MachineSource source = new MachineSource(this);
 
-        // shortcut for exact item matches to save compute for majority of trades
-        if (!remove.isItemStackDamageable() && ore == null) {
+        int remain = remove.stackSize;
+        // Skip this branch if itemstack is damageable because AE's extractItems doesn't work for those
+        if (!remove.isItemStackDamageable()) {
             IAEItemStack stack = storage.getItemInventory()
                 .extractItems(AEItemStack.create(remove), simulate ? Actionable.SIMULATE : Actionable.MODULATE, source);
-            return stack != null && stack.getStackSize() >= remove.stackSize;
+            if (stack != null) remain -= (int) stack.getStackSize();
+            if (!simulate) pulledStackTracker.accept(stack);
         }
 
-        if (cachedItems == null) {
-            return false;
-        }
+        if (remain == 0 || ore == null || cachedItems == null) return remain;
 
-        List<IAEItemStack> modulateList = new LinkedList<>();
-
-        long remain = remove.stackSize;
+        // TODO: oredict extract broken - vm.matchItem broken?
         for (IAEItemStack stack : cachedItems) {
-            if (
-                ore == null && stack.getItem() != remove.getItem()
-                    || ore != null && IntStream.of(OreDictionary.getOreIDs(stack.getItemStack()))
-                        .mapToObj(OreDictionary::getOreName)
-                        .noneMatch(s -> s.equals(ore))
-            ) {
-                continue;
-            }
-
-            if (remove.isItemStackDamageable() && stack.getItemDamage() != remove.getItemDamage()) {
-                continue;
-            }
+            if (!MTEVendingMachine.matchItem(remove, stack.getItemStack(), ore)) continue;
 
             IAEItemStack copy = stack.copy();
             copy.setStackSize(Math.min(stack.getStackSize(), remain));
-            if (
-                storage.getItemInventory()
-                    .extractItems(copy, Actionable.SIMULATE, source) == null
-            ) {
-                continue;
-            }
-            remain -= copy.getStackSize();
 
-            if (stack.getItem() == remove.getItem()) {
-                modulateList.add(0, copy);
-            } else {
-                modulateList.add(copy);
-            }
+            IAEItemStack removed = storage.getItemInventory()
+                .extractItems(copy, simulate ? Actionable.SIMULATE : Actionable.MODULATE, source);
+            if (removed == null) continue;
+            if (!simulate) pulledStackTracker.accept(removed);
+            remain -= (int) copy.getStackSize();
 
-            if (remain <= 0) {
-                break;
-            }
+            if (remain == 0) break;
         }
 
-        if (simulate || remain > 0) {
-            return remain <= 0;
-        }
+        return remain;
 
-        for (IAEItemStack modulate : modulateList) {
-            storage.getItemInventory()
-                .extractItems(modulate, Actionable.MODULATE, source);
-        }
-        return true;
     }
 }

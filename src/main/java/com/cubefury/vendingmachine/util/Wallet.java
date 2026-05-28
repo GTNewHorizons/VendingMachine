@@ -1,10 +1,13 @@
 package com.cubefury.vendingmachine.util;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import javax.annotation.Nullable;
 
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -19,21 +22,32 @@ public class Wallet {
     private final Map<CurrencyType, Integer> currencies = new EnumMap<>(CurrencyType.class);
     private final List<NBTTagCompound> invalidCurrency = new ArrayList<>();
 
+    public static Wallet copyOf(@Nullable Wallet wallet) {
+        if (wallet == null) return null;
+
+        Wallet copy = new Wallet();
+        copy.merge(wallet);
+        return copy;
+    }
+
     public boolean hasEnough(List<CurrencyItem> currencyItems) {
         return currencyItems.stream()
             .allMatch(ci -> currencies.getOrDefault(ci.type, 0) >= ci.value);
     }
 
-    public boolean performTrade(List<CurrencyItem> currencyItems) {
+    public List<CurrencyItem> performTrade(List<CurrencyItem> currencyItems) {
         Map<CurrencyType, Integer> newCoinInventory = new EnumMap<>(CurrencyType.class);
+        List<CurrencyItem> remaining = new ArrayList<>();
 
         // Check to make sure we have enough
         for (CurrencyItem ci : currencyItems) {
-            int oldValue = currencies.get(ci.type);
-            if (!currencies.containsKey(ci.type) || oldValue < ci.value) {
-                return false;
+            if (!currencies.containsKey(ci.type)) {
+                remaining.add(new CurrencyItem(ci.type, ci.value));
+            } else if (currencies.get(ci.type) >= ci.value) {
+                newCoinInventory.put(ci.type, currencies.get(ci.type) - ci.value);
             } else {
-                newCoinInventory.put(ci.type, oldValue - ci.value);
+                newCoinInventory.put(ci.type, 0);
+                remaining.add(new CurrencyItem(ci.type, ci.value - currencies.get(ci.type)));
             }
         }
 
@@ -45,13 +59,19 @@ public class Wallet {
                 currencies.put(entry.getKey(), entry.getValue());
             }
         }
-        return true;
+
+        return remaining;
     }
 
     public void merge(Wallet other) {
+        if (other == null) return;
         for (Entry<CurrencyType, Integer> entry : other.currencies.entrySet()) {
             addCount(entry.getKey(), entry.getValue());
         }
+    }
+
+    public Map<CurrencyType, Integer> getCurrencies() {
+        return Collections.unmodifiableMap(currencies);
     }
 
     public int getCount(CurrencyType type) {

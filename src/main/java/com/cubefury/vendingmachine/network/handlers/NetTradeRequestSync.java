@@ -16,7 +16,6 @@ import com.cubefury.vendingmachine.blocks.gui.TradeItemDisplay;
 import com.cubefury.vendingmachine.blocks.gui.WalletMode;
 import com.cubefury.vendingmachine.network.PacketSender;
 import com.cubefury.vendingmachine.network.PacketTypeRegistry;
-import com.cubefury.vendingmachine.storage.NameCache;
 import com.cubefury.vendingmachine.trade.TradeRequest;
 import com.cubefury.vendingmachine.util.NBTConverter;
 
@@ -71,7 +70,6 @@ public class NetTradeRequestSync {
             ((MTEVendingMachine) ((IGregTechTileEntity) te).getMetaTileEntity()).addTradeRequest(
                 new TradeRequest(
                     message.second(),
-                    NameCache.INSTANCE.getUUIDFromPlayer(message.second()),
                     NBTConverter.UuidValueType.TRADEGROUP.readId(message.first()),
                     message.first()
                         .getInteger("tradeGroupOrder"),
