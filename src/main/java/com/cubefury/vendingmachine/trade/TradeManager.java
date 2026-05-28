@@ -139,7 +139,7 @@ public class TradeManager {
         Team team = TeamManager.getTeamByPlayer(player);
         if (team == null) return 0;
 
-        int[] count = {0};
+        int[] count = { 0 };
         TeamManager.forEachOnlineTeamMember(team, $ -> count[0]++);
         return VMConfig.team.maxTradeLimit < 1 ? count[0] : Math.min(VMConfig.team.maxTradeLimit, count[0]);
     }
