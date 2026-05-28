@@ -86,6 +86,7 @@ public final class VMMusicManager {
                         .getSoundHandler();
                     soundHandler
                         .playSound(PositionedSoundRecord.func_147673_a(VMConfig.music.current_track.getSoundLoc()));
+                    running = true;
                 }
             }
             return;
