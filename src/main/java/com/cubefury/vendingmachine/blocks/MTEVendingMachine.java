@@ -41,6 +41,7 @@ import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.oredict.OreDictionary;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.lwjgl.input.Keyboard;
 
 import com.cleanroommc.modularui.utils.item.ItemStackHandler;
@@ -109,7 +110,7 @@ public class MTEVendingMachine extends MTEMultiBlockBase
     private MTEVendingUplinkHatch uplinkHatch = null;
 
     public static final int INPUT_SLOTS = 8;
-    public static final int OUTPUT_SLOTS = 8;
+    public static final int OUTPUT_SLOTS = 100;
 
     public static final int MAX_TRADES = 300;
 
@@ -122,6 +123,9 @@ public class MTEVendingMachine extends MTEMultiBlockBase
         .addIcon(VM_MACHINE_FRONT_ON_GLOW)
         .glow()
         .build() };
+    private static final String COIN_DROP_SOUND = "vendingmachine:coin_drop";
+    private static final String ITEM_DROP_SOUND = "vendingmachine:item_drop";
+
     protected final List<RenderOverlay.OverlayTicket> overlayTickets = new ArrayList<>();
 
     private MultiblockTooltipBuilder tooltipBuilder;
@@ -130,9 +134,9 @@ public class MTEVendingMachine extends MTEMultiBlockBase
 
     private final boolean mIsAnimated;
 
-    public ItemStackHandler inputItems = new ItemStackHandler(INPUT_SLOTS);
-    public ItemStackHandler outputItems = new ItemStackHandler(OUTPUT_SLOTS);
-    public Queue<ItemStack> outputBuffer = new ConcurrentLinkedQueue<>();
+    public final ItemStackHandler inputItems = new ItemStackHandler(INPUT_SLOTS);
+    public final ItemStackHandler outputItems = new ItemStackHandler(OUTPUT_SLOTS);
+    private final Queue<ItemStack> outputBuffer = new ConcurrentLinkedQueue<>();
 
     public final Queue<TradeRequest> pendingTrades = new LinkedBlockingQueue<>();
     private boolean newBufferedOutputs = false;
@@ -194,64 +198,69 @@ public class MTEVendingMachine extends MTEMultiBlockBase
             NetTradeRequestSync.sendAck(tradeRequest.player);
         }
         if (
-            this.newBufferedOutputs || (!this.outputBuffer.isEmpty()
-                && this.ticksSinceOutput % VMConfig.vendingMachineSettings.dispense_frequency == 0)
+            this.newBufferedOutputs
+                || (!this.outputBuffer.isEmpty() && this.ticksSinceOutput % getDispensingDelay() == 0)
         ) {
-            int remainingDispensables = VMConfig.vendingMachineSettings.dispense_amount;
-            while (!this.outputBuffer.isEmpty() && remainingDispensables > 0) {
-                ItemStack next = this.outputBuffer.peek();
-
-                if (next == null) { // impossible, but just in case
-                    this.outputBuffer.poll();
-                } else {
-                    ItemStack nextCopy = next.copy();
-                    nextCopy.stackSize = 1;
-                    for (int i = 0; i < MTEVendingMachine.OUTPUT_SLOTS && remainingDispensables > 0
-                        && next.stackSize > 0; i++) {
-                        // check for existing stacks
-                        ItemStack cur = this.outputItems.getStackInSlot(i);
-                        if (cur != null) {
-                            ItemStack curCopy = cur.copy();
-                            curCopy.stackSize = 1;
-                            if (
-                                ItemStack.areItemStacksEqual(curCopy, nextCopy)
-                                    && ItemStack.areItemStackTagsEqual(curCopy, nextCopy)
-                            ) {
-                                int change = Math.min(
-                                    Math.min(remainingDispensables, curCopy.getMaxStackSize() - cur.stackSize),
-                                    next.stackSize);
-                                cur.stackSize += change;
-                                this.outputItems.setStackInSlot(i, cur);
-                                next.stackSize -= change;
-                                remainingDispensables -= change;
-                            }
-                        }
-                    }
-                    for (int i = 0; i < MTEVendingMachine.OUTPUT_SLOTS && remainingDispensables > 0
-                        && next.stackSize > 0; i++) {
-                        // make new stack
-                        ItemStack cur = this.outputItems.getStackInSlot(i);
-                        if (cur == null) {
-                            int change = Math.min(remainingDispensables, next.stackSize);
-                            ItemStack output = next.copy();
-                            output.stackSize = change;
-                            this.outputItems.setStackInSlot(i, output);
-                            remainingDispensables -= change;
-                            next.stackSize -= change;
-                        }
-                    }
-
-                    if (next.stackSize == 0) {
-                        this.outputBuffer.poll();
-                    } else { // outputs full or dispensed enough items this cycle
-                        break;
-                    }
-                }
-            }
+            dispenseFirstNonNullIem();
+            ticksSinceOutput = 0;
         }
         ticksSinceOutput = this.newBufferedOutputs ? 0 : ticksSinceOutput + 1;
         this.newBufferedOutputs = false;
         this.markDirty();
+    }
+
+    private int getDispensingDelay() {
+        int baseDelay = 10;
+        int queueSize = outputBuffer.size();
+        double acceleration = Math.log(queueSize);
+        if (acceleration < 1) {
+            return baseDelay;
+        }
+        return (int) (baseDelay / acceleration);
+    }
+
+    private void dispenseFirstNonNullIem() {
+        ItemStack dispensableStack = getNextDispensable();
+        if (dispensableStack != null) {
+            int targetSlot = getFirstEmptyOutputSlot();
+            if (targetSlot != -1) {
+                outputIntoSlot(dispensableStack, targetSlot);
+                playSoundEffect(getSoundForDispensedItemstack(dispensableStack));
+                this.outputBuffer.poll();
+            }
+        }
+    }
+
+    private @Nullable ItemStack getNextDispensable() {
+        while (!this.outputBuffer.isEmpty()) {
+            ItemStack next = this.outputBuffer.peek();
+            if (next != null && next.stackSize > 0) {
+                return next;
+            }
+            // impossible, but just in case
+            this.outputBuffer.poll();
+        }
+        return null;
+    }
+
+    private int getFirstEmptyOutputSlot() {
+        for (int i = 0; i < MTEVendingMachine.OUTPUT_SLOTS; i++) {
+            if (this.outputItems.getStackInSlot(i) == null) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private void outputIntoSlot(ItemStack next, int slotIndex) {
+        ItemStack output = next.copy();
+        output.stackSize = next.stackSize;
+        next.stackSize = 0;
+        this.outputItems.setStackInSlot(slotIndex, output);
+    }
+
+    private static @NotNull String getSoundForDispensedItemstack(@NotNull ItemStack itemStack) {
+        return CurrencyItem.fromItemStack(itemStack) != null ? COIN_DROP_SOUND : ITEM_DROP_SOUND;
     }
 
     private boolean processTradeOnServer(TradeRequest tradeRequest) {
@@ -267,15 +276,18 @@ public class MTEVendingMachine extends MTEMultiBlockBase
 
         for (BigItemStack toItem : trade.toItems) {
             if (toItem == null) continue;
-            this.outputBuffer.addAll(toItem.getCombinedStacks());
-            this.newBufferedOutputs = true;
+            dispenseItemStacks(toItem.getCombinedStacks());
         }
         TradeManager.INSTANCE.executeTrade(playerId, tg);
 
         this.sendTradeUpdate();
         this.markDirty();
-        playSoundEffect("vendingmachine:item_drop");
         return true;
+    }
+
+    public void dispenseItemStacks(List<ItemStack> itemStacks) {
+        this.outputBuffer.addAll(itemStacks);
+        this.newBufferedOutputs = true;
     }
 
     public ItemStack @NotNull [] getCopyOfInputSlotItems() {
@@ -297,6 +309,8 @@ public class MTEVendingMachine extends MTEMultiBlockBase
             World world = te.getWorld();
             if (world instanceof WorldServer worldServer) {
                 EntityPlayer player = getCurrentUser();
+                float volume = getRandomVolume();
+                float pitch = getRandomPitch();
                 for (IWorldAccess worldAccess : worldServer.worldAccesses) {
                     worldAccess.playSoundToNearExcept(
                         player,
@@ -304,8 +318,8 @@ public class MTEVendingMachine extends MTEMultiBlockBase
                         te.getXCoord() + 0.5f,
                         te.getYCoord() + 0.5f,
                         te.getZCoord() + 0.5f,
-                        1f,
-                        1f);
+                        volume,
+                        pitch);
                 }
                 if (player instanceof EntityPlayerMP mpPlayer) {
                     S29PacketSoundEffect packet = new S29PacketSoundEffect(
@@ -313,12 +327,20 @@ public class MTEVendingMachine extends MTEMultiBlockBase
                         player.posX,
                         player.posY - player.yOffset,
                         player.posZ,
-                        1f,
-                        1f);
+                        volume,
+                        pitch);
                     mpPlayer.playerNetServerHandler.sendPacket(packet);
                 }
             }
         }
+    }
+
+    private static float getRandomPitch() {
+        return (float) (0.95d + (0.1d * Math.random()));
+    }
+
+    private static float getRandomVolume() {
+        return (float) (0.6d + (0.4d * Math.random()));
     }
 
     @Override
@@ -769,34 +791,6 @@ public class MTEVendingMachine extends MTEMultiBlockBase
         }
     }
 
-    public void spawnItem(ItemStack stack) {
-        if (stack == null || this.getBaseMetaTileEntity() == null) {
-            return;
-        }
-        World world = this.getBaseMetaTileEntity()
-            .getWorld();
-        int posX = this.getBaseMetaTileEntity()
-            .getXCoord();
-        int posY = this.getBaseMetaTileEntity()
-            .getYCoord();
-        int posZ = this.getBaseMetaTileEntity()
-            .getZCoord();
-
-        ForgeDirection frontFacing = this.getBaseMetaTileEntity()
-            .getFrontFacing();
-        final EntityItem itemEntity = new EntityItem(
-            world,
-            posX + 0.5 + frontFacing.offsetX * 0.7,
-            posY + 0.5 + frontFacing.offsetY * 0.7,
-            posZ + 0.5 + frontFacing.offsetZ * 0.7,
-            stack);
-        itemEntity.delayBeforeCanPickup = 0;
-        itemEntity.motionX = 0.1f * frontFacing.offsetX;
-        itemEntity.motionY = 0.1f * frontFacing.offsetY;
-        itemEntity.motionZ = 0.1f * frontFacing.offsetZ;
-        world.spawnEntityInWorld(itemEntity);
-    }
-
     private boolean addUplinkHatch(IGregTechTileEntity aBaseMetaTileEntity, int aBaseCasingIndex) {
         if (this.uplinkHatch != null) return false;
         if (aBaseMetaTileEntity == null) return false;
@@ -807,6 +801,23 @@ public class MTEVendingMachine extends MTEMultiBlockBase
         uplinkHatch.updateCraftingIcon(uplinkHatch.getMachineCraftingIcon());
         this.uplinkHatch = uplinkHatch;
         return true;
+    }
+
+    public void fillPlayerInventoryWithDispensedItems() {
+        EntityPlayer player = getCurrentUser();
+        if (player == null) {
+            return;
+        }
+        for (int i = 0; i < OUTPUT_SLOTS; i++) {
+            ItemStack stack = outputItems.getStackInSlot(i);
+            if (stack == null) continue;
+            ItemStack toAdd = stack.copy();
+            boolean fullyAdded = player.inventory.addItemStackToInventory(toAdd);
+            outputItems.setStackInSlot(i, toAdd.stackSize <= 0 ? null : toAdd);
+            if (!fullyAdded) {
+                break;
+            }
+        }
     }
 
     @Override
