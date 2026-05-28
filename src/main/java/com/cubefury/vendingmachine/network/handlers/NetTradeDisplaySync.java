@@ -123,8 +123,6 @@ public class NetTradeDisplaySync {
     public static void syncTradesToClient(@Nonnull EntityPlayerMP player, MTEVendingMachine base) {
         UUID playerId = NameCache.INSTANCE.getUUIDFromPlayer(player);
         List<TradeGroup> availableGroups = TradeManager.INSTANCE.getAvailableTradeGroups(playerId);
-        base.refreshInputSlotCache();
-        base.refreshMeItemCache();
 
         long currentTimestamp = System.currentTimeMillis();
 
@@ -150,13 +148,8 @@ public class NetTradeDisplaySync {
                 Trade trade = tg.getTrades()
                     .get(i);
 
-                boolean inputItemsSatisfied = base.inputItemsSatisfied(trade.fromItems)
-                    && base.inputItemsSatisfied(trade.nonConsumedItems);
-
-                boolean tradableNowPersonal = inputItemsSatisfied
-                    && base.inputCurrencySatisfied(trade.fromCurrency, playerId, WalletMode.PERSONAL);
-                boolean tradableNowTeam = inputItemsSatisfied
-                    && base.inputCurrencySatisfied(trade.fromCurrency, playerId, WalletMode.TEAM);
+                boolean tradableNowPersonal = base.checkTrade(trade, playerId, WalletMode.PERSONAL, true);
+                boolean tradableNowTeam = base.checkTrade(trade, playerId, WalletMode.TEAM, true);
 
                 trades.appendTag(
                     new Tradable(

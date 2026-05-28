@@ -25,6 +25,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import com.cubefury.vendingmachine.items.VMItems;
 import com.cubefury.vendingmachine.trade.CurrencyItem;
 import com.cubefury.vendingmachine.trade.CurrencyType;
+import com.cubefury.vendingmachine.trade.Transaction;
+import com.cubefury.vendingmachine.util.BigItemStack;
 import com.cubefury.vendingmachine.util.Wallet;
 
 import appeng.api.config.Actionable;
@@ -57,6 +59,8 @@ public class MTEVendingUplinkHatch extends MTEHatch implements IGridProxyable, I
     private IItemList<IAEItemStack> cachedItems;
     private final LinkedList<IAEItemStack> pendingItemInject = new LinkedList<>();
     private long lastOutputTick = 0;
+    private final Wallet meWallet = new Wallet();
+    private boolean refreshCache = true;
 
     public static final int mTier = 3;
 
@@ -169,12 +173,22 @@ public class MTEVendingUplinkHatch extends MTEHatch implements IGridProxyable, I
         if (baseMetaTileEntity.isServerSide()) {
             if (tick % 20 == 0) {
                 baseMetaTileEntity.setActive(isActive());
+                if (refreshCache) {
+                    refreshStorageCache();
+                    meWallet.resetAllCount();
+                    updateCurrencyInto(meWallet);
+                    refreshCache = false;
+                }
             }
             if (tick - lastOutputTick > 40) {
                 flushInjectBuffer(tick);
             }
         }
         super.onPostTick(baseMetaTileEntity, tick);
+    }
+
+    public void setRefreshCache() {
+        refreshCache = true;
     }
 
     private Function<IAEItemStack, IAEItemStack> getAENetworkInserter() {
@@ -257,7 +271,7 @@ public class MTEVendingUplinkHatch extends MTEHatch implements IGridProxyable, I
         return null;
     }
 
-    public void refreshStorageContents() {
+    public void refreshStorageCache() {
         IStorageGrid storage = accessStorage();
         if (storage == null) return;
 
@@ -274,7 +288,19 @@ public class MTEVendingUplinkHatch extends MTEHatch implements IGridProxyable, I
         }
     }
 
-    public List<CurrencyItem> performTrade(Map<CurrencyType, Integer> currencies) {
+    public boolean executeTrade(List<BigItemStack> nonConsumedItems, List<BigItemStack> fromItems,
+        List<CurrencyItem> fromCurrency, boolean simulate) {
+        Transaction tx = new Transaction(this, nonConsumedItems, fromItems, fromCurrency, simulate);
+        if (!tx.validate()) return false;
+        tx.commit();
+        return true;
+    }
+
+    public boolean checkSufficientCurrency(List<CurrencyItem> currency) {
+        return meWallet.hasEnough(currency);
+    }
+
+    public List<CurrencyItem> removeCoins(Map<CurrencyType, Integer> currencies) {
         Map<CurrencyType, Integer> extracted = new HashMap<>();
 
         List<Pair<Integer, IAEItemStack>> candidateStacks = new ArrayList<>();
@@ -298,7 +324,8 @@ public class MTEVendingUplinkHatch extends MTEHatch implements IGridProxyable, I
                 if (!type.isMatchingType(stack)) continue;
 
                 int coinValue = candidate.getLeft();
-                stack.stackSize = Math.min(stack.stackSize, valueLeft / coinValue + (amount % coinValue == 0 ? 0 : 1));
+                stack.stackSize = Math
+                    .min(stack.stackSize, valueLeft / coinValue + (valueLeft % coinValue == 0 ? 0 : 1));
                 if (removeItem(stack, false, null, tracker -> {}) == 0) {
                     valueLeft -= coinValue * stack.stackSize;
                     if (extracted.containsKey(type)) {
@@ -335,6 +362,7 @@ public class MTEVendingUplinkHatch extends MTEHatch implements IGridProxyable, I
 
         if (remain == 0 || ore == null || cachedItems == null) return remain;
 
+        // TODO: oredict extract broken - vm.matchItem broken?
         for (IAEItemStack stack : cachedItems) {
             if (!MTEVendingMachine.matchItem(remove, stack.getItemStack(), ore)) continue;
 

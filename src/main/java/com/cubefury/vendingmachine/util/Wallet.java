@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.annotation.Nullable;
+
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraftforge.common.util.Constants;
@@ -20,7 +22,9 @@ public class Wallet {
     private final Map<CurrencyType, Integer> currencies = new EnumMap<>(CurrencyType.class);
     private final List<NBTTagCompound> invalidCurrency = new ArrayList<>();
 
-    public static Wallet copyOf(Wallet wallet) {
+    public static Wallet copyOf(@Nullable Wallet wallet) {
+        if (wallet == null) return null;
+
         Wallet copy = new Wallet();
         copy.merge(wallet);
         return copy;
