@@ -58,6 +58,7 @@ public class CurrencyItem {
     }
 
     public static CurrencyItem fromItemStack(ItemStack newItem) {
+        if (newItem == null) return null;
         String itemName = Item.itemRegistry.getNameForObject(newItem.getItem());
         for (CurrencyType type : CurrencyType.values()) {
             if (itemName.startsWith(type.itemPrefix)) {

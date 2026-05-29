@@ -6,6 +6,7 @@ import static com.cubefury.vendingmachine.gui.GuiTextures.DISPENSER_OVERHANG;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -16,7 +17,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumChatFormatting;
@@ -63,7 +63,6 @@ import com.cubefury.vendingmachine.blocks.gui.coin.CoinDisplay;
 import com.cubefury.vendingmachine.blocks.gui.fallingitem.FallingItemSlotFactory;
 import com.cubefury.vendingmachine.gui.GuiTextures;
 import com.cubefury.vendingmachine.gui.WidgetThemes;
-import com.cubefury.vendingmachine.network.handlers.NetTradeDisplaySync;
 import com.cubefury.vendingmachine.storage.NameCache;
 import com.cubefury.vendingmachine.trade.CurrencyItem;
 import com.cubefury.vendingmachine.trade.CurrencyType;
@@ -128,6 +127,8 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
     private static final int COIN_COLUMN_WIDTH = 40;
     private static final int COIN_COLUMN_ROW_COUNT = 4;
     private static final String COIN_INSERT_SOUND = "vendingmachine:coin_insert";
+
+    private final List<ItemSlot> inputSlots = new ArrayList<>();
 
     public MTEVendingMachineGui(MTEVendingMachine base) {
         super(base);
@@ -497,9 +498,14 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
 
     private SlotGroupWidget createInputSlots() {
         UUID playerId = NameCache.INSTANCE.getUUIDFromPlayer(getBase().getCurrentUser());
+        this.inputSlots.clear();
         return SlotGroupWidget.builder()
             .matrix("II", "II", "II", "II")
-            .key('I', index -> makeInterceptingSlot(index, playerId))
+            .key('I', index -> {
+                ItemSlot slot = makeInterceptingSlot(index, playerId);
+                inputSlots.add(slot);
+                return slot;
+            })
             .build();
     }
 
@@ -508,41 +514,37 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
         return new ItemSlot().slot(
             slot.slotGroup("inputSlotGroup")
                 .changeListener((newItem, onlyAmountChanged, client, init) -> {
-                    if (client || newItem == null || !base.getActive()) {
+                    if (!base.getActive()) {
                         return;
                     }
                     CurrencyItem currencyItem = CurrencyItem.fromItemStack(newItem);
                     if (currencyItem != null) {
+                        slot.putStack(null);
+                    }
+                    if (client) return;
+                    base.syncTrades = true;
+                    if (currencyItem != null) {
                         Wallet wallet = TradeManager.INSTANCE.getWallet(playerId, walletMode);
                         if (wallet != null) {
                             insertCoin(playerId, currencyItem, wallet);
-                            forceClearSlot(slot);
+                        } else {
+                            base.dispenseItemStacks(Collections.singletonList(newItem));
                         }
+                        forceSyncInputSlots();
                     }
                 }));
+    }
+
+    private void forceSyncInputSlots() {
+        this.inputSlots.forEach(
+            slot -> slot.getSyncHandler()
+                .forceSyncItem());
     }
 
     private void insertCoin(UUID playerId, CurrencyItem currencyItem, @NotNull Wallet wallet) {
         wallet.addCount(currencyItem.type, currencyItem.value);
         base.playSoundEffect(COIN_INSERT_SOUND);
         TradeManager.INSTANCE.saveTeamData(playerId);
-    }
-
-    private void forceClearSlot(ModularSlot slot) {
-        slot.putStack(null);
-        // server-side sync for that input slot
-        // during next tick after any input
-        slot.getSyncHandler()
-            .forceSyncItem();
-        // server side force refresh
-        // Not syncing the trades to client on slot change will cause a short refresh delay, but
-        // might be worth
-        // for huge AE systems
-        NetTradeDisplaySync.syncTradesToClient(
-            (EntityPlayerMP) this.getBase()
-                .getCurrentUser(),
-            this.getBase());
-        base.markDirty();
     }
 
     private IWidget createDispenserChute() {
@@ -886,6 +888,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
         UUID playerId = NameCache.INSTANCE.getUUIDFromPlayer(getBase().getCurrentUser());
         for (CurrencyType type : CurrencyType.values()) {
             IntSyncValue coinAmountSyncer = new IntSyncValue(() -> {
+                if (guiData.isClient()) return 0;
                 Wallet wallet = TradeManager.INSTANCE.getWallet(playerId, walletMode);
                 return wallet == null ? 0 : wallet.getCount(type);
             });
@@ -900,14 +903,14 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
             syncManager.syncValue("ejectCoin_" + type.id, ejectCoinSyncer);
         }
 
-        Team team = TeamManager.getTeamByPlayer(playerId);
-        BooleanSyncValue hasTeamSyncer = new BooleanSyncValue(
+        Team team = this.guiData.isClient() ? null : TeamManager.getTeamByPlayer(playerId);
+        BooleanSyncValue hasTeamSyncer = new BooleanSyncValue(() -> false, val -> {
+            walletButtons.setEnabled(val);
+            if (!val) walletMode = WalletMode.PERSONAL;
+        },
             () -> team != null && (VMConfig.team.soloTeam || team.getMembers()
                 .size() > 1),
-            val -> {
-                walletButtons.setEnabled(val);
-                if (!val) walletMode = WalletMode.PERSONAL;
-            });
+            val -> {});
         syncManager.syncValue("hasTeam", hasTeamSyncer);
 
         // Block modifications from server -> client
