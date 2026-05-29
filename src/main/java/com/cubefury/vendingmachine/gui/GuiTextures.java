@@ -136,9 +136,15 @@ public final class GuiTextures {
         .build();
 
     public static final UITexture EJECT_COINS = UITexture.builder()
-        .location(VendingMachine.MODID, "gui/overlay/coinEject")
+        .location(VendingMachine.MODID, "gui/overlay/coin_return")
         .imageSize(16, 16)
         .name("coin_eject")
+        .build();
+
+    public static final UITexture EJECT_SLOTS = UITexture.builder()
+        .location(VendingMachine.MODID, "gui/overlay/slot_empty")
+        .imageSize(16, 16)
+        .name("slot_empty")
         .build();
 
     public static final TabTexture TAB_LEFT = TabTexture.of(
@@ -162,4 +168,5 @@ public final class GuiTextures {
         .name("filtered_tab")
         .nonOpaque()
         .build();
+
 }

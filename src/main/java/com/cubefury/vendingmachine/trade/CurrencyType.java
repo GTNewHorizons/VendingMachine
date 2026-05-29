@@ -52,7 +52,7 @@ public enum CurrencyType {
     private static UITexture createCoinUITexture(String name, String suffix) {
         return UITexture.builder()
             .location("dreamcraft", "items/itemCoin" + name + suffix)
-            .imageSize(32, 32)
+            .imageSize(16, 16)
             .name("VM_UI_Coin_" + name + suffix)
             .build();
     }
