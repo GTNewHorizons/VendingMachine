@@ -141,6 +141,7 @@ public class MTEVendingMachine extends MTEMultiBlockBase
     private boolean newBufferedOutputs = false;
     private int ticksSinceOutput = 0;
     private int ticksSinceTradeUpdate = 0;
+    public boolean syncTrades = false;
 
     private Map<BigItemStack, Integer> inputSlotCache = new HashMap<>();
 
@@ -587,12 +588,13 @@ public class MTEVendingMachine extends MTEMultiBlockBase
         if (!this.mMachine) return;
         dispenseItems();
         if (
-            this.currentUser != null
-                && this.ticksSinceTradeUpdate++ >= VMConfig.vendingMachineSettings.gui_refresh_interval
+            this.currentUser != null && (this.syncTrades
+                || this.ticksSinceTradeUpdate++ >= VMConfig.vendingMachineSettings.gui_refresh_interval)
         ) {
             if (uplinkHatch != null) uplinkHatch.setRefreshCache();
 
             this.sendTradeUpdate();
+            this.syncTrades = false;
         }
     }
 
@@ -625,8 +627,8 @@ public class MTEVendingMachine extends MTEMultiBlockBase
                     required.stackSize -= slots[i].stackSize;
                     if (!simulate) slots[i] = null;
                 } else {
-                    required.stackSize = 0;
                     if (!simulate) slots[i].stackSize -= required.stackSize;
+                    required.stackSize = 0;
                 }
             }
         }
@@ -672,6 +674,7 @@ public class MTEVendingMachine extends MTEMultiBlockBase
                 extractRequiredStackFromSlots(slots, required, stack.getOreDict(), simulate);
             }
 
+            if (required.stackSize == 0) continue;
             BigItemStack requiredBis = stack.copy();
             requiredBis.stackSize = required.stackSize;
             remain.add(requiredBis);
