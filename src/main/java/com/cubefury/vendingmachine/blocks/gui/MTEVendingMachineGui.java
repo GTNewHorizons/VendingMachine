@@ -227,7 +227,8 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
             .excludeAreaInRecipeViewer()
             .top(1)
             .minElementMargin(1)
-            .coverChildren().grid(
+            .coverChildren()
+            .grid(
                 Arrays.asList(
                     Arrays.asList(
                         volumeButton = new CycleButtonWidget().size(14)
@@ -256,8 +257,8 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
                                         + VMConfig.music.current_track.getLocalizedName());
                                 builder.addLine(
                                     IKey.lang(
-                                            "vendingmachine.gui.volume.tooltip_volume_display",
-                                            VolumeControlGui.getVolumeAsString())
+                                        "vendingmachine.gui.volume.tooltip_volume_display",
+                                        VolumeControlGui.getVolumeAsString())
                                         .style(EnumChatFormatting.GRAY));
                                 builder.addLine(
                                     IKey.lang("vendingmachine.gui.volume.tooltip_open_panel")
