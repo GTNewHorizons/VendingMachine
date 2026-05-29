@@ -80,7 +80,6 @@ import com.gtnewhorizon.gtnhlib.config.ConfigurationManager;
 import com.gtnewhorizon.gtnhlib.teams.Team;
 import com.gtnewhorizon.gtnhlib.teams.TeamManager;
 
-import gregtech.api.modularui2.GTGuiTextures;
 import gregtech.api.modularui2.GTWidgetThemes;
 import gregtech.common.gui.modularui.multiblock.base.MTEMultiBlockBaseGui;
 import gregtech.common.modularui2.widget.SelectButton;
@@ -228,8 +227,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
             .excludeAreaInRecipeViewer()
             .top(1)
             .minElementMargin(1)
-            .coverChildren()
-            .matrix(
+            .coverChildren().grid(
                 Arrays.asList(
                     Arrays.asList(
                         volumeButton = new CycleButtonWidget().size(14)
@@ -258,8 +256,8 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
                                         + VMConfig.music.current_track.getLocalizedName());
                                 builder.addLine(
                                     IKey.lang(
-                                        "vendingmachine.gui.volume.tooltip_volume_display",
-                                        VolumeControlGui.getVolumeAsString())
+                                            "vendingmachine.gui.volume.tooltip_volume_display",
+                                            VolumeControlGui.getVolumeAsString())
                                         .style(EnumChatFormatting.GRAY));
                                 builder.addLine(
                                     IKey.lang("vendingmachine.gui.volume.tooltip_open_panel")
@@ -472,14 +470,16 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
                     .child(
                         Flow.row()
                             .child(
-                                new ToggleButton().overlay(GTGuiTextures.OVERLAY_BUTTON_CYCLIC)
+                                new ToggleButton().overlay(
+                                    GuiTextures.EJECT_SLOTS.asIcon()
+                                        .size(16))
                                     .tooltipBuilder(t -> t.addLine(IKey.lang("vendingmachine.gui.item_eject")))
                                     .syncHandler("ejectItems")
                                     .right(6))
                             .child(
                                 new ToggleButton().overlay(
                                     GuiTextures.EJECT_COINS.asIcon()
-                                        .size(14))
+                                        .size(16))
                                     .tooltipBuilder(t -> t.addLine(IKey.lang("vendingmachine.gui.coin_eject")))
                                     .playClickSound(false)
                                     .syncHandler("ejectCoins")
