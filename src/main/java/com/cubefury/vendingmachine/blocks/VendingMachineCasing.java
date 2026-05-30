@@ -2,9 +2,10 @@ package com.cubefury.vendingmachine.blocks;
 
 import net.minecraft.util.IIcon;
 
+import com.cubefury.vendingmachine.api.enums.Textures;
+
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import gregtech.api.enums.Textures;
 import gregtech.common.blocks.BlockCasingsAbstract;
 import gregtech.common.blocks.ItemCasings;
 import gregtech.common.blocks.MaterialCasings;
@@ -16,13 +17,8 @@ public class VendingMachineCasing extends BlockCasingsAbstract {
     }
 
     @Override
-    public int getTextureIndex(int aMeta) {
-        return (16 << 7) | (aMeta + 64);
-    }
-
-    @Override
     @SideOnly(Side.CLIENT)
     public IIcon getIcon(int side, int meta) {
-        return Textures.BlockIcons.MACHINE_CASING_ITEM_PIPE_TIN.getIcon();
+        return Textures.VM_CASING.getIcon();
     }
 }

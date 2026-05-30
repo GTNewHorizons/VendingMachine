@@ -5,8 +5,8 @@ import gregtech.api.interfaces.IIconContainer;
 
 public class Textures {
 
-    public static final IIconContainer VM_MACHINE_FRONT_OFF = BlockIcons
-        .custom("vendingmachine:vending_machine_front_off"),
+    public static final IIconContainer VM_CASING = BlockIcons.custom("vendingmachine:vending_machine_casing"),
+        VM_MACHINE_FRONT_OFF = BlockIcons.custom("vendingmachine:vending_machine_front_off"),
         VM_MACHINE_FRONT_ON = BlockIcons.custom("vendingmachine:vending_machine_front_on"),
         VM_MACHINE_FRONT_ON_GLOW = BlockIcons.custom("vendingmachine:vending_machine_front_on_glow"),
 
