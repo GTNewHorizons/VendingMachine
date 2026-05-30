@@ -70,7 +70,6 @@ import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
 import com.gtnewhorizon.structurelib.structure.IStructureDefinition;
 import com.gtnewhorizon.structurelib.structure.ISurvivalBuildEnvironment;
 
-import gregtech.api.GregTechAPI;
 import gregtech.api.covers.CoverRegistry;
 import gregtech.api.enums.Textures;
 import gregtech.api.interfaces.IIconContainer;
@@ -84,7 +83,6 @@ import gregtech.api.render.TextureFactory;
 import gregtech.api.util.GTUtil;
 import gregtech.api.util.GTUtility;
 import gregtech.api.util.MultiblockTooltipBuilder;
-import gregtech.common.blocks.BlockCasings11;
 import mcp.mobius.waila.api.IWailaConfigHandler;
 import mcp.mobius.waila.api.IWailaDataAccessor;
 
@@ -99,11 +97,11 @@ public class MTEVendingMachine extends MTEMultiBlockBase
             ofChain(
                 ofHatchAdderOptional(
                     MTEVendingMachine::addUplinkHatch,
-                    ((BlockCasings11) GregTechAPI.sBlockCasings11).getTextureIndex(0),
+                    VendingMachineBlocks.casingBlock.getTextureIndex(0),
                     1,
-                    GregTechAPI.sBlockCasings11,
+                    VendingMachineBlocks.casingBlock,
                     0),
-                ofBlock(GregTechAPI.sBlockCasings11, 0)))
+                ofBlock(VendingMachineBlocks.casingBlock, 0)))
         .build();
 
     private MTEVendingUplinkHatch uplinkHatch = null;
