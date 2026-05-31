@@ -46,6 +46,7 @@ import org.lwjgl.input.Keyboard;
 import com.cleanroommc.modularui.utils.item.ItemStackHandler;
 import com.cubefury.vendingmachine.VMConfig;
 import com.cubefury.vendingmachine.VendingMachine;
+import com.cubefury.vendingmachine.api.enums.Textures;
 import com.cubefury.vendingmachine.blocks.gui.MTEVendingMachineGui;
 import com.cubefury.vendingmachine.blocks.gui.TradeItemDisplay;
 import com.cubefury.vendingmachine.blocks.gui.WalletMode;
@@ -71,7 +72,6 @@ import com.gtnewhorizon.structurelib.structure.IStructureDefinition;
 import com.gtnewhorizon.structurelib.structure.ISurvivalBuildEnvironment;
 
 import gregtech.api.covers.CoverRegistry;
-import gregtech.api.enums.Textures;
 import gregtech.api.interfaces.IIconContainer;
 import gregtech.api.interfaces.ISecondaryDescribable;
 import gregtech.api.interfaces.ITexture;
@@ -113,8 +113,7 @@ public class MTEVendingMachine extends MTEMultiBlockBase
 
     public static final int STRUCTURE_CHECK_TICKS = 20;
 
-    private static final ITexture[] FACING_SIDE = {
-        TextureFactory.of(Textures.BlockIcons.MACHINE_CASING_ITEM_PIPE_TIN) };
+    private static final ITexture[] FACING_SIDE = { TextureFactory.of(Textures.VM_CASING) };
     private static final ITexture[] FACING_FRONT = { TextureFactory.of(VM_MACHINE_FRONT_OFF) };
     private static final ITexture[] FACING_ACTIVE = { TextureFactory.of(VM_MACHINE_FRONT_ON), TextureFactory.builder()
         .addIcon(VM_MACHINE_FRONT_ON_GLOW)
