@@ -11,49 +11,61 @@ import cpw.mods.fml.relauncher.SideOnly;
 
 public enum CurrencyType {
 
-    ADVENTURE("adventure", "dreamcraft:CoinAdventure", "Adventure"),
-    BEES("bees", "dreamcraft:CoinBees", "Bees"),
-    BLOOD("blood", "dreamcraft:CoinBlood", "Blood"),
-    CHEMIST("chemist", "dreamcraft:CoinChemist", "Chemist"),
-    COOK("cook", "dreamcraft:CoinCook", "Cook"),
-    DARK_WIZARD("darkWizard", "dreamcraft:CoinDarkWizard", "DarkWizard"),
-    FARMER("farmer", "dreamcraft:CoinFarmer", "Farmer"),
-    FLOWER("flower", "dreamcraft:CoinFlower", "Flower"),
-    FORESTRY("forestry", "dreamcraft:CoinForestry", "Forestry"),
-    SMITH("smith", "dreamcraft:CoinSmith", "Smith"),
-    SPACE("space", "dreamcraft:CoinSpace", "Space"),
-    SURVIVOR("survivor", "dreamcraft:CoinSurvivor", "Survivor"),
-    TECHNICIAN("technician", "dreamcraft:CoinTechnician", "Technician"),
-    WITCH("witch", "dreamcraft:CoinWitch", "Witch"),
+    ADVENTURE("adventure", "dreamcraft:CoinAdventure", "adventure"),
+    BEES("bees", "dreamcraft:CoinBees", "bee"),
+    BLOOD("blood", "dreamcraft:CoinBlood", "bm"),
+    CHEMIST("chemist", "dreamcraft:CoinChemist", "chemist"),
+    COOK("cook", "dreamcraft:CoinCook", "cook"),
+    DARK_WIZARD("darkWizard", "dreamcraft:CoinDarkWizard", "wizard"),
+    FARMER("farmer", "dreamcraft:CoinFarmer", "farmer"),
+    FLOWER("flower", "dreamcraft:CoinFlower", "gardener"),
+    FORESTRY("forestry", "dreamcraft:CoinForestry", "ranger"),
+    SMITH("smith", "dreamcraft:CoinSmith", "builder"),
+    SPACE("space", "dreamcraft:CoinSpace", "space"),
+    SURVIVOR("survivor", "dreamcraft:CoinSurvivor", "survivor"),
+    TECHNICIAN("technician", "dreamcraft:CoinTechnician", "technician"),
+    WITCH("witch", "dreamcraft:CoinWitch", "witch"),
     // comment before semicolon to reduce merge conflicts
     ;
 
     public final String id;
     public final String itemPrefix;
 
-    public final UITexture coin1;
-    public final UITexture coin10;
-    public final UITexture coin100;
-    public final UITexture coin1000;
-    public final UITexture coin10000;
+    public final UITexture coinBackground1;
+    public final UITexture coinBackground10;
+    public final UITexture coinBackground100;
+    public final UITexture coinBackground1000;
+    public final UITexture coinBackground10000;
+
+    public final UITexture coinIcon1;
+    public final UITexture coinIcon10;
+    public final UITexture coinIcon100;
+    public final UITexture coinIcon1000;
+    public final UITexture coinIcon10000;
 
     CurrencyType(String id, String itemPrefix, String textureName) {
         this.id = id;
         this.itemPrefix = itemPrefix;
-        coin1 = createCoinUITexture(textureName, "");
-        coin10 = createCoinUITexture(textureName, "I");
-        coin100 = createCoinUITexture(textureName, "II");
-        coin1000 = createCoinUITexture(textureName, "III");
-        coin10000 = createCoinUITexture(textureName, "IV");
+        coinBackground1 = createCoinUITexture("background/small0");
+        coinBackground10 = createCoinUITexture("background/small1");
+        coinBackground100 = createCoinUITexture("background/small2");
+        coinBackground1000 = createCoinUITexture("background/small3");
+        coinBackground10000 = createCoinUITexture("background/small4");
+
+        coinIcon1 = createCoinUITexture("icons/" + textureName + "0");
+        coinIcon10 = createCoinUITexture("icons/" + textureName + "1");
+        coinIcon100 = createCoinUITexture("icons/" + textureName + "2");
+        coinIcon1000 = createCoinUITexture("icons/" + textureName + "3");
+        coinIcon10000 = createCoinUITexture("icons/" + textureName + "4");
 
         CurrencyItem.typeMap.put(this.id, this);
     }
 
-    private static UITexture createCoinUITexture(String name, String suffix) {
+    private static UITexture createCoinUITexture(String name) {
         return UITexture.builder()
-            .location("dreamcraft", "items/itemCoin" + name + suffix)
+            .location("dreamcraft", "items/coins/" + name)
             .imageSize(16, 16)
-            .name("VM_UI_Coin_" + name + suffix)
+            .name("VM_UI_Coin_" + name.replaceAll("/", "_"))
             .build();
     }
 
