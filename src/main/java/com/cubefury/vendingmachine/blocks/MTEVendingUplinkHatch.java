@@ -4,6 +4,8 @@ import static com.cubefury.vendingmachine.api.enums.Textures.VUPLINK_OVERLAY_ACT
 import static com.cubefury.vendingmachine.api.enums.Textures.VUPLINK_OVERLAY_INACTIVE;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -15,8 +17,15 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ChatComponentTranslation;
+import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.world.World;
+import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -27,6 +36,7 @@ import com.cubefury.vendingmachine.trade.CurrencyItem;
 import com.cubefury.vendingmachine.trade.CurrencyType;
 import com.cubefury.vendingmachine.trade.Transaction;
 import com.cubefury.vendingmachine.util.BigItemStack;
+import com.cubefury.vendingmachine.util.Translator;
 import com.cubefury.vendingmachine.util.Wallet;
 
 import appeng.api.config.Actionable;
@@ -46,11 +56,15 @@ import appeng.me.helpers.AENetworkProxy;
 import appeng.me.helpers.IGridProxyable;
 import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import gregtech.api.interfaces.ITexture;
 import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
 import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
 import gregtech.api.metatileentity.implementations.MTEHatch;
 import gregtech.api.render.TextureFactory;
+import mcp.mobius.waila.api.IWailaConfigHandler;
+import mcp.mobius.waila.api.IWailaDataAccessor;
 
 public class MTEVendingUplinkHatch extends MTEHatch implements IGridProxyable, IPowerChannelState, IActionHost {
 
@@ -362,7 +376,6 @@ public class MTEVendingUplinkHatch extends MTEHatch implements IGridProxyable, I
 
         if (remain == 0 || ore == null || cachedItems == null) return remain;
 
-        // TODO: oredict extract broken - vm.matchItem broken?
         for (IAEItemStack stack : cachedItems) {
             if (!MTEVendingMachine.matchItem(remove, stack.getItemStack(), ore)) continue;
 
@@ -380,5 +393,104 @@ public class MTEVendingUplinkHatch extends MTEHatch implements IGridProxyable, I
 
         return remain;
 
+    }
+
+    @Override
+    public void getWailaNBTData(EntityPlayerMP player, TileEntity tile, NBTTagCompound tag, World world, int x, int y,
+        int z) {
+        super.getWailaNBTData(player, tile, tag, world, x, y, z);
+        tag.setInteger("stackCount", pendingItemInject.size());
+
+        IAEItemStack[] stacks = pendingItemInject.toArray(new IAEItemStack[0]);
+
+        Arrays.sort(
+            stacks,
+            Comparator.comparingLong(IAEItemStack::getStackSize)
+                .reversed());
+
+        if (stacks.length > 10) {
+            stacks = Arrays.copyOf(stacks, 10);
+        }
+
+        NBTTagList tagList = new NBTTagList();
+        tag.setTag("stacks", tagList);
+
+        for (IAEItemStack stack : stacks) {
+            NBTTagCompound stackTag = new NBTTagCompound();
+            stack.writeToNBT(stackTag);
+            tagList.appendTag(stackTag);
+        }
+    }
+
+    @Override
+    public void saveNBTData(NBTTagCompound aNBT) {
+        super.saveNBTData(aNBT);
+
+        NBTTagList pendingInject = new NBTTagList();
+        pendingItemInject.forEach(
+            aeStack -> pendingInject.appendTag(
+                aeStack.getItemStack()
+                    .writeToNBT(new NBTTagCompound())));
+        aNBT.setTag("pendingInject", pendingInject);
+    }
+
+    @Override
+    public void loadNBTData(NBTTagCompound aNBT) {
+        super.loadNBTData(aNBT);
+        NBTTagList pendingInject = aNBT.getTagList("pendingInject", Constants.NBT.TAG_COMPOUND);
+        for (int i = 0; i < pendingInject.tagCount(); i++) {
+            pendingItemInject
+                .addLast(AEItemStack.create(ItemStack.loadItemStackFromNBT(pendingInject.getCompoundTagAt(i))));
+        }
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public boolean hasWailaAdvancedBody(ItemStack itemStack, IWailaDataAccessor accessor, IWailaConfigHandler config) {
+        return true;
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public void getWailaAdvancedBody(ItemStack itemStack, List<String> ss, IWailaDataAccessor accessor,
+        IWailaConfigHandler config) {
+        super.getWailaAdvancedBody(itemStack, ss, accessor, config);
+
+        NBTTagCompound tag = accessor.getNBTData();
+
+        NBTTagList stacks = tag.getTagList("stacks", 10);
+        int stackCount = tag.getInteger("stackCount");
+
+        if (stackCount == 0) {
+            ss.add(Translator.translate("vendingmachine.vendinguplink.me.no_cached_stacks"));
+        } else {
+            ss.add(
+                Translator.translate(
+                    "vendingmachine.vendinguplink.me.contains_cached_stacks",
+                    EnumChatFormatting.GOLD,
+                    stackCount,
+                    EnumChatFormatting.RESET));
+
+            for (int i = 0; i < stacks.tagCount(); i++) {
+                IAEItemStack stack = AEItemStack.loadItemStackFromNBT(stacks.getCompoundTagAt(i));
+
+                ss.add(
+                    String.format(
+                        "%s: %s%d%s",
+                        stack.getItemStack()
+                            .getDisplayName(),
+                        EnumChatFormatting.GOLD,
+                        stack.getStackSize(),
+                        EnumChatFormatting.RESET));
+            }
+
+            if (stackCount > stacks.tagCount()) {
+                ss.add(
+                    Translator.translate(
+                        "vendingmachine.vendinguplink.me.and_more_stacks",
+                        EnumChatFormatting.ITALIC,
+                        stackCount - stacks.tagCount()));
+            }
+        }
     }
 }

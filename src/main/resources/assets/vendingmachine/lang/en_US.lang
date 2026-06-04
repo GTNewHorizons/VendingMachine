@@ -10,6 +10,11 @@ hatch.vendinguplink.me.name=ME Vending Uplink Hatch
 # Structure
 structure.vendingmachine.hint.1=Hint 1 Dot: Tin Item Pipe Casing, ME Vending Uplink Hatch
 
+# Tooltips
+vendingmachine.vendinguplink.me.no_cached_stacks=This uplink has no cached stacks
+vendingmachine.vendinguplink.me.contains_cached_stacks=This uplink contains %s%d%s cached stacks:
+vendingmachine.vendinguplink.me.and_more_stacks=%sAnd %d more...
+
 # Gui
 vendingmachine.gui.requirementHeader=Requirements:
 vendingmachine.gui.requirement.unknown=Unknown Requirement
