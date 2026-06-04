@@ -71,7 +71,7 @@ public class MTEVendingUplinkHatch extends MTEHatch implements IGridProxyable, I
 
     protected AENetworkProxy gridProxy = null;
     protected boolean additionalConnection = false;
-    private IItemList<IAEItemStack> cachedItems;
+    private IItemList<IAEItemStack> availableItems;
     private final LinkedList<IAEItemStack> pendingItemInject = new LinkedList<>();
     private long lastOutputTick = 0;
     private final Wallet meWallet = new Wallet();
@@ -301,13 +301,13 @@ public class MTEVendingUplinkHatch extends MTEHatch implements IGridProxyable, I
         IStorageGrid storage = accessStorage();
         if (storage == null) return;
 
-        cachedItems = storage.getItemInventory()
+        availableItems = storage.getItemInventory()
             .getStorageList();
     }
 
     public void updateCurrencyInto(Wallet wallet) {
-        if (cachedItems == null) return;
-        for (IAEItemStack aeStack : cachedItems) {
+        if (availableItems == null) return;
+        for (IAEItemStack aeStack : availableItems) {
             CurrencyItem ci = CurrencyItem.fromItemStack(aeStack.getItemStack());
             if (ci == null) continue;
             wallet.addCount(ci.type, ci.value);
@@ -330,7 +330,7 @@ public class MTEVendingUplinkHatch extends MTEHatch implements IGridProxyable, I
         Map<CurrencyType, Integer> extracted = new HashMap<>();
 
         List<Pair<Integer, IAEItemStack>> candidateStacks = new ArrayList<>();
-        for (IAEItemStack stack : cachedItems) {
+        for (IAEItemStack stack : availableItems) {
             CurrencyItem curItem = CurrencyItem.fromItemStack(stack.getItemStack());
             if (curItem == null || !currencies.containsKey(curItem.type)) continue;
             ItemStack baseItem = stack.getItemStack()
@@ -386,9 +386,9 @@ public class MTEVendingUplinkHatch extends MTEHatch implements IGridProxyable, I
             if (!simulate) pulledStackTracker.accept(stack);
         }
 
-        if (remain == 0 || ore == null || cachedItems == null) return remain;
+        if (remain == 0 || ore == null || availableItems == null) return remain;
 
-        for (IAEItemStack stack : cachedItems) {
+        for (IAEItemStack stack : availableItems) {
             if (!MTEVendingMachine.matchItem(remove, stack.getItemStack(), ore)) continue;
 
             IAEItemStack copy = stack.copy();
