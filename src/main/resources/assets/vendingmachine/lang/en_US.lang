@@ -13,7 +13,7 @@ structure.vendingmachine.hint.1=Hint 1 Dot: Tin Item Pipe Casing, ME Vending Upl
 
 # Tooltips
 vendingmachine.vendinguplink.me.no_cached_stacks=This uplink has no cached stacks
-vendingmachine.vendinguplink.me.contains_cached_stacks=This uplink contains %s%d%s cached stacks:
+vendingmachine.vendinguplink.me.contains_cached_stacks=%s%d%s stacks pending ME network insertion:
 vendingmachine.vendinguplink.me.and_more_stacks=%sAnd %d more...
 
 # Gui
