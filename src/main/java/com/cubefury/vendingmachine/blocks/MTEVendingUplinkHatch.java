@@ -408,6 +408,28 @@ public class MTEVendingUplinkHatch extends MTEHatch implements IGridProxyable, I
     }
 
     @Override
+    public void saveNBTData(NBTTagCompound aNBT) {
+        super.saveNBTData(aNBT);
+
+        NBTTagList pendingInject = new NBTTagList();
+        pendingItemInject.forEach(
+            aeStack -> pendingInject.appendTag(
+                aeStack.getItemStack()
+                    .writeToNBT(new NBTTagCompound())));
+        aNBT.setTag("pendingInject", pendingInject);
+    }
+
+    @Override
+    public void loadNBTData(NBTTagCompound aNBT) {
+        super.loadNBTData(aNBT);
+        NBTTagList pendingInject = aNBT.getTagList("pendingInject", Constants.NBT.TAG_COMPOUND);
+        for (int i = 0; i < pendingInject.tagCount(); i++) {
+            pendingItemInject
+                .addLast(AEItemStack.create(ItemStack.loadItemStackFromNBT(pendingInject.getCompoundTagAt(i))));
+        }
+    }
+
+    @Override
     public void getWailaNBTData(EntityPlayerMP player, TileEntity tile, NBTTagCompound tag, World world, int x, int y,
         int z) {
         super.getWailaNBTData(player, tile, tag, world, x, y, z);
@@ -431,28 +453,6 @@ public class MTEVendingUplinkHatch extends MTEHatch implements IGridProxyable, I
             NBTTagCompound stackTag = new NBTTagCompound();
             stack.writeToNBT(stackTag);
             tagList.appendTag(stackTag);
-        }
-    }
-
-    @Override
-    public void saveNBTData(NBTTagCompound aNBT) {
-        super.saveNBTData(aNBT);
-
-        NBTTagList pendingInject = new NBTTagList();
-        pendingItemInject.forEach(
-            aeStack -> pendingInject.appendTag(
-                aeStack.getItemStack()
-                    .writeToNBT(new NBTTagCompound())));
-        aNBT.setTag("pendingInject", pendingInject);
-    }
-
-    @Override
-    public void loadNBTData(NBTTagCompound aNBT) {
-        super.loadNBTData(aNBT);
-        NBTTagList pendingInject = aNBT.getTagList("pendingInject", Constants.NBT.TAG_COMPOUND);
-        for (int i = 0; i < pendingInject.tagCount(); i++) {
-            pendingItemInject
-                .addLast(AEItemStack.create(ItemStack.loadItemStackFromNBT(pendingInject.getCompoundTagAt(i))));
         }
     }
 
