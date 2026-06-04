@@ -46,6 +46,7 @@ import org.lwjgl.input.Keyboard;
 import com.cleanroommc.modularui.utils.item.ItemStackHandler;
 import com.cubefury.vendingmachine.VMConfig;
 import com.cubefury.vendingmachine.VendingMachine;
+import com.cubefury.vendingmachine.api.enums.Textures;
 import com.cubefury.vendingmachine.blocks.gui.MTEVendingMachineGui;
 import com.cubefury.vendingmachine.blocks.gui.TradeItemDisplay;
 import com.cubefury.vendingmachine.blocks.gui.WalletMode;
@@ -70,9 +71,7 @@ import com.gtnewhorizon.structurelib.alignment.enumerable.ExtendedFacing;
 import com.gtnewhorizon.structurelib.structure.IStructureDefinition;
 import com.gtnewhorizon.structurelib.structure.ISurvivalBuildEnvironment;
 
-import gregtech.api.GregTechAPI;
 import gregtech.api.covers.CoverRegistry;
-import gregtech.api.enums.Textures;
 import gregtech.api.interfaces.IIconContainer;
 import gregtech.api.interfaces.ISecondaryDescribable;
 import gregtech.api.interfaces.ITexture;
@@ -83,7 +82,6 @@ import gregtech.api.render.RenderOverlay;
 import gregtech.api.render.TextureFactory;
 import gregtech.api.util.GTUtil;
 import gregtech.api.util.MultiblockTooltipBuilder;
-import gregtech.common.blocks.BlockCasings11;
 import mcp.mobius.waila.api.IWailaConfigHandler;
 import mcp.mobius.waila.api.IWailaDataAccessor;
 
@@ -98,11 +96,11 @@ public class MTEVendingMachine extends MTEMultiBlockBase
             ofChain(
                 ofHatchAdderOptional(
                     MTEVendingMachine::addUplinkHatch,
-                    ((BlockCasings11) GregTechAPI.sBlockCasings11).getTextureIndex(0),
+                    VendingMachineBlocks.casingBlock.getTextureIndex(0),
                     1,
-                    GregTechAPI.sBlockCasings11,
+                    VendingMachineBlocks.casingBlock,
                     0),
-                ofBlock(GregTechAPI.sBlockCasings11, 0)))
+                ofBlock(VendingMachineBlocks.casingBlock, 0)))
         .build();
 
     private MTEVendingUplinkHatch uplinkHatch = null;
@@ -114,8 +112,7 @@ public class MTEVendingMachine extends MTEMultiBlockBase
 
     public static final int STRUCTURE_CHECK_TICKS = 20;
 
-    private static final ITexture[] FACING_SIDE = {
-        TextureFactory.of(Textures.BlockIcons.MACHINE_CASING_ITEM_PIPE_TIN) };
+    private static final ITexture[] FACING_SIDE = { TextureFactory.of(Textures.VM_CASING) };
     private static final ITexture[] FACING_FRONT = { TextureFactory.of(VM_MACHINE_FRONT_OFF) };
     private static final ITexture[] FACING_ACTIVE = { TextureFactory.of(VM_MACHINE_FRONT_ON), TextureFactory.builder()
         .addIcon(VM_MACHINE_FRONT_ON_GLOW)

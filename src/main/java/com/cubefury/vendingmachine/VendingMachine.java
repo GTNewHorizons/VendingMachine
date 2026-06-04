@@ -5,6 +5,7 @@ import net.minecraft.util.EnumChatFormatting;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.cubefury.vendingmachine.blocks.VendingMachineBlocks;
 import com.cubefury.vendingmachine.gui.WidgetThemes;
 import com.cubefury.vendingmachine.items.VMItems;
 import com.cubefury.vendingmachine.network.PacketTypeRegistry;
@@ -103,6 +104,7 @@ public class VendingMachine {
         GameRegistry.registerItem(ItemPlaceholder.placeholder, "placeholder");
 
         if (isGtLoaded) {
+            VendingMachineBlocks.registerBlocks();
             VMItems.registerMultis();
         }
 
