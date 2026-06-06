@@ -81,7 +81,6 @@ import gregtech.api.metatileentity.implementations.MTEMultiBlockBase;
 import gregtech.api.render.RenderOverlay;
 import gregtech.api.render.TextureFactory;
 import gregtech.api.util.GTUtil;
-import gregtech.api.util.GTUtility;
 import gregtech.api.util.MultiblockTooltipBuilder;
 import mcp.mobius.waila.api.IWailaConfigHandler;
 import mcp.mobius.waila.api.IWailaDataAccessor;
@@ -469,7 +468,7 @@ public class MTEVendingMachine extends MTEMultiBlockBase
 
         NBTTagList pendingOutputs = aNBT.getTagList("outputBuffer", Constants.NBT.TAG_COMPOUND);
         for (int i = 0; i < pendingOutputs.tagCount(); i++) {
-            outputBuffer.add(GTUtility.loadItem(pendingOutputs.getCompoundTagAt(i)));
+            outputBuffer.add(ItemStack.loadItemStackFromNBT(pendingOutputs.getCompoundTagAt(i)));
         }
 
         if (inputItems != null) {
