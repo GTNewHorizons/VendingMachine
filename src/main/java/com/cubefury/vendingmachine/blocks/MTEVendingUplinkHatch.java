@@ -5,7 +5,6 @@ import static com.cubefury.vendingmachine.api.enums.Textures.VUPLINK_OVERLAY_ACT
 import static com.cubefury.vendingmachine.api.enums.Textures.VUPLINK_OVERLAY_INACTIVE;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -435,25 +434,19 @@ public class MTEVendingUplinkHatch extends MTEHatch implements IGridProxyable, I
         super.getWailaNBTData(player, tile, tag, world, x, y, z);
         tag.setInteger("stackCount", pendingItemInject.size());
 
-        IAEItemStack[] stacks = pendingItemInject.toArray(new IAEItemStack[0]);
-
-        Arrays.sort(
-            stacks,
-            Comparator.comparingLong(IAEItemStack::getStackSize)
-                .reversed());
-
-        if (stacks.length > 10) {
-            stacks = Arrays.copyOf(stacks, 10);
-        }
-
         NBTTagList tagList = new NBTTagList();
+        pendingItemInject.stream()
+            .sorted(
+                Comparator.comparingLong(IAEItemStack::getStackSize)
+                    .reversed())
+            .limit(10)
+            .map(stack -> {
+                NBTTagCompound stackTag = new NBTTagCompound();
+                stack.writeToNBT(stackTag);
+                return stackTag;
+            })
+            .forEachOrdered(tagList::appendTag);
         tag.setTag("stacks", tagList);
-
-        for (IAEItemStack stack : stacks) {
-            NBTTagCompound stackTag = new NBTTagCompound();
-            stack.writeToNBT(stackTag);
-            tagList.appendTag(stackTag);
-        }
     }
 
     @Override
