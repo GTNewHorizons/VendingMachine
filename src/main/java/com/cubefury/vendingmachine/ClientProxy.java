@@ -1,10 +1,13 @@
 package com.cubefury.vendingmachine;
 
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.SimpleReloadableResourceManager;
 import net.minecraftforge.common.MinecraftForge;
 
 import com.cubefury.vendingmachine.handlers.ClientEventHandler;
 import com.cubefury.vendingmachine.handlers.SaveLoadHandler;
 import com.cubefury.vendingmachine.integration.nei.NEIConfig;
+import com.cubefury.vendingmachine.util.ColorResource;
 
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
@@ -18,6 +21,9 @@ public final class ClientProxy extends CommonProxy {
         MinecraftForge.EVENT_BUS.register(new NEIConfig());
         super.init(event);
         SaveLoadHandler.INSTANCE.clientInit();
+        ((SimpleReloadableResourceManager) Minecraft.getMinecraft()
+            .getResourceManager()).registerReloadListener(new ColorResource.CacheReloadListener());
+
     }
 
     @Override

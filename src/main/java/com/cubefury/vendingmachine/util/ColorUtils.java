@@ -1,7 +1,5 @@
 package com.cubefury.vendingmachine.util;
 
-import com.gtnewhorizon.gtnhlib.color.ColorResource;
-
 public class ColorUtils {
 
     private static final ColorResource.Factory color = new ColorResource.Factory("vendingmachine");
