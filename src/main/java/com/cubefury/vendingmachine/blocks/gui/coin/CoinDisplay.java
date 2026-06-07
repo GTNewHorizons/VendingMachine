@@ -26,7 +26,7 @@ public class CoinDisplay extends Flow {
     private final TextWidget<?> coinAmount;
     private final ToggleButton coinButton;
 
-    private final Icon coinIcon1, coinIcon10, coinIcon100, coinIcon1000, coinIcon10000;
+    private final Icon[] coinIcon1, coinIcon10, coinIcon100, coinIcon1000, coinIcon10000;
 
     private int textColor = 0;
     private int oldCoinValue = -1;
@@ -36,16 +36,26 @@ public class CoinDisplay extends Flow {
     public CoinDisplay(TradeMainPanel panel, CurrencyType type, PanelSyncManager syncManager) {
         super(GuiAxis.X);
 
-        coinIcon1 = type.coin1.asIcon()
-            .size(12);
-        coinIcon10 = type.coin10.asIcon()
-            .size(12);
-        coinIcon100 = type.coin100.asIcon()
-            .size(12);
-        coinIcon1000 = type.coin1000.asIcon()
-            .size(12);
-        coinIcon10000 = type.coin10000.asIcon()
-            .size(12);
+        coinIcon1 = new Icon[] { type.coinBackground1.asIcon()
+            .size(16),
+            type.coinIcon1.asIcon()
+                .size(16) };
+        coinIcon10 = new Icon[] { type.coinBackground10.asIcon()
+            .size(16),
+            type.coinIcon10.asIcon()
+                .size(16) };
+        coinIcon100 = new Icon[] { type.coinBackground100.asIcon()
+            .size(16),
+            type.coinIcon100.asIcon()
+                .size(16) };
+        coinIcon1000 = new Icon[] { type.coinBackground1000.asIcon()
+            .size(16),
+            type.coinIcon1000.asIcon()
+                .size(16) };
+        coinIcon10000 = new Icon[] { type.coinBackground10000.asIcon()
+            .size(16),
+            type.coinIcon10000.asIcon()
+                .size(16) };
 
         coinSyncValue = syncManager.findSyncHandler("coinAmount_" + type.id, 0, IntSyncValue.class);
         this.child(
@@ -83,7 +93,7 @@ public class CoinDisplay extends Flow {
         }
     }
 
-    private Icon getCoinButtonIcon() {
+    private Icon[] getCoinButtonIcon() {
         if (!VMConfig.gui.update_coin_icon || oldCoinValue < 10) return coinIcon1;
         if (oldCoinValue < 100) return coinIcon10;
         if (oldCoinValue < 1000) return coinIcon100;
