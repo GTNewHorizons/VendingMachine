@@ -20,7 +20,7 @@ import com.cubefury.vendingmachine.blocks.MTEVendingMachine;
 import com.cubefury.vendingmachine.gui.GuiTextures;
 import com.cubefury.vendingmachine.gui.WidgetThemes;
 import com.cubefury.vendingmachine.trade.FavouritesTracker;
-import com.cubefury.vendingmachine.util.GuiParams;
+import com.cubefury.vendingmachine.util.ColorUtils;
 
 public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interactable {
 
@@ -87,7 +87,7 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
 
     @Override
     public void draw(ModularGuiContext context, WidgetThemeEntry<?> widgetTheme) {
-        int textColor = GuiParams.display_text_color.getColor(false);
+        int textColor = ColorUtils.displayText.getColor();
         ItemStack item = value.getValue();
         if (!Platform.isStackEmpty(item)) {
             if (this.displayType == DisplayType.TILE) {
@@ -108,7 +108,7 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
                 }
                 this.overlay(
                     IKey.str(display.hasCooldown ? this.display.cooldownText : "")
-                        .color(GuiParams.trade_display_text_color.getColor(false)));
+                        .color(ColorUtils.displayText.getColor()));
                 if (this.display.isFavourite) {
                     GuiTextures.FAVOURITE_SPRITE.draw(context, 4, 4, 6, 6, widgetTheme.getTheme());
                 }
@@ -132,15 +132,15 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
                     3,
                     MTEVendingMachineGui.LIST_ITEM_HEIGHT - 2,
                     display.isTradeableNow(rootPanel.getWalletMode())
-                        ? GuiParams.trade_display_list_tradable_now_color.getColor(true)
-                        : GuiParams.trade_display_list_untradable_now_color.getColor(true));
+                        ? ColorUtils.tradeDisplayListTradableNow.getColor()
+                        : ColorUtils.tradeDisplayListUntradableNow.getColor());
                 if (!this.checkVmActive() || this.display.hasCooldown || !this.display.enabled) {
                     GuiDraw.drawRect(
                         1,
                         1,
                         MTEVendingMachineGui.LIST_ITEM_WIDTH - 2,
                         MTEVendingMachineGui.LIST_ITEM_HEIGHT - 2,
-                        GuiParams.trade_display_disabled_color.getColor(true));
+                        ColorUtils.tradeDisplayDisabled.getColor());
                 }
                 if (this.display.tgID.equals(this.rootPanel.currentSelected)) {
                     GuiDraw.drawRect(
@@ -148,11 +148,11 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
                         1,
                         2,
                         MTEVendingMachineGui.LIST_ITEM_HEIGHT - 2,
-                        GuiParams.trade_display_list_current_selected_color.getColor(true));
+                        ColorUtils.tradeDisplayListCurrentSelected.getColor());
                 }
                 this.overlay(
                     IKey.str(display.hasCooldown && this.display.enabled ? this.display.cooldownText : "")
-                        .color(GuiParams.trade_display_text_color.getColor(false))
+                        .color(ColorUtils.displayText.getColor())
                         .scale(0.9f));
                 if (this.display.isFavourite) {
                     GuiTextures.FAVOURITE_SPRITE.draw(context, 139, 2, 10, 10, widgetTheme.getTheme());
