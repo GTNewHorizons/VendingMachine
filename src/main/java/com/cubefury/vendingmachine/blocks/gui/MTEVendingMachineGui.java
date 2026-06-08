@@ -894,6 +894,11 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
             });
             syncManager.syncValue("coinAmount_" + type.id, coinAmountSyncer);
 
+            syncManager.syncValue("coinAmountMe_" + type.id, new IntSyncValue(() -> {
+                if (guiData.isClient()) return 0;
+                return base.getUplinkCurrencyAmount(type);
+            }));
+
             BooleanSyncValue ejectCoinSyncer = new BooleanSyncValue(() -> this.ejectSingleCoin.get(type), val -> {
                 this.ejectSingleCoin.put(type, val);
                 if (val) {
