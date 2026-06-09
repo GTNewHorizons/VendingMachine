@@ -369,6 +369,10 @@ public class MTEVendingUplinkHatch extends MTEHatch implements IGridProxyable, I
         return consumedItems;
     }
 
+    public int getCurrencyAmount(CurrencyType type) {
+        return meWallet.getCount(type);
+    }
+
     public int removeItem(ItemStack remove, boolean simulate, String ore, Consumer<IAEItemStack> pulledStackTracker) {
         if (remove == null || remove.stackSize == 0) return 0;
         IStorageGrid storage = accessStorage();

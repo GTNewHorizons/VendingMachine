@@ -14,6 +14,7 @@ public class ColorUtils {
         textColorConditionUnsatisfied   = color.rgb("textColorConditionUnsatisfied",    "0xA87A5E"),
         nc_InputsOverlay                = color.rgb("nc_InputsOverlay",                 "0xFDD835"),
         tradeDisplayText                = color.rgb("tradeDisplayText",                 "0xFFFFFF"),
+        coinDisplayHasMeCoinsOverride   = color.rgb("coinDisplayHasMeCoinsOverride",    "0x0000AA"),
 
         tradeDisplayDisabled            = color.argb("tradeDisplayDisabled",            "0xBB000000"),
         tradeDisplayListTradableNow     = color.argb("tradeDisplayListTradableNow",     "0x883CFF00"),

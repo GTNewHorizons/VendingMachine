@@ -53,6 +53,7 @@ import com.cubefury.vendingmachine.blocks.gui.WalletMode;
 import com.cubefury.vendingmachine.network.handlers.NetTradeDisplaySync;
 import com.cubefury.vendingmachine.network.handlers.NetTradeRequestSync;
 import com.cubefury.vendingmachine.trade.CurrencyItem;
+import com.cubefury.vendingmachine.trade.CurrencyType;
 import com.cubefury.vendingmachine.trade.Trade;
 import com.cubefury.vendingmachine.trade.TradeDatabase;
 import com.cubefury.vendingmachine.trade.TradeGroup;
@@ -658,6 +659,11 @@ public class MTEVendingMachine extends MTEMultiBlockBase
         }
 
         return success;
+    }
+
+    public int getUplinkCurrencyAmount(CurrencyType type) {
+        if (uplinkHatch == null) return 0;
+        return uplinkHatch.getCurrencyAmount(type);
     }
 
     public List<BigItemStack> removeItems(ItemStack[] slots, List<BigItemStack> fromItems, boolean simulate) {

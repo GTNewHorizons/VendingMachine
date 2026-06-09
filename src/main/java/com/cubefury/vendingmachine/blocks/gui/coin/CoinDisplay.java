@@ -14,6 +14,7 @@ import com.cleanroommc.modularui.widgets.layout.Flow;
 import com.cubefury.vendingmachine.VMConfig;
 import com.cubefury.vendingmachine.blocks.gui.TradeMainPanel;
 import com.cubefury.vendingmachine.trade.CurrencyType;
+import com.cubefury.vendingmachine.util.ColorUtils;
 import com.cubefury.vendingmachine.util.Translator;
 
 public class CoinDisplay extends Flow {
@@ -23,6 +24,7 @@ public class CoinDisplay extends Flow {
     private static final float AMOUNT_SCALE_OFFSET = 0.1f;
 
     private final IntSyncValue coinSyncValue;
+    private final IntSyncValue coinSyncValueMe;
     private final TextWidget<?> coinAmount;
     private final ToggleButton coinButton;
 
@@ -58,6 +60,7 @@ public class CoinDisplay extends Flow {
                 .size(16) };
 
         coinSyncValue = syncManager.findSyncHandler("coinAmount_" + type.id, 0, IntSyncValue.class);
+        coinSyncValueMe = syncManager.findSyncHandler("coinAmountMe_" + type.id, 0, IntSyncValue.class);
         this.child(
             coinButton = new CoinButton(panel, type).overlay(coinIcon1)
                 .size(12)
@@ -65,7 +68,16 @@ public class CoinDisplay extends Flow {
                 .syncHandler("ejectCoin_" + type.id)
                 .tooltipDynamic((builder) -> {
                     builder.clearText();
-                    builder.addLine(coinSyncValue.getValue() + " " + type.getLocalizedName());
+                    StringBuilder valueLine = new StringBuilder().append(coinSyncValue.getValue());
+                    int coinValueMe = coinSyncValueMe.getValue();
+                    valueLine.append(" ");
+                    if (coinValueMe > 0) {
+                        valueLine.append("(+")
+                            .append(coinValueMe)
+                            .append(") ");
+                    }
+                    valueLine.append(type.getLocalizedName());
+                    builder.addLine(valueLine.toString());
                     builder.emptyLine();
                     builder.addLine(
                         IKey.str(Translator.translate("vendingmachine.gui.single_coin_type_eject_hint"))
@@ -73,7 +85,9 @@ public class CoinDisplay extends Flow {
                     builder.setAutoUpdate(true);
                 }))
             .child(
-                coinAmount = IKey.dynamic(() -> getReadableStringFromCoinAmount(coinSyncValue.getValue()))
+                coinAmount = IKey
+                    .dynamic(
+                        () -> getReadableStringFromCoinAmount(coinSyncValue.getValue() + coinSyncValueMe.getValue()))
                     .scale(DEFAULT_AMOUNT_SCALE)
                     .asWidget()
                     .top(3)
@@ -104,21 +118,25 @@ public class CoinDisplay extends Flow {
     @Override
     public void draw(ModularGuiContext context, WidgetThemeEntry<?> widgetTheme) {
         int val = coinSyncValue.getValue();
-        textColor = widgetTheme.getTheme()
-            .getTextColor();
-        if (val == 0) {
+        int valMe = coinSyncValueMe.getValue();
+        textColor = valMe > 0 ? ColorUtils.coinDisplayHasMeCoinsOverride.getColor()
+            : widgetTheme.getTheme()
+                .getTextColor();
+
+        int totalVal = val + valMe;
+        if (totalVal == 0) {
             textColor = Color.lerp(
                 textColor,
                 widgetTheme.getTheme()
                     .getColor(),
                 0.2f);
         }
-        if (val != oldCoinValue) {
+        if (totalVal != oldCoinValue) {
             if (oldCoinValue != -1) {
                 lastCoinChange = System.currentTimeMillis();
-                coinIncreased = val > oldCoinValue;
+                coinIncreased = totalVal > oldCoinValue;
             }
-            oldCoinValue = val;
+            oldCoinValue = totalVal;
             coinButton.overlay(getCoinButtonIcon());
         }
         long now = System.currentTimeMillis();
