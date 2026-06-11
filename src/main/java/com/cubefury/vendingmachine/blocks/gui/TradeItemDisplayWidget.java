@@ -77,12 +77,10 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
             pressed = true;
             return Result.SUCCESS;
         }
-        if (rootPanel.ctrlHeld) {
-            FavouritesTracker.INSTANCE.toggleFavourites(this.display.tgID, this.display.tradeGroupOrder);
-            rootPanel.forceGuiRefresh();
-            return Result.SUCCESS;
-        }
-        return Result.IGNORE;
+
+        FavouritesTracker.INSTANCE.toggleFavourites(this.display.tgID, this.display.tradeGroupOrder);
+        rootPanel.forceGuiRefresh();
+        return Result.SUCCESS;
     }
 
     @Override
@@ -108,7 +106,7 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
                 }
                 this.overlay(
                     IKey.str(display.hasCooldown ? this.display.cooldownText : "")
-                        .color(ColorUtils.displayText.getColor()));
+                        .color(ColorUtils.displayTextCooldown.getColor()));
                 if (this.display.isFavourite) {
                     GuiTextures.FAVOURITE_SPRITE.draw(context, 4, 4, 6, 6, widgetTheme.getTheme());
                 }
@@ -152,7 +150,7 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
                 }
                 this.overlay(
                     IKey.str(display.hasCooldown && this.display.enabled ? this.display.cooldownText : "")
-                        .color(ColorUtils.displayText.getColor())
+                        .color(ColorUtils.displayTextCooldown.getColor())
                         .scale(0.9f));
                 if (this.display.isFavourite) {
                     GuiTextures.FAVOURITE_SPRITE.draw(context, 139, 2, 10, 10, widgetTheme.getTheme());
