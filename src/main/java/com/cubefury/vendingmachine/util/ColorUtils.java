@@ -9,6 +9,7 @@ public class ColorUtils {
     public static final ColorResource
     // spotless:off
         displayText                     = color.rgb("displayText",                      "0x000000"),
+        displayTextCooldown             = color.rgb("displayTextCooldown",              "0xFFFFFF"),
         textColorConditionDefault       = color.rgb("textColorConditionDefault",        "0x000000"),
         textColorConditionSatisfied     = color.rgb("textColorConditionSatisfied",      "0x55D441"),
         textColorConditionUnsatisfied   = color.rgb("textColorConditionUnsatisfied",    "0xA87A5E"),
