@@ -89,19 +89,19 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
         ItemStack item = value.getValue();
         if (!Platform.isStackEmpty(item)) {
             if (this.displayType == DisplayType.TILE) {
-                GuiDraw.drawText(" " + this.display.display.stackSize, 4, 9, 1.0f, textColor, false);
-                GuiDraw.drawItem(item, 26, 4, 16, 16, context.getCurrentDrawingZ());
-                GlStateManager.color(1f, 1f, 1f, 1f);
                 if (this.display.isTradeableNow(rootPanel.getWalletMode())) {
                     GuiTextures.OVERLAY_TRADEABLE
                         .draw(0, 0, MTEVendingMachineGui.TILE_ITEM_WIDTH, MTEVendingMachineGui.TILE_ITEM_HEIGHT);
                 }
-                if (!this.checkVmActive() || this.display.hasCooldown || !this.display.enabled) {
-                    GuiTextures.OVERLAY_COOLDOWN
-                        .draw(0, 0, MTEVendingMachineGui.TILE_ITEM_WIDTH, MTEVendingMachineGui.TILE_ITEM_HEIGHT);
-                }
                 if (this.display.tgID.equals(this.rootPanel.currentSelected)) {
                     GuiTextures.OVERLAY_SELECTED
+                        .draw(0, 0, MTEVendingMachineGui.TILE_ITEM_WIDTH, MTEVendingMachineGui.TILE_ITEM_HEIGHT);
+                }
+                GuiDraw.drawText(" " + this.display.display.stackSize, 4, 9, 1.0f, textColor, false);
+                GuiDraw.drawItem(item, 26, 4, 16, 16, context.getCurrentDrawingZ());
+                GlStateManager.color(1f, 1f, 1f, 1f);
+                if (!this.checkVmActive() || this.display.hasCooldown || !this.display.enabled) {
+                    GuiTextures.OVERLAY_COOLDOWN
                         .draw(0, 0, MTEVendingMachineGui.TILE_ITEM_WIDTH, MTEVendingMachineGui.TILE_ITEM_HEIGHT);
                 }
                 this.overlay(
