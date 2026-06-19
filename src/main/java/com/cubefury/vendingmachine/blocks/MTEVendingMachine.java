@@ -53,6 +53,7 @@ import com.cubefury.vendingmachine.blocks.gui.WalletMode;
 import com.cubefury.vendingmachine.network.handlers.NetTradeDisplaySync;
 import com.cubefury.vendingmachine.network.handlers.NetTradeRequestSync;
 import com.cubefury.vendingmachine.trade.CurrencyItem;
+import com.cubefury.vendingmachine.trade.CurrencyType;
 import com.cubefury.vendingmachine.trade.Trade;
 import com.cubefury.vendingmachine.trade.TradeDatabase;
 import com.cubefury.vendingmachine.trade.TradeGroup;
@@ -82,7 +83,6 @@ import gregtech.api.metatileentity.implementations.MTEMultiBlockBase;
 import gregtech.api.render.RenderOverlay;
 import gregtech.api.render.TextureFactory;
 import gregtech.api.util.GTUtil;
-import gregtech.api.util.GTUtility;
 import gregtech.api.util.MultiblockTooltipBuilder;
 import mcp.mobius.waila.api.IWailaConfigHandler;
 import mcp.mobius.waila.api.IWailaDataAccessor;
@@ -475,7 +475,7 @@ public class MTEVendingMachine extends MTEMultiBlockBase
 
         NBTTagList pendingOutputs = aNBT.getTagList("outputBuffer", Constants.NBT.TAG_COMPOUND);
         for (int i = 0; i < pendingOutputs.tagCount(); i++) {
-            outputBuffer.add(GTUtility.loadItem(pendingOutputs.getCompoundTagAt(i)));
+            outputBuffer.add(ItemStack.loadItemStackFromNBT(pendingOutputs.getCompoundTagAt(i)));
         }
 
         if (inputItems != null) {
@@ -665,6 +665,11 @@ public class MTEVendingMachine extends MTEMultiBlockBase
         }
 
         return success;
+    }
+
+    public int getUplinkCurrencyAmount(CurrencyType type) {
+        if (uplinkHatch == null) return 0;
+        return uplinkHatch.getCurrencyAmount(type);
     }
 
     public List<BigItemStack> removeItems(ItemStack[] slots, List<BigItemStack> fromItems, boolean simulate) {

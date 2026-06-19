@@ -12,7 +12,7 @@ import com.cleanroommc.modularui.widgets.ButtonWidget;
 import com.cleanroommc.modularui.widgets.SliderWidget;
 import com.cleanroommc.modularui.widgets.layout.Flow;
 import com.cubefury.vendingmachine.VMConfig;
-import com.cubefury.vendingmachine.util.GuiParams;
+import com.cubefury.vendingmachine.util.ColorUtils;
 import com.cubefury.vendingmachine.util.VMMusicManager;
 import com.gtnewhorizon.gtnhlib.config.ConfigurationManager;
 
@@ -58,8 +58,7 @@ public class VolumeControlGui {
                                     .height(10)
                                     .marginRight(5)
                                     .verticalCenter()
-                                    .background(
-                                        new Rectangle().color(GuiParams.volume_slider_background.getColor(true)))
+                                    .background(new Rectangle().color(ColorUtils.volumeSliderBackground.getColor()))
                                     .value(new Dynamic(() -> VMConfig.music.music_volume, value -> {
                                         VMConfig.music.music_volume = (float) value;
                                         VMMusicManager.onVolumeChange();

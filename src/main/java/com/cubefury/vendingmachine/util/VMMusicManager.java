@@ -93,7 +93,7 @@ public final class VMMusicManager {
         }
         validateInVm();
         SoundSystem sys = getSoundManager().vendingmachine$getSoundSystem();
-        int msPassed = (int) (System.currentTimeMillis() - musicStartTime);
+        int msPassed = (int) Math.min(System.currentTimeMillis() - musicStartTime, FADE_TIME);
         float volume = Math.min(msPassed / (float) FADE_TIME, 1);
         if (volume == 1) {
             running = false;

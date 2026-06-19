@@ -28,7 +28,7 @@ import com.cubefury.vendingmachine.storage.NameCache;
 import com.cubefury.vendingmachine.trade.CurrencyItem;
 import com.cubefury.vendingmachine.trade.Trade;
 import com.cubefury.vendingmachine.util.BigItemStack;
-import com.cubefury.vendingmachine.util.GuiParams;
+import com.cubefury.vendingmachine.util.ColorUtils;
 import com.cubefury.vendingmachine.util.Translator;
 
 import betterquesting.api.questing.IQuest;
@@ -91,9 +91,9 @@ public class NeiRecipeHandler extends TemplateRecipeHandler {
     }
 
     private void setTextColors() {
-        textColorConditionDefault = GuiParams.condition_default_color.getColor(false);
-        textColorConditionSatisfied = GuiParams.condition_satisfied_color.getColor(false);
-        textColorConditionUnsatisfied = GuiParams.condition_unsatisfied_color.getColor(false);
+        textColorConditionDefault = ColorUtils.textColorConditionDefault.getColor();
+        textColorConditionSatisfied = ColorUtils.textColorConditionSatisfied.getColor();
+        textColorConditionUnsatisfied = ColorUtils.textColorConditionUnsatisfied.getColor();
     }
 
     @Override
@@ -290,7 +290,7 @@ public class NeiRecipeHandler extends TemplateRecipeHandler {
                 "NC",
                 (int) (ps.relx / scale),
                 (int) (ps.rely / scale),
-                GuiParams.nc_inputs_overlay_color.getColor(false),
+                ColorUtils.nc_InputsOverlay.getColor(),
                 false);
         }
         GL11.glPopMatrix();
