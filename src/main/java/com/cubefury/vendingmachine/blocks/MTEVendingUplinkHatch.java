@@ -1,5 +1,6 @@
 package com.cubefury.vendingmachine.blocks;
 
+import static com.cubefury.vendingmachine.api.enums.Textures.VM_CASING_TEXTURE;
 import static com.cubefury.vendingmachine.api.enums.Textures.VUPLINK_OVERLAY_ACTIVE;
 import static com.cubefury.vendingmachine.api.enums.Textures.VUPLINK_OVERLAY_INACTIVE;
 
@@ -141,6 +142,22 @@ public class MTEVendingUplinkHatch extends MTEHatch implements IGridProxyable, I
 
     @Override
     public void securityBreak() {}
+
+    @Override
+    public ITexture[] getTexture(IGregTechTileEntity aBaseMetaTileEntity, ForgeDirection side, ForgeDirection aFacing,
+        int colorIndex, boolean aActive, boolean redstoneLevel) {
+        ITexture background = getCasingTexture();
+        if (side != aFacing) {
+            return new ITexture[] { background };
+        } else {
+            return aActive ? this.getTexturesActive(background) : this.getTexturesInactive(background);
+        }
+    }
+
+    @Override
+    public ITexture getCasingTexture() {
+        return VM_CASING_TEXTURE;
+    }
 
     @Override
     public ITexture[] getTexturesActive(ITexture aBaseTexture) {
