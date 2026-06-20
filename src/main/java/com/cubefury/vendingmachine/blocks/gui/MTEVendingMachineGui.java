@@ -749,7 +749,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
             .name("paged")
             .width(162)
             .controller(tabController)
-            .background(GuiTextures.TEXT_FIELD_BACKGROUND);
+            .background(GuiTextures.TRADE_BACKGROUND);
         paged.height(() -> 2 + Math.max(TRADE_LIST_MIN_HEIGHT, Math.min(rootPanel.getArea().height - 176, TRADE_LIST_MAX_HEIGHT))
             + (VMConfig.gui.show_coins ? 0: COIN_DISPLAY_HEIGHT), Unit.Measure.PIXEL);
         this.pagedWidget = paged;

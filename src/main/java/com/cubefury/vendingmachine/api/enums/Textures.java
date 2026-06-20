@@ -1,7 +1,11 @@
 package com.cubefury.vendingmachine.api.enums;
 
+import com.cubefury.vendingmachine.blocks.VendingMachineBlocks;
+
 import gregtech.api.enums.Textures.BlockIcons;
 import gregtech.api.interfaces.IIconContainer;
+import gregtech.api.interfaces.ITexture;
+import gregtech.common.render.GTBlockTextureBuilder;
 
 public class Textures {
 
@@ -30,5 +34,9 @@ public class Textures {
 
     public static final IIconContainer[] VM_OVERLAY = { VM_OVERLAY_0, VM_OVERLAY_1, VM_OVERLAY_2, VM_OVERLAY_3,
         VM_OVERLAY_4 };
+
+    public static ITexture VM_CASING_TEXTURE = new GTBlockTextureBuilder()
+        .setFromBlock(VendingMachineBlocks.casingBlock, 0)
+        .build();
 
 }
