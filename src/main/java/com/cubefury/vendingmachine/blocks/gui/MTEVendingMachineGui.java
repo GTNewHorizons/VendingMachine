@@ -724,7 +724,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
             .name("paged")
             .width(162)
             .controller(tabController)
-            .background(GuiTextures.TEXT_FIELD_BACKGROUND)
+            .background(GuiTextures.TRADE_BACKGROUND)
             .height(146);
         for (TradeCategory category : this.tradeCategories) {
             ListWidget<IWidget, ?> tradeList = new ListWidget<>()

@@ -10,6 +10,14 @@ import com.cubefury.vendingmachine.VendingMachine;
 
 public final class GuiTextures {
 
+    public static final UITexture TRADE_BACKGROUND = UITexture.builder()
+        .location(VendingMachine.MODID, "gui/background/trade_background")
+        .imageSize(61, 12)
+        .adaptable(4)
+        .canApplyTheme()
+        .name("trade_background")
+        .build();
+
     public static final UITexture SIDE_PANEL_BACKGROUND = UITexture.builder()
         .location(VendingMachine.MODID, "gui/background/panel_side")
         .imageSize(50, 214)
