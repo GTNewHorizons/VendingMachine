@@ -283,7 +283,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
                             .overlay(
                                 new DynamicDrawable(
                                     () -> VMConfig.gui.display_type.getTexture()
-                                        .size(14)))
+                                        .size(12)))
                             .stateCount(DisplayType.values().length)
                             .value(new IntValue.Dynamic(() -> VMConfig.gui.display_type.ordinal(), val -> {
                                 VMConfig.gui.display_type = DisplayType.values()[val];
@@ -301,9 +301,9 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
                             .overlay(
                                 new DynamicDrawable(
                                     () -> VMConfig.gui.show_coins ? GuiTextures.SHOW_COINS.asIcon()
-                                        .size(14)
+                                        .size(12)
                                         : GuiTextures.HIDE_COINS.asIcon()
-                                            .size(14)))
+                                            .size(12)))
                             .stateCount(2)
                             .value(new BoolValue.Dynamic(() -> VMConfig.gui.show_coins, val -> {
                                 VMConfig.gui.show_coins = val;
@@ -315,7 +315,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
                             .overlay(
                                 new DynamicDrawable(
                                     () -> VMConfig.gui.sort_mode.getTexture()
-                                        .size(14)))
+                                        .size(12)))
                             .stateCount(SortMode.values().length)
                             .value(new IntValue.Dynamic(() -> VMConfig.gui.sort_mode.ordinal(), val -> {
                                 VMConfig.gui.sort_mode = SortMode.values()[val];

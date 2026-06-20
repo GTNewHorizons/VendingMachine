@@ -8,14 +8,12 @@ import com.cleanroommc.modularui.api.drawable.IKey;
 import com.cleanroommc.modularui.drawable.Icon;
 import com.cleanroommc.modularui.drawable.UITexture;
 import com.cubefury.vendingmachine.VendingMachine;
-
-import gregtech.api.modularui2.GTGuiTextures;
+import com.cubefury.vendingmachine.gui.GuiTextures;
 
 public enum MusicTrack {
 
-    NONE("none", null, GTGuiTextures.OVERLAY_BUTTON_MUFFLE_ON),
-    LUNCH_BREAK("lunch_break", new ResourceLocation(VendingMachine.MODID, "track.lunch_break"),
-        GTGuiTextures.OVERLAY_BUTTON_MUFFLE_OFF);
+    NONE("none", null, GuiTextures.AUDIO_OFF),
+    LUNCH_BREAK("lunch_break", new ResourceLocation(VendingMachine.MODID, "track.lunch_break"), GuiTextures.AUDIO_ON);
 
     private final String name;
     private final ResourceLocation sound;
