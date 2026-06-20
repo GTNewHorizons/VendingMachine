@@ -125,6 +125,30 @@ public final class GuiTextures {
         .name("wallet_team")
         .build();
 
+    public static final UITexture SHOW_COINS = UITexture.builder()
+        .location(VendingMachine.MODID, "gui/overlay/show_coins")
+        .imageSize(12, 12)
+        .name("show_coins")
+        .build();
+
+    public static final UITexture HIDE_COINS = UITexture.builder()
+        .location(VendingMachine.MODID, "gui/overlay/hide_coins")
+        .imageSize(12, 12)
+        .name("hide_coins")
+        .build();
+
+    public static final UITexture AUDIO_ON = UITexture.builder()
+        .location(VendingMachine.MODID, "gui/overlay/audio_on")
+        .imageSize(12, 12)
+        .name("audio_on")
+        .build();
+
+    public static final UITexture AUDIO_OFF = UITexture.builder()
+        .location(VendingMachine.MODID, "gui/overlay/audio_off")
+        .imageSize(12, 12)
+        .name("audio_off")
+        .build();
+
     public static final UITexture INPUT_SPRITE = UITexture.builder()
         .location(VendingMachine.MODID, "gui/background/input")
         .imageSize(30, 20)

@@ -59,6 +59,10 @@ public class VMConfig {
         @Config.DefaultEnum("PERSONAL")
         public WalletMode wallet_mode = WalletMode.PERSONAL;
 
+        @Config.LangKey("vendingmachine.config.gui.show_coins")
+        @Config.DefaultBoolean(true)
+        public boolean show_coins = true;
+
         @Config.Comment("Update coin icon depending on amount.")
         @Config.DefaultBoolean(false)
         public boolean update_coin_icon = false;

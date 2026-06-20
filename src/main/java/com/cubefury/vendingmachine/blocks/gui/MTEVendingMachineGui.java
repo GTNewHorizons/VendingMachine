@@ -42,9 +42,11 @@ import com.cleanroommc.modularui.value.sync.EnumSyncValue;
 import com.cleanroommc.modularui.value.sync.IntSyncValue;
 import com.cleanroommc.modularui.value.sync.InteractionSyncHandler;
 import com.cleanroommc.modularui.value.sync.PanelSyncManager;
+import com.cleanroommc.modularui.widget.AbstractWidget;
 import com.cleanroommc.modularui.widget.ParentWidget;
 import com.cleanroommc.modularui.widget.SingleChildWidget;
 import com.cleanroommc.modularui.widget.Widget;
+import com.cleanroommc.modularui.widget.sizer.Unit;
 import com.cleanroommc.modularui.widgets.ButtonWidget;
 import com.cleanroommc.modularui.widgets.CycleButtonWidget;
 import com.cleanroommc.modularui.widgets.ListWidget;
@@ -100,6 +102,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
 
     private PosGuiData guiData;
     private final PagedWidget.Controller tabController;
+    private PagedWidget pagedWidget;
     private final List<ListWidget> tradeLists;
     public IWidget favouritesTabWidget;
     private final SearchBar searchBar;
@@ -118,12 +121,15 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
 
     // Trade Item Display
     public static final int TRADE_ROW_WIDTH = 154;
+    private static final int TRADE_LIST_MIN_HEIGHT = 1;
+    private static final int TRADE_LIST_MAX_HEIGHT = 144;
     public static final int TILE_ITEMS_PER_ROW = 3;
     public static final int TILE_ITEM_HEIGHT = 25;
     public static final int TILE_ITEM_WIDTH = 47;
     public static final int LIST_ITEM_HEIGHT = 14;
     public static final int LIST_ITEM_WIDTH = 153;
 
+    private static final int COIN_DISPLAY_HEIGHT = 55;
     private static final int COIN_COLUMN_WIDTH = 40;
     private static final int COIN_COLUMN_ROW_COUNT = 4;
     private static final String COIN_INSERT_SOUND = "vendingmachine:coin_insert";
@@ -177,9 +183,15 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
         this.guiData = guiData;
 
         registerSyncValues(syncManager);
-        ModularPanel panel = new TradeMainPanel("MTEMultiBlockBase", this, guiData, syncManager)
-            .size(178, CUSTOM_UI_HEIGHT)
+        ModularPanel panel = new TradeMainPanel("MTEMultiBlockBase", this, guiData, syncManager).width(178)
             .padding(4);
+
+        panel.height(
+            () -> Math.min(
+                CUSTOM_UI_HEIGHT,
+                panel.getScreen()
+                    .getScreenArea().height - 69),
+            Unit.Measure.PIXEL);
 
         if (syncManager.isClient()) {
             panel.onCloseAction(() -> {
@@ -271,7 +283,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
                             .overlay(
                                 new DynamicDrawable(
                                     () -> VMConfig.gui.display_type.getTexture()
-                                        .size(14)))
+                                        .size(12)))
                             .stateCount(DisplayType.values().length)
                             .value(new IntValue.Dynamic(() -> VMConfig.gui.display_type.ordinal(), val -> {
                                 VMConfig.gui.display_type = DisplayType.values()[val];
@@ -285,12 +297,25 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
                             })
                             .tooltipAutoUpdate(true)),
                     Arrays.asList(
-                        null,
+                        new CycleButtonWidget().size(14)
+                            .overlay(
+                                new DynamicDrawable(
+                                    () -> VMConfig.gui.show_coins ? GuiTextures.SHOW_COINS.asIcon()
+                                        .size(12)
+                                        : GuiTextures.HIDE_COINS.asIcon()
+                                            .size(12)))
+                            .stateCount(2)
+                            .value(new BoolValue.Dynamic(() -> VMConfig.gui.show_coins, val -> {
+                                VMConfig.gui.show_coins = val;
+                                pagedWidget.scheduleResize();
+                                tradeLists.forEach(AbstractWidget::scheduleResize);
+                                ConfigurationManager.save(VMConfig.class);
+                            })),
                         new CycleButtonWidget().size(14)
                             .overlay(
                                 new DynamicDrawable(
                                     () -> VMConfig.gui.sort_mode.getTexture()
-                                        .size(14)))
+                                        .size(12)))
                             .stateCount(SortMode.values().length)
                             .value(new IntValue.Dynamic(() -> VMConfig.gui.sort_mode.ordinal(), val -> {
                                 VMConfig.gui.sort_mode = SortMode.values()[val];
@@ -724,15 +749,20 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
             .name("paged")
             .width(162)
             .controller(tabController)
-            .background(GuiTextures.TRADE_BACKGROUND)
-            .height(146);
+            .background(GuiTextures.TRADE_BACKGROUND);
+        paged.height(() -> 2 + Math.max(TRADE_LIST_MIN_HEIGHT, Math.min(rootPanel.getArea().height - 176, TRADE_LIST_MAX_HEIGHT))
+            + (VMConfig.gui.show_coins ? 0: COIN_DISPLAY_HEIGHT), Unit.Measure.PIXEL);
+        this.pagedWidget = paged;
+
         for (TradeCategory category : this.tradeCategories) {
             ListWidget<IWidget, ?> tradeList = new ListWidget<>()
                 .name("items")
                 .width(161)
                 .top(1)
-                .height(144)
                 .collapseDisabledChild(true);
+
+            tradeList.height(() -> Math.max(TRADE_LIST_MIN_HEIGHT, Math.min(rootPanel.getArea().height - 176, TRADE_LIST_MAX_HEIGHT))
+                + (VMConfig.gui.show_coins ? 0: COIN_DISPLAY_HEIGHT), Unit.Measure.PIXEL);
 
             this.tradeLists.add(tradeList);
 
@@ -818,8 +848,9 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
     private IWidget createCoinInventoryRow(TradeMainPanel panel, PanelSyncManager syncManager) {
         Flow parent = Flow.row()
             .width(162)
-            .height(36)
-            .top(172)
+            .height(COIN_DISPLAY_HEIGHT)
+            .bottom(84)
+            .setEnabledIf(flow -> VMConfig.gui.show_coins)
             .left(3);
         Flow coinColumn = Flow.column()
             .width(COIN_COLUMN_WIDTH);
