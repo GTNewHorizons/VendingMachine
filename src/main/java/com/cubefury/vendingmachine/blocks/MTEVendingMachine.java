@@ -52,6 +52,7 @@ import com.cubefury.vendingmachine.blocks.gui.TradeItemDisplay;
 import com.cubefury.vendingmachine.blocks.gui.WalletMode;
 import com.cubefury.vendingmachine.network.handlers.NetTradeDisplaySync;
 import com.cubefury.vendingmachine.network.handlers.NetTradeRequestSync;
+import com.cubefury.vendingmachine.network.handlers.NetWorldMusicSync;
 import com.cubefury.vendingmachine.trade.CurrencyItem;
 import com.cubefury.vendingmachine.trade.CurrencyType;
 import com.cubefury.vendingmachine.trade.Trade;
@@ -62,6 +63,7 @@ import com.cubefury.vendingmachine.trade.TradeRequest;
 import com.cubefury.vendingmachine.util.BigItemStack;
 import com.cubefury.vendingmachine.util.OverlayHelper;
 import com.cubefury.vendingmachine.util.Translator;
+import com.cubefury.vendingmachine.util.VMMusicManager;
 import com.cubefury.vendingmachine.util.Wallet;
 import com.gtnewhorizon.structurelib.StructureLibAPI;
 import com.gtnewhorizon.structurelib.alignment.IAlignment;
@@ -144,6 +146,13 @@ public class MTEVendingMachine extends MTEMultiBlockBase
     private Map<BigItemStack, Integer> inputSlotCache = new HashMap<>();
 
     private EntityPlayer currentUser = null;
+
+    // World music (jukebox mode). Server is source of truth, persisted in NBT.
+    private boolean worldMusicEnabled = false;
+    // Client mirror of the above, set via NetWorldMusicSync.
+    public boolean clientWorldMusicEnabled = false;
+    // Client: whether this machine's GUI is currently open locally (suppresses world sound).
+    public boolean guiOpenLocally = false;
 
     public MTEVendingMachine(final int aID, final String aName, final String aNameRegional) {
         super(aID, aName, aNameRegional);
@@ -466,11 +475,13 @@ public class MTEVendingMachine extends MTEMultiBlockBase
             pendingOutputs.appendTag(itemStack.writeToNBT(new NBTTagCompound()));
         }
         aNBT.setTag("outputBuffer", pendingOutputs);
+        aNBT.setBoolean("worldMusic", this.worldMusicEnabled);
     }
 
     @Override
     public void loadNBTData(NBTTagCompound aNBT) {
         super.loadNBTData(aNBT);
+        this.worldMusicEnabled = aNBT.getBoolean("worldMusic");
         boolean loadedLegacyData = false;
 
         NBTTagList pendingOutputs = aNBT.getTagList("outputBuffer", Constants.NBT.TAG_COMPOUND);
@@ -583,6 +594,14 @@ public class MTEVendingMachine extends MTEMultiBlockBase
             if (!aBaseMetaTileEntity.isActive()) {
                 OverlayHelper.clearVMOverlay(overlayTickets);
             }
+            VMMusicManager.updateWorldMusic(
+                aBaseMetaTileEntity.getWorld().provider.dimensionId,
+                aBaseMetaTileEntity.getXCoord(),
+                aBaseMetaTileEntity.getYCoord(),
+                aBaseMetaTileEntity.getZCoord(),
+                this.clientWorldMusicEnabled,
+                this.guiOpenLocally,
+                aBaseMetaTileEntity.isActive());
             return;
         } else if (this.mUpdate++ % STRUCTURE_CHECK_TICKS == 0) {
             this.mMachine = checkMachine(aBaseMetaTileEntity, null);
@@ -706,6 +725,7 @@ public class MTEVendingMachine extends MTEMultiBlockBase
         if (aBaseMetaTileEntity.isClientSide()) {
             StructureLibAPI.queryAlignment((IAlignmentProvider) aBaseMetaTileEntity);
             setTextureOverlay();
+            NetWorldMusicSync.requestState(this);
         }
     }
 
@@ -749,7 +769,12 @@ public class MTEVendingMachine extends MTEMultiBlockBase
     @Override
     public void onRemoval() {
         super.onRemoval();
-        if (getBaseMetaTileEntity().isClientSide()) OverlayHelper.clearVMOverlay(overlayTickets);
+        if (getBaseMetaTileEntity().isClientSide()) {
+            OverlayHelper.clearVMOverlay(overlayTickets);
+            IGregTechTileEntity te = getBaseMetaTileEntity();
+            VMMusicManager
+                .stopWorldMusic(te.getWorld().provider.dimensionId, te.getXCoord(), te.getYCoord(), te.getZCoord());
+        }
     }
 
     @Override
@@ -793,6 +818,22 @@ public class MTEVendingMachine extends MTEMultiBlockBase
 
     public EntityPlayer getCurrentUser() {
         return this.currentUser;
+    }
+
+    public boolean isWorldMusicEnabled() {
+        return this.worldMusicEnabled;
+    }
+
+    public void setWorldMusicEnabled(boolean enabled) {
+        if (this.worldMusicEnabled == enabled) {
+            return;
+        }
+        this.worldMusicEnabled = enabled;
+        IGregTechTileEntity te = getBaseMetaTileEntity();
+        if (te != null && te.isServerSide()) {
+            this.markDirty();
+            NetWorldMusicSync.broadcastState(this);
+        }
     }
 
     public void resetCurrentUser(EntityPlayer aPlayer) {

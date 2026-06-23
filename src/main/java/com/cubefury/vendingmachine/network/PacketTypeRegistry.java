@@ -20,6 +20,7 @@ import com.cubefury.vendingmachine.network.handlers.NetTradeDbSync;
 import com.cubefury.vendingmachine.network.handlers.NetTradeDisplaySync;
 import com.cubefury.vendingmachine.network.handlers.NetTradeNotification;
 import com.cubefury.vendingmachine.network.handlers.NetTradeRequestSync;
+import com.cubefury.vendingmachine.network.handlers.NetWorldMusicSync;
 
 public class PacketTypeRegistry implements IPacketRegistry {
 
@@ -37,6 +38,7 @@ public class PacketTypeRegistry implements IPacketRegistry {
         NetBulkSync.registerHandler();
         NetResetVMUser.registerHandler();
         NetTradeNotification.registerHandler();
+        NetWorldMusicSync.registerHandler();
     }
 
     @Override

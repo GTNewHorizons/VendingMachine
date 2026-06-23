@@ -1,5 +1,8 @@
 package com.cubefury.vendingmachine.util;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.ISound;
 import net.minecraft.client.audio.PositionedSoundRecord;
@@ -24,6 +27,9 @@ import paulscode.sound.SoundSystem;
 public final class VMMusicManager {
 
     public static boolean tickingMusic = false;
+
+    // Active world (positional) sounds keyed by "dim:x:y:z".
+    private static final Map<String, ISound> worldSounds = new HashMap<>();
 
     private static final int FADE_TIME = 1000;
 
@@ -139,6 +145,40 @@ public final class VMMusicManager {
             inVm = Minecraft.getMinecraft().currentScreen instanceof GuiContainerWrapper;
         }
         return inVm;
+    }
+
+    private static String worldKey(int dim, int x, int y, int z) {
+        return dim + ":" + x + ":" + y + ":" + z;
+    }
+
+    public static void updateWorldMusic(int dim, int x, int y, int z, boolean enabled, boolean guiOpenLocally,
+        boolean active) {
+        String key = worldKey(dim, x, y, z);
+        boolean shouldPlay = enabled && active && !guiOpenLocally && MusicTrack.LUNCH_BREAK.getSoundLoc() != null;
+        SoundHandler soundHandler = Minecraft.getMinecraft()
+            .getSoundHandler();
+        ISound current = worldSounds.get(key);
+        // Track is looped (repeat=true), so map presence is the source of truth.
+        // We must not rely on isSoundPlaying right after playSound: streamed sounds
+        // load asynchronously and report not-playing for a few ticks, which would
+        // start a second overlapping copy.
+        if (shouldPlay && current == null) {
+            ISound sound = new VMWorldSound(MusicTrack.LUNCH_BREAK.getSoundLoc(), x, y, z);
+            worldSounds.put(key, sound);
+            soundHandler.playSound(sound);
+        } else if (!shouldPlay && current != null) {
+            soundHandler.stopSound(current);
+            worldSounds.remove(key);
+        }
+    }
+
+    public static void stopWorldMusic(int dim, int x, int y, int z) {
+        ISound sound = worldSounds.remove(worldKey(dim, x, y, z));
+        if (sound != null) {
+            Minecraft.getMinecraft()
+                .getSoundHandler()
+                .stopSound(sound);
+        }
     }
 
     public static class AudioContext {

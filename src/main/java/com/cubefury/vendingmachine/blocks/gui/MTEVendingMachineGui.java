@@ -194,7 +194,9 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
             Unit.Measure.PIXEL);
 
         if (syncManager.isClient()) {
+            base.guiOpenLocally = true;
             panel.onCloseAction(() -> {
+                base.guiOpenLocally = false;
                 FavouritesTracker.INSTANCE.saveFavourites();
                 VMMusicManager.stopVendingMachineMusic();
             });
@@ -328,7 +330,19 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
                                         + VMConfig.gui.sort_mode.getLocalizedName());
                                 setForceRefresh();
                             })
-                            .tooltipAutoUpdate(true))));
+                            .tooltipAutoUpdate(true)),
+                    Arrays.asList(
+                        new ToggleButton().size(14)
+                            .overlay(
+                                new DynamicDrawable(
+                                    () -> (base.isWorldMusicEnabled() ? GuiTextures.AUDIO_ON : GuiTextures.AUDIO_OFF)
+                                        .asIcon()
+                                        .size(12)))
+                            .syncHandler("worldMusic")
+                            .tooltipBuilder(t -> t.addLine(IKey.lang("vendingmachine.gui.world_music"))),
+                        // Empty second cell so the grid row matches the others' width (Grid.sanitizeMatrix
+                        // cannot pad fixed-size Arrays.asList rows, ragged rows crash on init).
+                        null)));
     }
 
     public IWidget createCategoryTabs(PagedWidget.Controller tabController) {
@@ -915,6 +929,11 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
             }
         }).allowC2S();
         syncManager.syncValue("ejectCoins", ejectCoinsSyncer);
+
+        BooleanSyncValue worldMusicSyncer = new BooleanSyncValue(
+            () -> base.isWorldMusicEnabled(),
+            val -> base.setWorldMusicEnabled(val)).allowC2S();
+        syncManager.syncValue("worldMusic", worldMusicSyncer);
 
         UUID playerId = NameCache.INSTANCE.getUUIDFromPlayer(getBase().getCurrentUser());
         for (CurrencyType type : CurrencyType.values()) {
