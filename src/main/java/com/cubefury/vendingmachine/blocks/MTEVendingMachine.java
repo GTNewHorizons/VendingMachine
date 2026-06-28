@@ -362,9 +362,9 @@ public class MTEVendingMachine extends MTEMultiBlockBase
             tooltipBuilder.addMachineType("Vending Machine")
                 .addInfo("Who even restocks this...")
                 .beginStructureBlock(2, 3, 1, false)
-                .addController("Middle")
-                .addOtherStructurePart("Tin Item Pipe Casings", "Everything except the controller")
-                .addOtherStructurePart("ME Vending Uplink Hatch", "Any Pipe Casing, Optional")
+                .addController("Middle right")
+                .addCasingInfoExactly("Vending Machine Casing", 5, false)
+                .addOtherStructurePart("ME Vending Uplink Hatch", "Any Vending Machine Casing, Optional")
                 .addStructureInfo("Cannot be flipped onto its side")
                 .toolTipFinisher(AUTHOR_CUBEFURY);
         }
