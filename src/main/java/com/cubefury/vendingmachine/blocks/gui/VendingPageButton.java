@@ -17,7 +17,8 @@ import com.cubefury.vendingmachine.trade.TradeCategory;
 
 public class VendingPageButton extends PageButton {
 
-    private final static int ICON_MARGIN = 6;
+    private final static int ICON_MARGIN_LEFT = 7;
+    private final static int ICON_MARGIN_RIGHT = 5;
 
     private final int index;
     private final Icon tabIcon;
@@ -38,7 +39,7 @@ public class VendingPageButton extends PageButton {
             tabIcon = tradeCategories.get(index)
                 .getTexture()
                 .asIcon()
-                .margin(ICON_MARGIN)
+                .margin(ICON_MARGIN_LEFT, ICON_MARGIN_RIGHT, 6, 6)
                 .center());
     }
 
@@ -51,11 +52,11 @@ public class VendingPageButton extends PageButton {
     @Override
     public void draw(ModularGuiContext context, WidgetThemeEntry<?> widgetTheme) {
         if (isHovering()) {
-            tabIcon.marginLeft(ICON_MARGIN - 1)
-                .marginRight(ICON_MARGIN + 1);
+            tabIcon.marginLeft(ICON_MARGIN_LEFT - 1)
+                .marginRight(ICON_MARGIN_RIGHT + 1);
         } else {
-            tabIcon.marginLeft(ICON_MARGIN)
-                .marginRight(ICON_MARGIN);
+            tabIcon.marginLeft(ICON_MARGIN_LEFT)
+                .marginRight(ICON_MARGIN_RIGHT);
         }
         super.draw(context, widgetTheme);
     }
