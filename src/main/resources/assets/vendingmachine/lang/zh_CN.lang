@@ -2,8 +2,6 @@ item.vendingmachine.placeholder.name=占位符物品
 
 tooltip.vendingmachine=到底是谁在补货啊...
 
-structure.vendingmachine.hint.1=提示 1：锡质物品管道外壳，ME自动售货接入接口
-
 vendingmachine.gui.requirementHeader=需求条件：
 vendingmachine.gui.requirement.unknown=未知需求
 vendingmachine.gui.requirement.betterquesting=任务
