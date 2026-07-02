@@ -358,8 +358,8 @@ public class MTEVendingMachine extends MTEMultiBlockBase
                 .addInfo("Who even restocks this...")
                 .beginStructureBlock(1, 2, 3, false)
                 .addController("Middle right, 2nd layer")
-                .addCasing("0-5", "Vending Machine Casing", false)
-                .addMiscHatch("0+", "ME Vending Uplink Hatch", "Any casing", 1)
+                .addCasing("4-5", "Vending Machine Casing", false)
+                .addMiscHatch("0-1", "ME Vending Uplink Hatch", "Any casing", 1)
                 .addStructureInfo("")
                 .addStructureFooter("Cannot be flipped onto its side")
                 .toolTipFinisher(AUTHOR_CUBEFURY);
