@@ -347,11 +347,6 @@ public class MTEVendingMachine extends MTEMultiBlockBase
     }
 
     @Override
-    public String[] getStructureDescription(ItemStack stackSize) {
-        return new String[] { Translator.translate("structure.vendingmachine.hint.1") };
-    }
-
-    @Override
     public IStructureDefinition<MTEVendingMachine> getStructureDefinition() {
         return STRUCTURE_DEFINITION;
     }
@@ -361,11 +356,12 @@ public class MTEVendingMachine extends MTEMultiBlockBase
             tooltipBuilder = new MultiblockTooltipBuilder();
             tooltipBuilder.addMachineType("Vending Machine")
                 .addInfo("Who even restocks this...")
-                .beginStructureBlock(2, 3, 1, false)
-                .addController("Middle right")
-                .addCasingInfoExactly("Vending Machine Casing", 5, false)
-                .addOtherStructurePart("ME Vending Uplink Hatch", "Any Vending Machine Casing, Optional")
-                .addStructureInfo("Cannot be flipped onto its side")
+                .beginStructureBlock(1, 2, 3, false)
+                .addController("Middle right, 2nd layer")
+                .addCasing("4-5", "Vending Machine Casing", false)
+                .addMiscHatch("0-1", "ME Vending Uplink Hatch", "Any casing", 1)
+                .addStructureInfo("")
+                .addStructureFooter("Cannot be flipped onto its side")
                 .toolTipFinisher(AUTHOR_CUBEFURY);
         }
         return tooltipBuilder;
