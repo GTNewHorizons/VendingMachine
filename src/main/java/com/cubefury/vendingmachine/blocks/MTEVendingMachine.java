@@ -50,8 +50,10 @@ import com.cubefury.vendingmachine.VendingMachine;
 import com.cubefury.vendingmachine.blocks.gui.MTEVendingMachineGui;
 import com.cubefury.vendingmachine.blocks.gui.TradeItemDisplay;
 import com.cubefury.vendingmachine.blocks.gui.WalletMode;
+import com.cubefury.vendingmachine.network.handlers.NetCoinDeposit;
 import com.cubefury.vendingmachine.network.handlers.NetTradeDisplaySync;
 import com.cubefury.vendingmachine.network.handlers.NetTradeRequestSync;
+import com.cubefury.vendingmachine.storage.NameCache;
 import com.cubefury.vendingmachine.trade.CurrencyItem;
 import com.cubefury.vendingmachine.trade.CurrencyType;
 import com.cubefury.vendingmachine.trade.Trade;
@@ -121,6 +123,7 @@ public class MTEVendingMachine extends MTEMultiBlockBase
         .build() };
     private static final String COIN_DROP_SOUND = "vendingmachine:coin_drop";
     private static final String ITEM_DROP_SOUND = "vendingmachine:item_drop";
+    private static final String COIN_INSERT_SOUND = "vendingmachine:coin_insert";
 
     protected final List<RenderOverlay.OverlayTicket> overlayTickets = new ArrayList<>();
 
@@ -765,6 +768,21 @@ public class MTEVendingMachine extends MTEMultiBlockBase
 
     @Override
     public boolean onRightclick(IGregTechTileEntity aBaseMetaTileEntity, EntityPlayer aPlayer) {
+        if (this.getActive() && CurrencyItem.fromItemStack(aPlayer.getHeldItem()) != null) {
+            // Deposit held coins straight into the wallet instead of opening the GUI.
+            // Both sides reach here; only the client knows the selected wallet mode, so it
+            // sends the packet. The server does nothing but consume the click (return true),
+            // and the packet handler performs the deposit.
+            if (aBaseMetaTileEntity.isClientSide()) {
+                NetCoinDeposit.sendDeposit(
+                    aBaseMetaTileEntity.getWorld(),
+                    aBaseMetaTileEntity.getXCoord(),
+                    aBaseMetaTileEntity.getYCoord(),
+                    aBaseMetaTileEntity.getZCoord(),
+                    VMConfig.gui.wallet_mode);
+            }
+            return true;
+        }
         if (GTUtil.hasMultiblockInputConfiguration(aPlayer.getHeldItem())) {
             if (aBaseMetaTileEntity.isServerSide()) {
                 if (GTUtil.loadMultiblockInputConfiguration(this, aPlayer)) {
@@ -799,6 +817,34 @@ public class MTEVendingMachine extends MTEMultiBlockBase
         if (this.currentUser == aPlayer) {
             this.currentUser = null;
         }
+    }
+
+    /**
+     * Server-side: deposit the player's whole held coin stack into the selected wallet.
+     * Mirrors MTEVendingMachineGui.insertCoin. No-op if the machine is inactive, the held
+     * item is not a coin, or the target wallet does not exist (e.g. team mode with no team).
+     */
+    public void depositHeldCoins(EntityPlayerMP player, WalletMode walletMode) {
+        if (!getActive() || player == null) {
+            return;
+        }
+        ItemStack held = player.getHeldItem();
+        CurrencyItem currencyItem = CurrencyItem.fromItemStack(held);
+        if (currencyItem == null) {
+            return;
+        }
+        UUID playerId = NameCache.INSTANCE.getUUIDFromPlayer(player);
+        Wallet wallet = TradeManager.INSTANCE.getWallet(playerId, walletMode);
+        if (wallet == null) {
+            // No wallet for this mode (e.g. team mode without a team): leave coins in hand.
+            return;
+        }
+        wallet.addCount(currencyItem.type, currencyItem.value);
+        player.inventory.setInventorySlotContents(player.inventory.currentItem, null);
+        player.inventoryContainer.detectAndSendChanges();
+        playSoundEffect(COIN_INSERT_SOUND);
+        this.syncTrades = true;
+        TradeManager.INSTANCE.saveTeamData(playerId);
     }
 
     private boolean addUplinkHatch(IGregTechTileEntity aBaseMetaTileEntity, int aBaseCasingIndex) {
