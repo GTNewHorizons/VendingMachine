@@ -50,7 +50,6 @@ import com.cubefury.vendingmachine.VendingMachine;
 import com.cubefury.vendingmachine.blocks.gui.MTEVendingMachineGui;
 import com.cubefury.vendingmachine.blocks.gui.TradeItemDisplay;
 import com.cubefury.vendingmachine.blocks.gui.WalletMode;
-import com.cubefury.vendingmachine.network.handlers.NetCoinDeposit;
 import com.cubefury.vendingmachine.network.handlers.NetTradeDisplaySync;
 import com.cubefury.vendingmachine.network.handlers.NetTradeRequestSync;
 import com.cubefury.vendingmachine.storage.NameCache;
@@ -768,21 +767,6 @@ public class MTEVendingMachine extends MTEMultiBlockBase
 
     @Override
     public boolean onRightclick(IGregTechTileEntity aBaseMetaTileEntity, EntityPlayer aPlayer) {
-        if (this.getActive() && CurrencyItem.fromItemStack(aPlayer.getHeldItem()) != null) {
-            // Deposit held coins straight into the wallet instead of opening the GUI.
-            // Both sides reach here; only the client knows the selected wallet mode, so it
-            // sends the packet. The server does nothing but consume the click (return true),
-            // and the packet handler performs the deposit.
-            if (aBaseMetaTileEntity.isClientSide()) {
-                NetCoinDeposit.sendDeposit(
-                    aBaseMetaTileEntity.getWorld(),
-                    aBaseMetaTileEntity.getXCoord(),
-                    aBaseMetaTileEntity.getYCoord(),
-                    aBaseMetaTileEntity.getZCoord(),
-                    VMConfig.gui.wallet_mode);
-            }
-            return true;
-        }
         if (GTUtil.hasMultiblockInputConfiguration(aPlayer.getHeldItem())) {
             if (aBaseMetaTileEntity.isServerSide()) {
                 if (GTUtil.loadMultiblockInputConfiguration(this, aPlayer)) {
