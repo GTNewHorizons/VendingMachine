@@ -362,7 +362,7 @@ public class MTEVendingMachine extends MTEMultiBlockBase
             tooltipBuilder = new MultiblockTooltipBuilder();
             tooltipBuilder.addMachineType("Vending Machine")
                 .addInfo("Who even restocks this...")
-                .beginStructureBlock(1, 2, 3, false)
+                .beginStructureBlock(2, 3, 1, false)
                 .addController("Middle right, 2nd layer")
                 .addCasing("4-5", "Vending Machine Casing", false)
                 .addMiscHatch("0-1", "ME Vending Uplink Hatch", "Any casing", 1)
