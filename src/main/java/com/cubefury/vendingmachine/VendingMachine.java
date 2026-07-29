@@ -94,7 +94,7 @@ public class VendingMachine {
     public void init(FMLInitializationEvent event) {
 
         isBqLoaded = Loader.isModLoaded("betterquesting");
-        isGtLoaded = Loader.isModLoaded("gregtech");
+        isGt5uNhLoaded = Loader.isModLoaded("gregtech_nh");
         isAeLoaded = Loader.isModLoaded("appliedenergistics2");
 
         LOG.info("Better Questing Integration enabled: {}", isBqLoaded);
