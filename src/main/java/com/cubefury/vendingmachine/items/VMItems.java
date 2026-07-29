@@ -17,7 +17,7 @@ public class VMItems {
 
     private VMItems() {}
 
-    @Optional.Method(modid = "gregtech")
+    @Optional.Method(modid = "gregtech_nh")
     public static void registerMultis() {
         vendingMachine = new MTEVendingMachine(
             VendingMachine.CONTROLLER_MTE_ID,

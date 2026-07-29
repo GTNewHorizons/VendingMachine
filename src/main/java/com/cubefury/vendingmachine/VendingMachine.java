@@ -60,7 +60,7 @@ public class VendingMachine {
     public static VendingMachine instance;
 
     public static boolean isBqLoaded = false;
-    public static boolean isGtLoaded = false;
+    public static boolean isGt5uNhLoaded = false;
     public static boolean isAeLoaded = false;
 
     public static int CONTROLLER_MTE_ID = 2741;
@@ -94,16 +94,16 @@ public class VendingMachine {
     public void init(FMLInitializationEvent event) {
 
         isBqLoaded = Loader.isModLoaded("betterquesting");
-        isGtLoaded = Loader.isModLoaded("gregtech");
+        isGt5uNhLoaded = Loader.isModLoaded("gregtech_nh");
         isAeLoaded = Loader.isModLoaded("appliedenergistics2");
 
         LOG.info("Better Questing Integration enabled: {}", isBqLoaded);
-        LOG.info("Gregtech Integration enabled: {}", isGtLoaded);
+        LOG.info("Gregtech Integration enabled: {}", isGt5uNhLoaded);
         LOG.info("AE2 Integration enabled {}", isAeLoaded);
 
         GameRegistry.registerItem(ItemPlaceholder.placeholder, "placeholder");
 
-        if (isGtLoaded) {
+        if (isGt5uNhLoaded) {
             VendingMachineBlocks.registerBlocks();
             VMItems.registerMultis();
         }
