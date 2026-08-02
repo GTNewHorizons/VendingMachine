@@ -44,6 +44,14 @@ public enum CurrencyType {
     public final UITexture coinIcon10000;
 
     CurrencyType(String id, String itemPrefix, String textureName) {
+
+        if (itemPrefix == null || itemPrefix.isEmpty())
+            throw new IllegalArgumentException("Currency itemPrefix cannot be null or empty.");
+        if (textureName == null || textureName.isEmpty())
+            throw new IllegalArgumentException("Currency textureName cannot be null or empty.");
+        if (id == null || id.isEmpty()) throw new IllegalArgumentException("Currency ID cannot be null or empty.");
+        if (id.equalsIgnoreCase("ALL")) throw new IllegalArgumentException("Currency ID cannot be '" + id + "'.");
+
         this.id = id;
         this.itemPrefix = itemPrefix;
         coinBackground1 = createCoinUITexture("background/small0");

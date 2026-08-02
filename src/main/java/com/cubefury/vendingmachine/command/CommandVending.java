@@ -7,7 +7,7 @@ import java.util.Map;
 
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
-import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.ChatComponentTranslation;
 
 import com.cubefury.vendingmachine.command.vending.IVendingSubcommand;
 import com.cubefury.vendingmachine.command.vending.SubCmdAdd;
@@ -66,7 +66,8 @@ public class CommandVending extends CommandBase {
             SUBCOMMAND_MAP.get(args[0])
                 .execute(sender, Arrays.copyOfRange(args, 1, args.length));
         } else {
-            sender.addChatMessage(new ChatComponentText("Usage: " + getCommandUsage(sender)));
+            sender
+                .addChatMessage(new ChatComponentTranslation("vendingmachine.command.usage", getCommandUsage(sender)));
         }
     }
 
