@@ -1,5 +1,7 @@
 package com.cubefury.vendingmachine.blocks.gui.coin;
 
+import static com.gtnewhorizon.gtnhlib.util.numberformatting.NumberFormatUtil.formatNumber;
+
 import com.cleanroommc.modularui.api.GuiAxis;
 import com.cleanroommc.modularui.api.drawable.IKey;
 import com.cleanroommc.modularui.drawable.Icon;
@@ -68,12 +70,12 @@ public class CoinDisplay extends Flow {
                 .syncHandler("ejectCoin_" + type.id)
                 .tooltipDynamic((builder) -> {
                     builder.clearText();
-                    StringBuilder valueLine = new StringBuilder().append(coinSyncValue.getValue());
+                    StringBuilder valueLine = new StringBuilder().append(formatNumber(coinSyncValue.getValue()));
                     int coinValueMe = coinSyncValueMe.getValue();
                     valueLine.append(" ");
                     if (coinValueMe > 0) {
                         valueLine.append("(+")
-                            .append(coinValueMe)
+                            .append(formatNumber(coinValueMe))
                             .append(") ");
                     }
                     valueLine.append(type.getLocalizedName());
@@ -98,12 +100,14 @@ public class CoinDisplay extends Flow {
     }
 
     private static String getReadableStringFromCoinAmount(int amount) {
-        if (amount < 10000) {
+        if (amount < 10_000) {
             return "" + amount;
-        } else if (amount < 1000000) {
-            return amount / 1000 + "K";
+        } else if (amount < 1_000_000) {
+            return amount / 1_000 + "K";
+        } else if (amount < 1_000_000_000) {
+            return formatNumber(amount / 1_000_000) + "M";
         } else {
-            return amount / 1000000 + "M";
+            return formatNumber(amount / 1_000_000_000) + "B";
         }
     }
 
