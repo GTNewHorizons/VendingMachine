@@ -4,6 +4,9 @@ import net.minecraft.item.ItemStack;
 
 import com.ruling_0.materiallib.api.StackResolver;
 
+/// Resolves the `ml:<material>:<shape>` references trade entries carry. Such a reference names its item by material
+/// and shape instead of by id and metadata, which MaterialLib assigns afresh each session.
+///
 /// Sole holder of MaterialLib API references, so that no other class can pull them in while MaterialLib is absent.
 /// Every caller checks [com.cubefury.vendingmachine.VendingMachine#isMaterialLibLoaded] before entering a method that
 /// reaches this class.

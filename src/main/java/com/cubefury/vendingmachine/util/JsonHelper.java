@@ -53,10 +53,8 @@ public class JsonHelper {
     }
 
     /// The stack an `ml:<material>:<shape>` entry names, or null when the entry names something else, when MaterialLib
-    /// is absent, or when the reference resolves to nothing. The stored `Damage` is ignored: the metadata a material
-    /// holds is assigned per session, so only the resolved stack carries a usable one.
-    ///
-    /// A reference that resolves to nothing returns null so that the caller falls back to its usual unknown-item path.
+    /// is absent, or when the reference resolves to nothing. The stored `Damage` is ignored in favor of the resolved
+    /// stack's.
     public static BigItemStack JsonToMaterialLibStack(@Nonnull NBTTagCompound nbt) {
         if (!nbt.hasKey("id", Constants.NBT.TAG_STRING) || !VendingMachine.isMaterialLibLoaded) {
             return null;
