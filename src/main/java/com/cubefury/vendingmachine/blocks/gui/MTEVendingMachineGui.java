@@ -656,9 +656,17 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
                     IKey.lang("vendingmachine.gui.required_inputs")
                         .style(IKey.DARK_GREEN, IKey.ITALIC));
                 for (CurrencyItem currencyItem : cur.fromCurrency) {
-                    builder.addLine(
-                        IKey.str(currencyItem.value + " " + currencyItem.type.getLocalizedName())
+                    builder.add(
+                        IKey.str(currencyItem.value + " ")
                             .style(IKey.DARK_GREEN));
+                    builder.add(
+                        IDrawable.of(currencyItem.type.coinBackground1, currencyItem.type.coinIcon1)
+                            .asIcon()
+                            .size(12));
+                    builder.add(
+                        IKey.str(" " + currencyItem.type.getLocalizedName())
+                            .style(IKey.DARK_GREEN));
+                    builder.newLine();
                 }
                 for (BigItemStack fromItem : cur.fromItems) {
                     builder.addLine(
