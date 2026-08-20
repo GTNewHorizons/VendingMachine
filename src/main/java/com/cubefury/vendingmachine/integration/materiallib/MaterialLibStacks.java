@@ -5,22 +5,21 @@ import net.minecraft.item.ItemStack;
 import com.ruling_0.materiallib.api.StackResolver;
 
 /// Resolves the `ml:<material>:<shape>` references trade entries carry. Such a reference names its item by material
-/// and shape instead of by id and metadata, which MaterialLib assigns afresh each session.
+/// and shape instead of by the id and metadata MaterialLib assigns afresh each session.
 ///
-/// Sole holder of MaterialLib API references, so that no other class can pull them in while MaterialLib is absent.
-/// Every caller checks [com.cubefury.vendingmachine.VendingMachine#isMaterialLibLoaded] before entering a method that
-/// reaches this class.
+/// Sole holder of MaterialLib API references, keeping them out of classes that load while MaterialLib is absent.
+/// Callers check [com.cubefury.vendingmachine.VendingMachine#isMaterialLibLoaded] first.
 public final class MaterialLibStacks {
 
     private MaterialLibStacks() {}
 
-    /// The stack an `ml:<material>:<shape>` reference names, or null when the reference is malformed or names nothing
-    /// MaterialLib registers. MaterialLib logs the reason for a miss.
-    public static ItemStack resolve(String reference, int amount) {
+    /// A single-item stack of what an `ml:<material>:<shape>` reference names, or null when the reference is malformed
+    /// or names nothing MaterialLib registers.
+    public static ItemStack resolve(String reference) {
         String[] parts = reference.split(":");
         if (parts.length != 3) {
             return null;
         }
-        return StackResolver.getStack(parts[1], parts[2], amount);
+        return StackResolver.getStack(parts[1], parts[2], 1);
     }
 }

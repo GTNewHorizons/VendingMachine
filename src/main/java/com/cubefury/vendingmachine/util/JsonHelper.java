@@ -64,18 +64,9 @@ public class JsonHelper {
             return null;
         }
 
-        BigItemStack stack = resolveMaterialLibStack(idName, nbt);
-        if (stack == null) {
-            mlInvalid++;
-            return null;
-        }
-        mlResolved++;
-        return stack;
-    }
-
-    private static BigItemStack resolveMaterialLibStack(String reference, NBTTagCompound nbt) {
-        ItemStack resolved = MaterialLibStacks.resolve(reference, 1);
+        ItemStack resolved = MaterialLibStacks.resolve(idName);
         if (resolved == null) {
+            mlInvalid++;
             return null;
         }
         BigItemStack stack = new BigItemStack(resolved).setOreDict(nbt.getString("OreDict"));
@@ -83,6 +74,7 @@ public class JsonHelper {
         if (nbt.hasKey("tag", Constants.NBT.TAG_COMPOUND)) {
             stack.setTagCompound(nbt.getCompoundTag("tag"));
         }
+        mlResolved++;
         return stack;
     }
 
@@ -104,8 +96,7 @@ public class JsonHelper {
         mlInvalid = 0;
         db.readFromNBT(readNbt.apply(file), false, true);
         if (mlResolved + mlInvalid > 0) {
-            VendingMachine.LOG
-                .info("{}: resolved {} MaterialLib entries ({} invalid)", VendingMachine.NAME, mlResolved, mlInvalid);
+            VendingMachine.LOG.info("Resolved {} MaterialLib entries ({} invalid)", mlResolved, mlInvalid);
         }
     }
 
