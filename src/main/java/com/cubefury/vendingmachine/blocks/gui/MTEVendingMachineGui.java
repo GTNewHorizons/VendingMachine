@@ -46,6 +46,7 @@ import com.cleanroommc.modularui.widget.AbstractWidget;
 import com.cleanroommc.modularui.widget.ParentWidget;
 import com.cleanroommc.modularui.widget.SingleChildWidget;
 import com.cleanroommc.modularui.widget.Widget;
+import com.cleanroommc.modularui.widget.scroll.VerticalScrollData;
 import com.cleanroommc.modularui.widget.sizer.Unit;
 import com.cleanroommc.modularui.widgets.ButtonWidget;
 import com.cleanroommc.modularui.widgets.CycleButtonWidget;
@@ -129,6 +130,12 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
     public static final int LIST_ITEM_HEIGHT = 14;
     public static final int LIST_ITEM_WIDTH = 153;
 
+    // Category Tabs
+    private static final int CATEGORY_TAB_LEFT = -29;
+    private static final int CATEGORY_TAB_TOP = 40;
+    private static final int CATEGORY_TAB_BOTTOM_MARGIN = 4;
+    private static final int CATEGORY_TAB_SCROLLBAR_WIDTH = 3;
+
     private static final int COIN_DISPLAY_HEIGHT = 55;
     private static final int COIN_COLUMN_WIDTH = 40;
     private static final int COIN_COLUMN_ROW_COUNT = 4;
@@ -200,7 +207,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
             });
             VMMusicManager.startVendingMachineMusic(true);
         }
-        panel.child(createCategoryTabs(this.tabController));
+        panel.child(createCategoryTabs(panel, this.tabController));
         Flow mainColumn = Flow.column()
             .width(170);
         if (syncManager.isClient()) { // client side sort and filtering
@@ -331,35 +338,38 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
                             .tooltipAutoUpdate(true))));
     }
 
-    public IWidget createCategoryTabs(PagedWidget.Controller tabController) {
-        Flow tabColumn = Flow.column()
-            .excludeAreaInRecipeViewer()
-            .width(40)
-            .height(300)
-            .left(-29)
-            .top(40)
-            .coverChildren();
+    // The tab list shrinks to fit its tabs, but never grows past the panel, so it scrolls on small GUI scales
+    public IWidget createCategoryTabs(ModularPanel rootPanel, PagedWidget.Controller tabController) {
+        int tabWidth = GuiTextures.TAB_LEFT.getWidth();
+        int tabHeight = GuiTextures.TAB_LEFT.getHeight();
+
+        ListWidget<IWidget, ?> tabList = new ListWidget<>().excludeAreaInRecipeViewer()
+            .scrollDirection(new VerticalScrollData(true, CATEGORY_TAB_SCROLLBAR_WIDTH))
+            .crossAxisAlignment(Alignment.CrossAxis.END)
+            .width(tabWidth + CATEGORY_TAB_SCROLLBAR_WIDTH)
+            .left(CATEGORY_TAB_LEFT - CATEGORY_TAB_SCROLLBAR_WIDTH)
+            .top(CATEGORY_TAB_TOP)
+            .maxSize(
+                () -> Math.max(tabHeight, rootPanel.getArea().height - CATEGORY_TAB_TOP - CATEGORY_TAB_BOTTOM_MARGIN));
 
         for (int i = 0; i < this.tradeCategories.size(); i++) {
             int index = i;
-            tabColumn.child(
-                new VendingPageButton(i, tabController, tradeCategories, highlightedTabs).tab(GuiTextures.TAB_LEFT, -1)
-                    .tooltipBuilder(builder -> {
-                        builder.clearText();
-                        builder.addLine(
-                            Translator.translate(
-                                this.tradeCategories.get(index)
-                                    .getUnlocalized_name()));
-                    }));
+            IWidget tab = new VendingPageButton(i, tabController, tradeCategories, highlightedTabs)
+                .tab(GuiTextures.TAB_LEFT, -1)
+                .tooltipBuilder(builder -> {
+                    builder.clearText();
+                    builder.addLine(
+                        Translator.translate(
+                            this.tradeCategories.get(index)
+                                .getUnlocalized_name()));
+                });
+            tabList.child(tab);
 
             if (tradeCategories.get(i) == TradeCategory.FAVOURITES) {
-                favouritesTabWidget = tabColumn.getChildren()
-                    .get(
-                        tabColumn.getChildren()
-                            .size() - 1);
+                favouritesTabWidget = tab;
             }
         }
-        return tabColumn;
+        return tabList;
     }
 
     public TradeCategory getActiveTradeCategory() {
