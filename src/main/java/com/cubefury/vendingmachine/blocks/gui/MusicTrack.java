@@ -12,16 +12,19 @@ import com.cubefury.vendingmachine.gui.GuiTextures;
 
 public enum MusicTrack {
 
-    NONE("none", null, GuiTextures.AUDIO_OFF),
-    LUNCH_BREAK("lunch_break", new ResourceLocation(VendingMachine.MODID, "track.lunch_break"), GuiTextures.AUDIO_ON);
+    NONE("none", null, 0, GuiTextures.AUDIO_OFF),
+    LUNCH_BREAK("lunch_break", new ResourceLocation(VendingMachine.MODID, "track.lunch_break"), 36_000L,
+        GuiTextures.AUDIO_ON);
 
     private final String name;
     private final ResourceLocation sound;
+    private final long durationMs;
     private final Icon texture;
 
-    MusicTrack(String name, @Nullable ResourceLocation sound, UITexture texture) {
+    MusicTrack(String name, @Nullable ResourceLocation sound, long durationMs, UITexture texture) {
         this.name = name;
         this.sound = sound;
+        this.durationMs = durationMs;
         this.texture = texture.asIcon();
     }
 
@@ -34,8 +37,15 @@ public enum MusicTrack {
         return sound;
     }
 
+    public long getDurationMs() {
+        return durationMs;
+    }
+
+    public long getDurationMsOrDefault(long defaultDurationMs) {
+        return durationMs > 0 ? durationMs : defaultDurationMs;
+    }
+
     public Icon getTexture() {
         return this.texture;
     }
-
 }
