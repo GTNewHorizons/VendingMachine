@@ -136,6 +136,14 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
     private static final int CATEGORY_TAB_BOTTOM_MARGIN = 4;
     private static final int CATEGORY_TAB_SCROLLBAR_WIDTH = 3;
 
+    // Input / Output Side Panel
+    private static final int IO_COLUMN_WIDTH = 50;
+    private static final int IO_COLUMN_HEIGHT = 214;
+    private static final int IO_COLUMN_MIN_HEIGHT = 36;
+    private static final int IO_COLUMN_TOP = 40;
+    private static final int IO_COLUMN_BOTTOM_MARGIN = 4;
+    private static final int IO_COLUMN_SCROLLBAR_WIDTH = 3;
+
     private static final int COIN_DISPLAY_HEIGHT = 55;
     private static final int COIN_COLUMN_WIDTH = 40;
     private static final int COIN_COLUMN_ROW_COUNT = 4;
@@ -231,7 +239,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
             Flow.column()
                 .size(20)
                 .right(5));
-        panel.child(createIOColumn());
+        panel.child(createIOColumn(panel));
         return panel;
     }
 
@@ -480,55 +488,69 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
         }
     }
 
-    private IWidget createIOColumn() {
-        return new ParentWidget<>().excludeAreaInRecipeViewer()
-            .width(50)
-            .height(214)
+    // The side panel background shrinks with the main panel, and the content inside scrolls when it no longer fits
+    private IWidget createIOColumn(ModularPanel rootPanel) {
+        ParentWidget<?> sidePanel = new ParentWidget<>().excludeAreaInRecipeViewer()
+            .width(IO_COLUMN_WIDTH)
             .right(-48)
-            .top(40)
-            .widgetTheme(WidgetThemes.BACKGROUND_SIDEPANEL)
+            .top(IO_COLUMN_TOP)
+            .widgetTheme(WidgetThemes.BACKGROUND_SIDEPANEL);
+        sidePanel.height(
+            () -> Math.max(
+                IO_COLUMN_MIN_HEIGHT,
+                Math.min(IO_COLUMN_HEIGHT, rootPanel.getArea().height - IO_COLUMN_TOP - IO_COLUMN_BOTTOM_MARGIN)),
+            Unit.Measure.PIXEL);
+
+        return sidePanel.child(
+            new ListWidget<>().scrollDirection(new VerticalScrollData(false, IO_COLUMN_SCROLLBAR_WIDTH))
+                .width(IO_COLUMN_WIDTH)
+                .heightRel(1.0f)
+                .right(1)
+                .child(createIOColumnContent()));
+    }
+
+    private IWidget createIOColumnContent() {
+        return Flow.column()
+            .size(IO_COLUMN_WIDTH, IO_COLUMN_HEIGHT)
             .child(
-                Flow.column()
+                GuiTextures.INPUT_SPRITE.asWidget()
+                    .leftRel(0.5f)
+                    .top(8)
+                    .width(30)
+                    .height(20))
+            .child(
+                (IWidget) new TextWidget(IKey.lang("vendingmachine.gui.in")).textAlign(Alignment.CENTER)
+                    .top(8)
+                    .widthRel(1.0f))
+            .child(
+                Flow.row()
+                    .child(createInputSlots().center())
+                    .top(20)
+                    .height(18 * 4))
+            .child(
+                Flow.row()
                     .child(
-                        GuiTextures.INPUT_SPRITE.asWidget()
-                            .leftRel(0.5f)
-                            .top(8)
-                            .width(30)
-                            .height(20))
+                        new ToggleButton().overlay(
+                            GuiTextures.EJECT_SLOTS.asIcon()
+                                .size(16))
+                            .tooltipBuilder(t -> t.addLine(IKey.lang("vendingmachine.gui.item_eject")))
+                            .syncHandler("ejectItems")
+                            .right(6))
                     .child(
-                        (IWidget) new TextWidget(IKey.lang("vendingmachine.gui.in")).textAlign(Alignment.CENTER)
-                            .top(8)
-                            .widthRel(1.0f))
-                    .child(
-                        Flow.row()
-                            .child(createInputSlots().center())
-                            .top(20)
-                            .height(18 * 4))
-                    .child(
-                        Flow.row()
-                            .child(
-                                new ToggleButton().overlay(
-                                    GuiTextures.EJECT_SLOTS.asIcon()
-                                        .size(16))
-                                    .tooltipBuilder(t -> t.addLine(IKey.lang("vendingmachine.gui.item_eject")))
-                                    .syncHandler("ejectItems")
-                                    .right(6))
-                            .child(
-                                new ToggleButton().overlay(
-                                    GuiTextures.EJECT_COINS.asIcon()
-                                        .size(16))
-                                    .tooltipBuilder(t -> t.addLine(IKey.lang("vendingmachine.gui.coin_eject")))
-                                    .playClickSound(false)
-                                    .syncHandler("ejectCoins")
-                                    .left(6))
-                            .top(98)
-                            .height(18))
-                    .child(
-                        Flow.row()
-                            .child(createDispenserChute())
-                            .bottom(6)
-                            .height(18 * 5))
-                    .right(1));
+                        new ToggleButton().overlay(
+                            GuiTextures.EJECT_COINS.asIcon()
+                                .size(16))
+                            .tooltipBuilder(t -> t.addLine(IKey.lang("vendingmachine.gui.coin_eject")))
+                            .playClickSound(false)
+                            .syncHandler("ejectCoins")
+                            .left(6))
+                    .top(98)
+                    .height(18))
+            .child(
+                Flow.row()
+                    .child(createDispenserChute())
+                    .bottom(6)
+                    .height(18 * 5));
     }
 
     private SlotGroupWidget createInputSlots() {
