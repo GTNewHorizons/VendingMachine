@@ -2,7 +2,6 @@ package com.cubefury.vendingmachine.util;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.ISound;
-import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.audio.SoundCategory;
 import net.minecraft.client.audio.SoundHandler;
 import net.minecraft.client.audio.SoundPoolEntry;
@@ -58,7 +57,9 @@ public final class VMMusicManager {
             musicStartTime = fade ? System.currentTimeMillis() : 0;
             SoundHandler soundHandler = Minecraft.getMinecraft()
                 .getSoundHandler();
-            soundHandler.playSound(PositionedSoundRecord.func_147673_a(VMConfig.music.current_track.getSoundLoc()));
+            long initialSeek = System.currentTimeMillis()
+                % VMConfig.music.current_track.getDurationMsOrDefault(30_000L);
+            soundHandler.playSound(new VMSound(VMConfig.music.current_track.getSoundLoc(), initialSeek));
         } else {
             musicStartTime = fade ? Math.min(FADE_TIME - (System.currentTimeMillis() - musicStartTime), FADE_TIME) : 0;
         }
@@ -80,12 +81,12 @@ public final class VMMusicManager {
         if (!running) {
             if (validateInVm()) {
                 SoundSystem sys = getSoundManager().vendingmachine$getSoundSystem();
-                if (vmMusic != null && !sys.playing(vmMusic.id)) { // Loop music when it ends
+                // Loop music when it ends
+                if (vmMusic != null && !sys.playing(vmMusic.id)) {
                     vmMusic = null;
                     SoundHandler soundHandler = Minecraft.getMinecraft()
                         .getSoundHandler();
-                    soundHandler
-                        .playSound(PositionedSoundRecord.func_147673_a(VMConfig.music.current_track.getSoundLoc()));
+                    soundHandler.playSound(new VMSound(VMConfig.music.current_track.getSoundLoc(), 0));
                     running = true;
                 }
             }
