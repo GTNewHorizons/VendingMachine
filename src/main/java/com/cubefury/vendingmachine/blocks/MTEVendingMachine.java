@@ -838,7 +838,7 @@ public class MTEVendingMachine extends MTEMultiBlockBase
         if (aMetaTileEntity == null) return false;
         if (!(aMetaTileEntity instanceof MTEVendingUplinkHatch uplinkHatch)) return false;
         uplinkHatch.updateTexture(aBaseCasingIndex);
-        uplinkHatch.updateCraftingIcon(uplinkHatch.getMachineCraftingIcon());
+        uplinkHatch.updateCraftingIcon(getMachineCraftingIcon(), getBaseMetaTileEntity());
         this.uplinkHatch = uplinkHatch;
         return true;
     }
