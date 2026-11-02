@@ -178,7 +178,7 @@ public class NeiRecipeHandler extends TemplateRecipeHandler {
 
     @Override
     public String getRecipeName() {
-        return VendingMachine.NAME;
+        return Translator.translate("vendingmachine.nei.title");
     }
 
     @Override
