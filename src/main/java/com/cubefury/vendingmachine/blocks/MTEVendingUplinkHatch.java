@@ -392,11 +392,16 @@ public class MTEVendingUplinkHatch extends MTEHatch implements IGridProxyable, I
                 .extractItems(AEItemStack.create(remove), simulate ? Actionable.SIMULATE : Actionable.MODULATE, source);
             if (stack != null) remain -= (int) stack.getStackSize();
             if (!simulate) pulledStackTracker.accept(stack);
+
+            if (ore == null) return remain;
         }
 
-        if (remain == 0 || ore == null || availableItems == null) return remain;
+        if (remain == 0 || availableItems == null) return remain;
 
         for (IAEItemStack stack : availableItems) {
+            // For non-damageable items, ignore exact matches since they would be accounted for in the branch above
+            if (!remove.isItemStackDamageable() && MTEVendingMachine.matchItem(remove, stack.getItemStack(), null))
+                continue;
             if (!MTEVendingMachine.matchItem(remove, stack.getItemStack(), ore)) continue;
 
             IAEItemStack copy = stack.copy();
@@ -406,7 +411,7 @@ public class MTEVendingUplinkHatch extends MTEHatch implements IGridProxyable, I
                 .extractItems(copy, simulate ? Actionable.SIMULATE : Actionable.MODULATE, source);
             if (removed == null) continue;
             if (!simulate) pulledStackTracker.accept(removed);
-            remain -= (int) copy.getStackSize();
+            remain -= (int) removed.getStackSize();
 
             if (remain == 0) break;
         }
