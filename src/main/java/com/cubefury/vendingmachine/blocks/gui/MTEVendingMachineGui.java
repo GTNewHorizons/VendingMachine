@@ -150,6 +150,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
     private static final String COIN_INSERT_SOUND = "vendingmachine:coin_insert";
 
     private final List<ItemSlot> inputSlots = new ArrayList<>();
+    private boolean coinsInserted = false;
 
     public MTEVendingMachineGui(MTEVendingMachine base) {
         super(base);
@@ -554,19 +555,18 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
     }
 
     private SlotGroupWidget createInputSlots() {
-        UUID playerId = NameCache.INSTANCE.getUUIDFromPlayer(getBase().getCurrentUser());
         this.inputSlots.clear();
         return SlotGroupWidget.builder()
             .matrix("II", "II", "II", "II")
             .key('I', index -> {
-                ItemSlot slot = makeInterceptingSlot(index, playerId);
+                ItemSlot slot = makeInterceptingSlot(index);
                 inputSlots.add(slot);
                 return slot;
             })
             .build();
     }
 
-    private ItemSlot makeInterceptingSlot(int index, UUID playerId) {
+    private ItemSlot makeInterceptingSlot(int index) {
         ModularSlot slot = new ModularSlot(base.inputItems, index);
         return new ItemSlot().slot(
             slot.slotGroup("inputSlotGroup")
@@ -575,21 +575,42 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
                         return;
                     }
                     CurrencyItem currencyItem = CurrencyItem.fromItemStack(newItem);
-                    if (currencyItem != null) {
-                        slot.putStack(null);
+                    if (client) {
+                        if (currencyItem != null) {
+                            slot.putStack(null);
+                        }
+                        return;
                     }
-                    if (client) return;
                     base.syncTrades = true;
                     if (currencyItem != null) {
-                        Wallet wallet = TradeManager.INSTANCE.getWallet(playerId, walletMode);
-                        if (wallet != null) {
-                            insertCoin(playerId, currencyItem, wallet);
-                        } else {
-                            base.dispenseItemStacks(Collections.singletonList(newItem));
-                        }
-                        forceSyncInputSlots();
+                        // Don't change the slot from inside its own change listener on the server: ModularUI2 is
+                        // still updating it and crashes on a second insert in the same click (infinite NEI stacks).
+                        // The coins are taken out on the next server tick instead, see consumeInsertedCoins().
+                        coinsInserted = true;
                     }
                 }));
+    }
+
+    private void consumeInsertedCoins() {
+        if (!coinsInserted) return;
+        coinsInserted = false;
+        if (!base.getActive()) return;
+        UUID playerId = NameCache.INSTANCE.getUUIDFromPlayer(base.getCurrentUser());
+        for (ItemSlot itemSlot : inputSlots) {
+            ModularSlot slot = itemSlot.getSyncHandler()
+                .getSlot();
+            ItemStack stack = slot.getStack();
+            CurrencyItem currencyItem = CurrencyItem.fromItemStack(stack);
+            if (currencyItem == null) continue;
+            slot.putStack(null);
+            Wallet wallet = TradeManager.INSTANCE.getWallet(playerId, walletMode);
+            if (wallet != null) {
+                insertCoin(playerId, currencyItem, wallet);
+            } else {
+                base.dispenseItemStacks(Collections.singletonList(stack));
+            }
+        }
+        forceSyncInputSlots();
     }
 
     private void forceSyncInputSlots() {
@@ -938,6 +959,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
         super.registerSyncValues(syncManager);
 
         syncManager.registerSlotGroup("inputSlotGroup", 2, true);
+        syncManager.onServerTick(this::consumeInsertedCoins);
         syncManager.registerSlotGroup("outputSlotGroup", 2, false);
 
         BooleanSyncValue ejectItemsSyncer = new BooleanSyncValue(() -> this.ejectItems, val -> {
