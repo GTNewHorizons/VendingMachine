@@ -979,14 +979,19 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
             syncManager.syncValue("ejectCoin_" + type.id, ejectCoinSyncer);
         }
 
-        Team team = this.guiData.isClient() ? null : TeamManager.getTeamByPlayer(playerId);
         BooleanSyncValue hasTeamSyncer = new BooleanSyncValue(() -> false, val -> {
             walletButtons.setEnabled(val);
-            if (!val) walletMode = WalletMode.PERSONAL;
-        },
-            () -> team != null && (VMConfig.team.soloTeam || team.getMembers()
-                .size() > 1),
-            val -> {});
+            if (!val) {
+                walletMode = WalletMode.PERSONAL;
+                VMConfig.gui.wallet_mode = walletMode;
+                ConfigurationManager.save(VMConfig.class);
+                this.shouldSyncWalletMode = true;
+            }
+        }, () -> {
+            Team team = TeamManager.getTeamByPlayer(playerId);
+            return team != null && (VMConfig.team.allowSoloTeamWallet || team.getMembers()
+                .size() > 1);
+        }, val -> {});
         syncManager.syncValue("hasTeam", hasTeamSyncer);
 
         // Block modifications from server -> client
@@ -1007,6 +1012,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
     private ToggleButton createWalletButton(WalletMode mode) {
         return new SelectButton().value(new BoolValue.Dynamic(() -> walletMode == mode, value -> {
             VMConfig.gui.wallet_mode = walletMode = mode;
+            ConfigurationManager.save(VMConfig.class);
             shouldSyncWalletMode = true;
             setForceRefresh();
         }))
