@@ -979,7 +979,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
             syncManager.syncValue("ejectCoin_" + type.id, ejectCoinSyncer);
         }
 
-        BooleanSyncValue hasTeamSyncer = new BooleanSyncValue(() -> false, val -> {
+        BooleanSyncValue enableTeamWalletSyncer = new BooleanSyncValue(() -> false, val -> {
             walletButtons.setEnabled(val);
             if (!val) {
                 walletMode = WalletMode.PERSONAL;
@@ -992,7 +992,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
             return team != null && (VMConfig.team.allowSoloTeamWallet || team.getMembers()
                 .size() > 1);
         }, val -> {});
-        syncManager.syncValue("hasTeam", hasTeamSyncer);
+        syncManager.syncValue("hasTeam", enableTeamWalletSyncer);
 
         // Block modifications from server -> client
         EnumSyncValue<WalletMode, ?> walletModeSyncer = new EnumSyncValue<>(
