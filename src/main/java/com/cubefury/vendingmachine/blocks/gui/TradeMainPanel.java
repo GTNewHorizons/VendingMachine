@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import net.minecraft.entity.player.EntityPlayer;
@@ -55,8 +56,7 @@ public class TradeMainPanel extends ModularPanel {
     public boolean onKeyPressed(char typedChar, int keyCode) {
         if (
             gui.getSearchBar()
-                .isFocused() && typedChar >= 32
-                && typedChar != 127
+                .isFocused() && !Character.isISOControl(typedChar)
         ) {
             return true;
         }
@@ -76,7 +76,7 @@ public class TradeMainPanel extends ModularPanel {
         }
         if (keyCode == Keyboard.KEY_LCONTROL || keyCode == Keyboard.KEY_RCONTROL) {
             ctrlHeld = false;
-            gui.setForceRefresh();
+            MTEVendingMachineGui.setForceRefresh();
         }
         return super.onKeyRelease(typedChar, keyCode);
     }
@@ -99,9 +99,8 @@ public class TradeMainPanel extends ModularPanel {
         }
         currentData.put(TradeCategory.FAVOURITES, favouritedTrades);
         for (TradeItemDisplay tid : TradeManager.INSTANCE.tradeData) {
-            tradeMap.putIfAbsent(tid.tgID, new HashMap<>());
-            tradeMap.get(tid.tgID)
-                .put(tid.tradeGroupOrder, tid);
+            var map = tradeMap.computeIfAbsent(tid.tgID, k -> new HashMap<>());
+            map.put(tid.tradeGroupOrder, tid);
         }
 
         currentData.forEach((k, v) -> {
@@ -169,7 +168,7 @@ public class TradeMainPanel extends ModularPanel {
     }
 
     public Map<TradeCategory, List<TradeItemDisplay>> formatTrades() {
-        Map<TradeCategory, List<TradeItemDisplay>> trades = new HashMap<>();
+        Map<TradeCategory, List<TradeItemDisplay>> trades = new ConcurrentHashMap<>();
         trades.put(TradeCategory.ALL, new ArrayList<>());
         SortMode sortMode = VMConfig.gui.sort_mode;
 
@@ -180,9 +179,8 @@ public class TradeMainPanel extends ModularPanel {
             }
             tid.isFavourite = FavouritesTracker.INSTANCE.isFavourite(tid);
             TradeCategory category = group.getCategory();
-            trades.putIfAbsent(category, new ArrayList<>());
-            trades.get(category)
-                .add(tid);
+            var categoryList = trades.computeIfAbsent(category, k -> new ArrayList<>());
+            categoryList.add(tid);
             trades.get(TradeCategory.ALL)
                 .add(tid);
         }
@@ -266,7 +264,7 @@ public class TradeMainPanel extends ModularPanel {
     }
 
     public void forceGuiRefresh() {
-        gui.setForceRefresh();
+        MTEVendingMachineGui.setForceRefresh();
     }
 
     @Override
