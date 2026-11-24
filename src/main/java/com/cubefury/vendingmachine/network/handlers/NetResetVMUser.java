@@ -9,7 +9,6 @@ import net.minecraftforge.common.DimensionManager;
 
 import com.cubefury.vendingmachine.VendingMachine;
 import com.cubefury.vendingmachine.api.network.UnserializedPacket;
-import com.cubefury.vendingmachine.api.util.Tuple2;
 import com.cubefury.vendingmachine.blocks.MTEVendingMachine;
 import com.cubefury.vendingmachine.network.PacketSender;
 import com.cubefury.vendingmachine.network.PacketTypeRegistry;
@@ -40,23 +39,15 @@ public class NetResetVMUser {
         PacketSender.INSTANCE.sendToServer(new UnserializedPacket(ID_NAME, payload));
     }
 
-    public static void onServer(Tuple2<NBTTagCompound, EntityPlayerMP> message) {
-        World world = DimensionManager.getWorld(
-            message.first()
-                .getInteger("dim"));
-        TileEntity te = world.getTileEntity(
-            message.first()
-                .getInteger("x"),
-            message.first()
-                .getInteger("y"),
-            message.first()
-                .getInteger("z"));
+    public static void onServer(NBTTagCompound tag, EntityPlayerMP player) {
+        World world = DimensionManager.getWorld(tag.getInteger("dim"));
+        TileEntity te = world.getTileEntity(tag.getInteger("x"), tag.getInteger("y"), tag.getInteger("z"));
         if (
             te instanceof IGregTechTileEntity
                 && ((IGregTechTileEntity) te).getMetaTileEntity() instanceof MTEVendingMachine
         ) {
-            ((MTEVendingMachine) ((IGregTechTileEntity) te).getMetaTileEntity()).resetCurrentUser(message.second());
+            ((MTEVendingMachine) ((IGregTechTileEntity) te).getMetaTileEntity()).resetCurrentUser(player);
         }
-        TradeManager.INSTANCE.saveTeamData(NameCache.INSTANCE.getUUIDFromPlayer(message.second()));
+        TradeManager.INSTANCE.saveTeamData(NameCache.INSTANCE.getUUIDFromPlayer(player));
     }
 }

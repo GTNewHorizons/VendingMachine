@@ -1,6 +1,7 @@
 package com.cubefury.vendingmachine.network;
 
 import java.util.concurrent.Executors;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import net.minecraft.client.Minecraft;
@@ -9,7 +10,6 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 
 import com.cubefury.vendingmachine.VendingMachine;
-import com.cubefury.vendingmachine.api.util.Tuple2;
 import com.cubefury.vendingmachine.storage.NameCache;
 
 import cpw.mods.fml.common.network.ByteBufUtils;
@@ -63,7 +63,7 @@ public class SerializedPacket implements IMessage {
                 return null;
             }
 
-            final Consumer<Tuple2<NBTTagCompound, EntityPlayerMP>> method = PacketTypeRegistry.INSTANCE
+            final BiConsumer<NBTTagCompound, EntityPlayerMP> method = PacketTypeRegistry.INSTANCE
                 .getServerHandler(new ResourceLocation(message.getString("ID")));
 
             if (method == null) {
@@ -71,8 +71,7 @@ public class SerializedPacket implements IMessage {
                     .warn("Recieved a packet server side with an invalid ID: {}", message.getString("ID"));
                 return null;
             } else if (sender != null) {
-                VendingMachine.proxy
-                    .scheduleServerTask(Executors.callable(() -> method.accept(new Tuple2<>(message, sender))));
+                VendingMachine.proxy.scheduleServerTask(Executors.callable(() -> method.accept(message, sender)));
             }
 
             return null;

@@ -1,6 +1,7 @@
 package com.cubefury.vendingmachine.network;
 
 import java.util.HashMap;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import javax.annotation.Nonnull;
@@ -11,7 +12,6 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 
 import com.cubefury.vendingmachine.api.network.IPacketRegistry;
-import com.cubefury.vendingmachine.api.util.Tuple2;
 import com.cubefury.vendingmachine.network.handlers.NetBulkSync;
 import com.cubefury.vendingmachine.network.handlers.NetCoinDeposit;
 import com.cubefury.vendingmachine.network.handlers.NetNameSync;
@@ -26,7 +26,7 @@ public class PacketTypeRegistry implements IPacketRegistry {
 
     public static final PacketTypeRegistry INSTANCE = new PacketTypeRegistry();
 
-    private final HashMap<ResourceLocation, Consumer<Tuple2<NBTTagCompound, EntityPlayerMP>>> serverHandlers = new HashMap<>();
+    private final HashMap<ResourceLocation, BiConsumer<NBTTagCompound, EntityPlayerMP>> serverHandlers = new HashMap<>();
     private final HashMap<ResourceLocation, Consumer<NBTTagCompound>> clientHandlers = new HashMap<>();
 
     public void init() {
@@ -43,7 +43,7 @@ public class PacketTypeRegistry implements IPacketRegistry {
 
     @Override
     public void registerServerHandler(@Nonnull ResourceLocation idName,
-        @Nonnull Consumer<Tuple2<NBTTagCompound, EntityPlayerMP>> method) {
+        @Nonnull BiConsumer<NBTTagCompound, EntityPlayerMP> method) {
         if (serverHandlers.containsKey(idName)) {
             throw new IllegalArgumentException("Cannot register duplicate packet handler: " + idName);
         }
@@ -62,7 +62,7 @@ public class PacketTypeRegistry implements IPacketRegistry {
 
     @Nullable
     @Override
-    public Consumer<Tuple2<NBTTagCompound, EntityPlayerMP>> getServerHandler(@Nonnull ResourceLocation idName) {
+    public BiConsumer<NBTTagCompound, EntityPlayerMP> getServerHandler(@Nonnull ResourceLocation idName) {
         return serverHandlers.get(idName);
     }
 

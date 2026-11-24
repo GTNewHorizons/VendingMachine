@@ -8,7 +8,6 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.DimensionManager;
 
 import com.cubefury.vendingmachine.api.network.UnserializedPacket;
-import com.cubefury.vendingmachine.api.util.Tuple2;
 import com.cubefury.vendingmachine.blocks.MTEVendingMachine;
 import com.cubefury.vendingmachine.blocks.gui.WalletMode;
 import com.cubefury.vendingmachine.network.PacketSender;
@@ -34,8 +33,7 @@ public class NetCoinDeposit {
         PacketSender.INSTANCE.sendToServer(new UnserializedPacket(ID_NAME, payload));
     }
 
-    public static void onServer(Tuple2<NBTTagCompound, EntityPlayerMP> message) {
-        NBTTagCompound payload = message.first();
+    public static void onServer(NBTTagCompound payload, EntityPlayerMP player) {
         World world = DimensionManager.getWorld(payload.getInteger("dim"));
         if (world == null) {
             return;
@@ -46,7 +44,7 @@ public class NetCoinDeposit {
                 && ((IGregTechTileEntity) te).getMetaTileEntity() instanceof MTEVendingMachine
         ) {
             MTEVendingMachine machine = (MTEVendingMachine) ((IGregTechTileEntity) te).getMetaTileEntity();
-            machine.depositHeldCoins(message.second(), WalletMode.values()[payload.getByte("wallet")]);
+            machine.depositHeldCoins(player, WalletMode.values()[payload.getByte("wallet")]);
         }
     }
 }

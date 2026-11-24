@@ -13,7 +13,6 @@ import net.minecraftforge.common.MinecraftForge;
 
 import com.cubefury.vendingmachine.VendingMachine;
 import com.cubefury.vendingmachine.api.network.UnserializedPacket;
-import com.cubefury.vendingmachine.api.util.Tuple2;
 import com.cubefury.vendingmachine.events.MarkDirtyNamesEvent;
 import com.cubefury.vendingmachine.handlers.SaveLoadHandler;
 import com.cubefury.vendingmachine.network.PacketSender;
@@ -58,8 +57,8 @@ public class NetBulkSync {
         NetTradeDbSync.sendDatabase(player, false);
     }
 
-    private static void onServer(Tuple2<NBTTagCompound, EntityPlayerMP> message) {
-        sendSync(message.second());
+    private static void onServer(NBTTagCompound tag, EntityPlayerMP player) {
+        sendSync(player);
     }
 
     @SideOnly(Side.CLIENT)
