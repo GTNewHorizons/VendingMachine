@@ -72,6 +72,7 @@ public class VMConfig {
 
         @Config.LangKey("vendingmachine.config.team.allow_in_teams")
         @Config.DefaultBoolean(false)
+        @Config.Name("soloTeam")
         public boolean allowSoloTeamWallet = false;
 
         @Config.LangKey("vendingmachine.config.team.cooldown_increase")
