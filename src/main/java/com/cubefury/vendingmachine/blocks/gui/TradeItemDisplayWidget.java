@@ -11,6 +11,7 @@ import com.cleanroommc.modularui.api.widget.Interactable;
 import com.cleanroommc.modularui.drawable.DynamicDrawable;
 import com.cleanroommc.modularui.drawable.GuiDraw;
 import com.cleanroommc.modularui.screen.viewport.ModularGuiContext;
+import com.cleanroommc.modularui.theme.WidgetTheme;
 import com.cleanroommc.modularui.theme.WidgetThemeEntry;
 import com.cleanroommc.modularui.utils.GlStateManager;
 import com.cleanroommc.modularui.utils.Platform;
@@ -85,7 +86,9 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
 
     @Override
     public void draw(ModularGuiContext context, WidgetThemeEntry<?> widgetTheme) {
-        int textColor = ColorUtils.displayText.getColor();
+        WidgetTheme theme = widgetTheme.getTheme();
+        int textColor = theme.getTextColor();
+        boolean textShadow = theme.getTextShadow();
         ItemStack item = value.getValue();
         if (!Platform.isStackEmpty(item)) {
             if (this.displayType == DisplayType.TILE) {
@@ -97,7 +100,7 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
                     GuiTextures.OVERLAY_SELECTED
                         .draw(0, 0, MTEVendingMachineGui.TILE_ITEM_WIDTH, MTEVendingMachineGui.TILE_ITEM_HEIGHT);
                 }
-                GuiDraw.drawText(" " + this.display.display.stackSize, 4, 9, 1.0f, textColor, false);
+                GuiDraw.drawText(" " + this.display.display.stackSize, 4, 9, 1.0f, textColor, textShadow);
                 GuiDraw.drawItem(item, 26, 4, 16, 16, context.getCurrentDrawingZ());
                 GlStateManager.color(1f, 1f, 1f, 1f);
                 if (!this.checkVmActive() || this.display.hasCooldown || !this.display.enabled) {
@@ -111,7 +114,7 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
                     GuiTextures.FAVOURITE_SPRITE.draw(context, 4, 4, 6, 6, widgetTheme.getTheme());
                 }
             } else if (this.displayType == DisplayType.LIST) {
-                GuiDraw.drawText("" + this.display.display.stackSize, 6, 4, 0.9f, textColor, false);
+                GuiDraw.drawText("" + this.display.display.stackSize, 6, 4, 0.9f, textColor, textShadow);
                 GuiDraw.drawItem(item, 24, 2, 9, 9, context.getCurrentDrawingZ());
                 GuiDraw.drawText(
                     this.display.display.getDisplayName()
@@ -123,7 +126,7 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
                     4,
                     0.9f,
                     textColor,
-                    false);
+                    textShadow);
                 GuiDraw.drawRect(
                     1,
                     1,
