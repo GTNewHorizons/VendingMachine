@@ -98,7 +98,9 @@ public class ItemPlaceholder extends Item {
     @Override
     public void onUpdate(ItemStack stack, World world, Entity entity, int slot, boolean held) {
         // This check only happens once a second
-        if (!stack.hasTagCompound() || !(entity instanceof EntityPlayer player) || world.getTotalWorldTime() % 100 != 0) {
+        if (
+            !stack.hasTagCompound() || !(entity instanceof EntityPlayer player) || world.getTotalWorldTime() % 100 != 0
+        ) {
             return;
         }
 

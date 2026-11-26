@@ -55,8 +55,7 @@ public class NetTradeRequestSync {
         World world = DimensionManager.getWorld(tag.getInteger("dim"));
         TileEntity te = world.getTileEntity(tag.getInteger("x"), tag.getInteger("y"), tag.getInteger("z"));
         if (
-            te instanceof IGregTechTileEntity gte
-                && gte.getMetaTileEntity() instanceof MTEVendingMachine vendingMachine
+            te instanceof IGregTechTileEntity gte && gte.getMetaTileEntity() instanceof MTEVendingMachine vendingMachine
         ) {
             vendingMachine.addTradeRequest(
                 new TradeRequest(

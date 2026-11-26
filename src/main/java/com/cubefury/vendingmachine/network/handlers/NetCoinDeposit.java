@@ -39,10 +39,7 @@ public class NetCoinDeposit {
             return;
         }
         TileEntity te = world.getTileEntity(payload.getInteger("x"), payload.getInteger("y"), payload.getInteger("z"));
-        if (
-            te instanceof IGregTechTileEntity gte
-                && gte.getMetaTileEntity() instanceof MTEVendingMachine machine
-        ) {
+        if (te instanceof IGregTechTileEntity gte && gte.getMetaTileEntity() instanceof MTEVendingMachine machine) {
             machine.depositHeldCoins(player, WalletMode.values()[payload.getByte("wallet")]);
         }
     }

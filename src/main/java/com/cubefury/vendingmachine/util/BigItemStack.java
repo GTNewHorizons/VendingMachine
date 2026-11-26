@@ -190,8 +190,7 @@ public class BigItemStack {
         if (stack == baseStack) return true; // idk why this was in BQ but ok
 
         if (stack instanceof ItemStack itemStack) {
-            return baseStack.isItemEqual(itemStack)
-                && ItemStack.areItemStackTagsEqual(baseStack, itemStack)
+            return baseStack.isItemEqual(itemStack) && ItemStack.areItemStackTagsEqual(baseStack, itemStack)
                 && stackSize == (itemStack).stackSize;
         }
 
