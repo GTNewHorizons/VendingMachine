@@ -37,18 +37,23 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
         this.vm = base;
         this.displayType = displayType;
         widgetTheme(WidgetThemes.THEME_TRADE_BUTTON);
-        if (displayType == DisplayType.TILE) {
-            height(MTEVendingMachineGui.TILE_ITEM_HEIGHT);
-            width(MTEVendingMachineGui.TILE_ITEM_WIDTH);
-            background(
-                new DynamicDrawable(
-                    () -> pressed ? GuiTextures.TILE_TRADE_BUTTON_PRESSED : GuiTextures.TILE_TRADE_BUTTON_UNPRESSED));
-        } else if (displayType == DisplayType.LIST) {
-            height(MTEVendingMachineGui.LIST_ITEM_HEIGHT);
-            width(MTEVendingMachineGui.LIST_ITEM_WIDTH);
-            background(
-                new DynamicDrawable(
-                    () -> pressed ? GuiTextures.LIST_TRADE_BUTTON_PRESSED : GuiTextures.LIST_TRADE_BUTTON_UNPRESSED));
+        switch (displayType) {
+            case TILE -> {
+                height(MTEVendingMachineGui.TILE_ITEM_HEIGHT);
+                width(MTEVendingMachineGui.TILE_ITEM_WIDTH);
+                background(
+                    new DynamicDrawable(
+                        () -> pressed ? GuiTextures.TILE_TRADE_BUTTON_PRESSED
+                            : GuiTextures.TILE_TRADE_BUTTON_UNPRESSED));
+            }
+            case LIST -> {
+                height(MTEVendingMachineGui.LIST_ITEM_HEIGHT);
+                width(MTEVendingMachineGui.LIST_ITEM_WIDTH);
+                background(
+                    new DynamicDrawable(
+                        () -> pressed ? GuiTextures.LIST_TRADE_BUTTON_PRESSED
+                            : GuiTextures.LIST_TRADE_BUTTON_UNPRESSED));
+            }
         }
 
         this.display = display;
@@ -87,79 +92,86 @@ public class TradeItemDisplayWidget extends ItemDisplayWidget implements Interac
     @Override
     public void draw(ModularGuiContext context, WidgetThemeEntry<?> widgetTheme) {
         WidgetTheme theme = widgetTheme.getTheme();
+        ItemStack item = value.getValue();
+        if (Platform.isStackEmpty(item)) {
+            return;
+        }
+        switch (this.displayType) {
+            case TILE -> drawTitle(context, theme, item);
+            case LIST -> drawList(context, theme, item);
+        }
+    }
+
+    private void drawTitle(ModularGuiContext context, WidgetTheme theme, ItemStack item) {
         int textColor = theme.getTextColor();
         boolean textShadow = theme.getTextShadow();
-        ItemStack item = value.getValue();
-        if (!Platform.isStackEmpty(item)) {
-            if (this.displayType == DisplayType.TILE) {
-                if (this.display.isTradeableNow(rootPanel.getWalletMode())) {
-                    GuiTextures.OVERLAY_TRADEABLE
-                        .draw(0, 0, MTEVendingMachineGui.TILE_ITEM_WIDTH, MTEVendingMachineGui.TILE_ITEM_HEIGHT);
-                }
-                if (this.display.tgID.equals(this.rootPanel.currentSelected)) {
-                    GuiTextures.OVERLAY_SELECTED
-                        .draw(0, 0, MTEVendingMachineGui.TILE_ITEM_WIDTH, MTEVendingMachineGui.TILE_ITEM_HEIGHT);
-                }
-                GuiDraw.drawText(" " + this.display.display.stackSize, 4, 9, 1.0f, textColor, textShadow);
-                GuiDraw.drawItem(item, 26, 4, 16, 16, context.getCurrentDrawingZ());
-                GlStateManager.color(1f, 1f, 1f, 1f);
-                if (!this.checkVmActive() || this.display.hasCooldown || !this.display.enabled) {
-                    GuiTextures.OVERLAY_COOLDOWN
-                        .draw(0, 0, MTEVendingMachineGui.TILE_ITEM_WIDTH, MTEVendingMachineGui.TILE_ITEM_HEIGHT);
-                }
-                this.overlay(
-                    IKey.str(display.hasCooldown ? this.display.cooldownText : "")
-                        .color(ColorUtils.displayTextCooldown.getColor()));
-                if (this.display.isFavourite) {
-                    GuiTextures.FAVOURITE_SPRITE.draw(context, 4, 4, 6, 6, widgetTheme.getTheme());
-                }
-            } else if (this.displayType == DisplayType.LIST) {
-                GuiDraw.drawText("" + this.display.display.stackSize, 6, 4, 0.9f, textColor, textShadow);
-                GuiDraw.drawItem(item, 24, 2, 9, 9, context.getCurrentDrawingZ());
-                GuiDraw.drawText(
-                    this.display.display.getDisplayName()
-                        .length() > 21
-                            ? this.display.display.getDisplayName()
-                                .substring(0, 21) + "..."
-                            : this.display.display.getDisplayName(),
-                    36,
-                    4,
-                    0.9f,
-                    textColor,
-                    textShadow);
-                GuiDraw.drawRect(
-                    1,
-                    1,
-                    3,
-                    MTEVendingMachineGui.LIST_ITEM_HEIGHT - 2,
-                    display.isTradeableNow(rootPanel.getWalletMode())
-                        ? ColorUtils.tradeDisplayListTradableNow.getColor()
-                        : ColorUtils.tradeDisplayListUntradableNow.getColor());
-                if (!this.checkVmActive() || this.display.hasCooldown || !this.display.enabled) {
-                    GuiDraw.drawRect(
-                        1,
-                        1,
-                        MTEVendingMachineGui.LIST_ITEM_WIDTH - 2,
-                        MTEVendingMachineGui.LIST_ITEM_HEIGHT - 2,
-                        ColorUtils.tradeDisplayDisabled.getColor());
-                }
-                if (this.display.tgID.equals(this.rootPanel.currentSelected)) {
-                    GuiDraw.drawRect(
-                        1,
-                        1,
-                        2,
-                        MTEVendingMachineGui.LIST_ITEM_HEIGHT - 2,
-                        ColorUtils.tradeDisplayListCurrentSelected.getColor());
-                }
-                this.overlay(
-                    IKey.str(display.hasCooldown && this.display.enabled ? this.display.cooldownText : "")
-                        .color(ColorUtils.displayTextCooldown.getColor())
-                        .scale(0.9f));
-                if (this.display.isFavourite) {
-                    GuiTextures.FAVOURITE_SPRITE.draw(context, 139, 2, 10, 10, widgetTheme.getTheme());
-                }
-            }
+        if (this.display.isTradeableNow(rootPanel.getWalletMode())) {
+            GuiTextures.OVERLAY_TRADEABLE
+                .draw(0, 0, MTEVendingMachineGui.TILE_ITEM_WIDTH, MTEVendingMachineGui.TILE_ITEM_HEIGHT);
         }
+        if (this.display.tgID.equals(this.rootPanel.currentSelected)) {
+            GuiTextures.OVERLAY_SELECTED
+                .draw(0, 0, MTEVendingMachineGui.TILE_ITEM_WIDTH, MTEVendingMachineGui.TILE_ITEM_HEIGHT);
+        }
+        GuiDraw.drawText(" " + this.display.display.stackSize, 4, 9, 1.0f, textColor, textShadow);
+        GuiDraw.drawItem(item, 26, 4, 16, 16, context.getCurrentDrawingZ());
+        GlStateManager.color(1f, 1f, 1f, 1f);
+        if (!this.checkVmActive() || this.display.hasCooldown || !this.display.enabled) {
+            GuiTextures.OVERLAY_COOLDOWN
+                .draw(0, 0, MTEVendingMachineGui.TILE_ITEM_WIDTH, MTEVendingMachineGui.TILE_ITEM_HEIGHT);
+        }
+        this.overlay(
+            IKey.str(display.hasCooldown ? this.display.cooldownText : "")
+                .color(ColorUtils.displayTextCooldown.getColor()));
+        if (this.display.isFavourite) {
+            GuiTextures.FAVOURITE_SPRITE.draw(context, 4, 4, 6, 6, theme);
+        }
+    }
+
+    private void drawList(ModularGuiContext context, WidgetTheme theme, ItemStack item) {
+        int textColor = theme.getTextColor();
+        boolean textShadow = theme.getTextShadow();
+        GuiDraw.drawText("" + this.display.display.stackSize, 6, 4, 0.9f, textColor, textShadow);
+        GuiDraw.drawItem(item, 24, 2, 9, 9, context.getCurrentDrawingZ());
+        GuiDraw
+            .drawText(truncateDisplayName(this.display.display.getDisplayName()), 36, 4, 0.9f, textColor, textShadow);
+        GuiDraw.drawRect(
+            1,
+            1,
+            3,
+            MTEVendingMachineGui.LIST_ITEM_HEIGHT - 2,
+            display.isTradeableNow(rootPanel.getWalletMode()) ? ColorUtils.tradeDisplayListTradableNow.getColor()
+                : ColorUtils.tradeDisplayListUntradableNow.getColor());
+        if (!this.checkVmActive() || this.display.hasCooldown || !this.display.enabled) {
+            GuiDraw.drawRect(
+                1,
+                1,
+                MTEVendingMachineGui.LIST_ITEM_WIDTH - 2,
+                MTEVendingMachineGui.LIST_ITEM_HEIGHT - 2,
+                ColorUtils.tradeDisplayDisabled.getColor());
+        }
+        if (this.display.tgID.equals(this.rootPanel.currentSelected)) {
+            GuiDraw.drawRect(
+                1,
+                1,
+                2,
+                MTEVendingMachineGui.LIST_ITEM_HEIGHT - 2,
+                ColorUtils.tradeDisplayListCurrentSelected.getColor());
+        }
+        this.overlay(
+            IKey.str(display.hasCooldown && this.display.enabled ? this.display.cooldownText : "")
+                .color(ColorUtils.displayTextCooldown.getColor())
+                .scale(0.9f));
+        if (this.display.isFavourite) {
+            GuiTextures.FAVOURITE_SPRITE.draw(context, 139, 2, 10, 10, theme);
+        }
+    }
+
+    private String truncateDisplayName(String displayName) {
+        if (displayName.length() <= 21) {
+            return displayName;
+        }
+        return displayName.substring(0, 21) + "…";
     }
 
     @Override

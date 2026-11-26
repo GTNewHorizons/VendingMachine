@@ -48,30 +48,32 @@ public class VolumeControlGui {
                             .asWidget()
                             .paddingRight(20)
                             .leftRel(0))
-                    .child(
-                        Flow.row()
-                            .coverChildren()
-                            .marginTop(5)
-                            .child(
-                                new SliderWidget().bounds(0.01f, 1f)
-                                    .width(100)
-                                    .height(10)
-                                    .marginRight(5)
-                                    .verticalCenter()
-                                    .background(new Rectangle().color(ColorUtils.volumeSliderBackground.getColor()))
-                                    .value(new Dynamic(() -> VMConfig.music.music_volume, value -> {
-                                        VMConfig.music.music_volume = (float) value;
-                                        VMMusicManager.onVolumeChange();
-                                        volumeChanged = true;
-                                    })))
-                            .child(
-                                IKey.dynamic(
-                                    () -> StatCollector.translateToLocalFormatted(
-                                        "vendingmachine.gui.volume.percent",
-                                        getVolumeAsString()))
-                                    .asWidget()
-                                    .width(30)
-                                    .verticalCenter())));
+                    .child(createVolumeControlRow()));
+    }
+
+    private Flow createVolumeControlRow() {
+        return Flow.row()
+            .coverChildren()
+            .marginTop(5)
+            .child(
+                new SliderWidget().bounds(0.01f, 1f)
+                    .width(100)
+                    .height(10)
+                    .marginRight(5)
+                    .verticalCenter()
+                    .background(new Rectangle().color(ColorUtils.volumeSliderBackground.getColor()))
+                    .value(new Dynamic(() -> VMConfig.music.music_volume, value -> {
+                        VMConfig.music.music_volume = (float) value;
+                        VMMusicManager.onVolumeChange();
+                        volumeChanged = true;
+                    })))
+            .child(
+                IKey.dynamic(
+                    () -> StatCollector
+                        .translateToLocalFormatted("vendingmachine.gui.volume.percent", getVolumeAsString()))
+                    .asWidget()
+                    .width(30)
+                    .verticalCenter());
     }
 
     public static String getVolumeAsString() {
