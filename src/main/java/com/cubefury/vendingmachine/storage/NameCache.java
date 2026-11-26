@@ -148,9 +148,7 @@ public class NameCache implements INameCache {
 
     @Override
     public List<UUID> getAllUUIDS() {
-        return cache.keySet()
-            .stream()
-            .collect(Collectors.toList());
+        return new ArrayList<>(cache.keySet());
     }
 
     @Override

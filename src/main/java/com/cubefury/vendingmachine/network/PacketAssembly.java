@@ -82,7 +82,7 @@ public final class PacketAssembly {
             tmp = new byte[size];
             setBuffer(owner, tmp);
         } else if (tmp.length != size) {
-            VendingMachine.LOG.error("Unexpected change in packet byte length: " + size + " > " + tmp.length);
+            VendingMachine.LOG.error("Unexpected change in packet byte length: {} > {}", size, tmp.length);
             clearBuffer(owner);
             return null;
         }

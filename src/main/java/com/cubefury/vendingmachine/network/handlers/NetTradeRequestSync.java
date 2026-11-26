@@ -55,16 +55,16 @@ public class NetTradeRequestSync {
         World world = DimensionManager.getWorld(tag.getInteger("dim"));
         TileEntity te = world.getTileEntity(tag.getInteger("x"), tag.getInteger("y"), tag.getInteger("z"));
         if (
-            te instanceof IGregTechTileEntity
-                && ((IGregTechTileEntity) te).getMetaTileEntity() instanceof MTEVendingMachine
+            te instanceof IGregTechTileEntity gte
+                && gte.getMetaTileEntity() instanceof MTEVendingMachine vendingMachine
         ) {
-            ((MTEVendingMachine) ((IGregTechTileEntity) te).getMetaTileEntity()).addTradeRequest(
+            vendingMachine.addTradeRequest(
                 new TradeRequest(
                     player,
                     NBTConverter.UuidValueType.TRADEGROUP.readId(tag),
                     tag.getInteger("tradeGroupOrder"),
                     WalletMode.values()[tag.getByte("wallet")],
-                    (MTEVendingMachine) ((IGregTechTileEntity) te).getMetaTileEntity()));
+                    vendingMachine));
         }
     }
 

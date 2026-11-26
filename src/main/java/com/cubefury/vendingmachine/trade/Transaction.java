@@ -57,7 +57,7 @@ public class Transaction {
     }
 
     private void depositCoins(List<CurrencyItem> deposit) {
-        deposit.forEach(ci -> hatch.injectCoins(ci));
+        deposit.forEach(hatch::injectCoins);
     }
 
     private void depositPulledItems() {

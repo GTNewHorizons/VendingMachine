@@ -43,10 +43,10 @@ public class NetResetVMUser {
         World world = DimensionManager.getWorld(tag.getInteger("dim"));
         TileEntity te = world.getTileEntity(tag.getInteger("x"), tag.getInteger("y"), tag.getInteger("z"));
         if (
-            te instanceof IGregTechTileEntity
-                && ((IGregTechTileEntity) te).getMetaTileEntity() instanceof MTEVendingMachine
+            te instanceof IGregTechTileEntity gte
+                && gte.getMetaTileEntity() instanceof MTEVendingMachine vendingMachine
         ) {
-            ((MTEVendingMachine) ((IGregTechTileEntity) te).getMetaTileEntity()).resetCurrentUser(player);
+            vendingMachine.resetCurrentUser(player);
         }
         TradeManager.INSTANCE.saveTeamData(NameCache.INSTANCE.getUUIDFromPlayer(player));
     }

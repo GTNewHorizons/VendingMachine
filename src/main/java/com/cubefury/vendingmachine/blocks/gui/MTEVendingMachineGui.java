@@ -102,7 +102,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
 
     private PosGuiData guiData;
     private final PagedWidget.Controller tabController;
-    private PagedWidget pagedWidget;
+    private PagedWidget<?> pagedWidget;
     private final List<ListWidget> tradeLists;
     public IWidget favouritesTabWidget;
     private final SearchBar searchBar;
@@ -769,7 +769,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
 
             // Incomplete Structure status message
             Flow statusRow = Flow.row().height(10).width(TRADE_ROW_WIDTH).marginLeft(2)
-                .child(new TextWidget(IKey.lang("vendingmachine.gui.error.incomplete_structure")))
+                .child(IKey.lang("vendingmachine.gui.error.incomplete_structure").asWidget())
                 .setEnabledIf(slot -> !this.getBase().getActive());
             tradeList.child(statusRow);
 

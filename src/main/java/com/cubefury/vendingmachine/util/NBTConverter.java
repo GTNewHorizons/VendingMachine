@@ -40,6 +40,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.stream.JsonWriter;
 
+// TODO: doesn't GTNH lib have this?
 public class NBTConverter {
 
     /**
@@ -160,28 +161,28 @@ public class NBTConverter {
         if (value == null || value.getId() == 0) out.beginObject()
             .endObject();
         else if (value instanceof NBTPrimitive) out.value(NBTConverter.getNumber(value));
-        else if (value instanceof NBTTagString) out.value(((NBTTagString) value).func_150285_a_());
-        else if (value instanceof NBTTagByteArray) {
+        else if (value instanceof NBTTagString nbtString) out.value(nbtString.func_150285_a_());
+        else if (value instanceof NBTTagByteArray nbtByteArray) {
             out.beginArray();
-            for (byte b : ((NBTTagByteArray) value).func_150292_c()) {
+            for (byte b : nbtByteArray.func_150292_c()) {
                 out.value(b);
             }
             out.endArray();
-        } else if (value instanceof NBTTagIntArray) {
+        } else if (value instanceof NBTTagIntArray nbtIntArray) {
             out.beginArray();
-            for (int b : ((NBTTagIntArray) value).func_150302_c()) {
+            for (int b : nbtIntArray.func_150302_c()) {
                 out.value(b);
             }
             out.endArray();
-        } else if (value instanceof NBTTagList) {
-            List<NBTBase> tagList = getTagList((NBTTagList) value);
+        } else if (value instanceof NBTTagList nbtTagList) {
+            List<NBTBase> tagList = getTagList(nbtTagList);
             out.beginArray();
             for (NBTBase tag : tagList) {
                 NBTtoJSON_Base(tag, format, out);
             }
             out.endArray();
-        } else if (value instanceof NBTTagCompound) {
-            NBTtoJSON_Compound((NBTTagCompound) value, out, format);
+        } else if (value instanceof NBTTagCompound nbtCompound) {
+            NBTtoJSON_Compound(nbtCompound, out, format);
         } else {
             // idk man what is this
             out.beginObject()
@@ -221,38 +222,45 @@ public class NBTConverter {
         if (tag.getId() >= 1 && tag.getId() <= 6) {
             return new JsonPrimitive(getNumber(tag));
         }
-        if (tag instanceof NBTTagString) {
-            return new JsonPrimitive(((NBTTagString) tag).func_150285_a_());
-        } else if (tag instanceof NBTTagCompound) {
-            return NBTtoJSON_Compound((NBTTagCompound) tag, new JsonObject(), format);
-        } else if (tag instanceof NBTTagList) {
-            JsonArray jAry = new JsonArray();
-
-            List<NBTBase> tagList = getTagList((NBTTagList) tag);
-
-            for (NBTBase t : tagList) {
-                jAry.add(NBTtoJSON_Base(t, format));
+        switch (tag) {
+            case NBTTagString nbtString -> {
+                return new JsonPrimitive(nbtString.func_150285_a_());
             }
-
-            return jAry;
-        } else if (tag instanceof NBTTagByteArray) {
-            JsonArray jAry = new JsonArray();
-
-            for (byte b : ((NBTTagByteArray) tag).func_150292_c()) {
-                jAry.add(new JsonPrimitive(b));
+            case NBTTagCompound nbtCompound -> {
+                return NBTtoJSON_Compound(nbtCompound, new JsonObject(), format);
             }
+            case NBTTagList nbtTagList -> {
+                JsonArray jAry = new JsonArray();
 
-            return jAry;
-        } else if (tag instanceof NBTTagIntArray) {
-            JsonArray jAry = new JsonArray();
+                List<NBTBase> tagList = getTagList(nbtTagList);
 
-            for (int i : ((NBTTagIntArray) tag).func_150302_c()) {
-                jAry.add(new JsonPrimitive(i));
+                for (NBTBase t : tagList) {
+                    jAry.add(NBTtoJSON_Base(t, format));
+                }
+
+                return jAry;
             }
+            case NBTTagByteArray nbtByteArray -> {
+                JsonArray jAry = new JsonArray();
 
-            return jAry;
-        } else {
-            return new JsonObject(); // No valid types found. We'll just return this to prevent a NPE
+                for (byte b : nbtByteArray.func_150292_c()) {
+                    jAry.add(new JsonPrimitive(b));
+                }
+
+                return jAry;
+            }
+            case NBTTagIntArray nbtIntArray -> {
+                JsonArray jAry = new JsonArray();
+
+                for (int i : nbtIntArray.func_150302_c()) {
+                    jAry.add(new JsonPrimitive(i));
+                }
+
+                return jAry;
+            }
+            default -> {
+                return new JsonObject(); // No valid types found. We'll just return this to prevent a NPE
+            }
         }
     }
 
@@ -407,39 +415,27 @@ public class NBTConverter {
 
     @SuppressWarnings("WeakerAccess")
     public static Number getNumber(NBTBase tag) {
-        if (tag instanceof NBTTagByte) {
-            return ((NBTTagByte) tag).func_150290_f();
-        } else if (tag instanceof NBTTagShort) {
-            return ((NBTTagShort) tag).func_150289_e();
-        } else if (tag instanceof NBTTagInt) {
-            return ((NBTTagInt) tag).func_150287_d();
-        } else if (tag instanceof NBTTagFloat) {
-            return ((NBTTagFloat) tag).func_150288_h();
-        } else if (tag instanceof NBTTagDouble) {
-            return ((NBTTagDouble) tag).func_150286_g();
-        } else if (tag instanceof NBTTagLong) {
-            return ((NBTTagLong) tag).func_150291_c();
-        } else {
-            return 0;
-        }
+        return switch (tag) {
+            case NBTTagByte nbtTagByte -> nbtTagByte.func_150290_f();
+            case NBTTagShort nbtShort -> nbtShort.func_150289_e();
+            case NBTTagInt nbtInt -> nbtInt.func_150287_d();
+            case NBTTagFloat nbtFloat -> nbtFloat.func_150288_h();
+            case NBTTagDouble nbtDouble -> nbtDouble.func_150286_g();
+            case NBTTagLong nbtLong -> nbtLong.func_150291_c();
+            case null, default -> 0;
+        };
     }
 
     @SuppressWarnings("WeakerAccess")
     public static NBTBase instanceNumber(Number num, byte type) {
-        switch (type) {
-            case 1:
-                return new NBTTagByte(num.byteValue());
-            case 2:
-                return new NBTTagShort(num.shortValue());
-            case 3:
-                return new NBTTagInt(num.intValue());
-            case 4:
-                return new NBTTagLong(num.longValue());
-            case 5:
-                return new NBTTagFloat(num.floatValue());
-            default:
-                return new NBTTagDouble(num.doubleValue());
-        }
+        return switch (type) {
+            case 1 -> new NBTTagByte(num.byteValue());
+            case 2 -> new NBTTagShort(num.shortValue());
+            case 3 -> new NBTTagInt(num.intValue());
+            case 4 -> new NBTTagLong(num.longValue());
+            case 5 -> new NBTTagFloat(num.floatValue());
+            default -> new NBTTagDouble(num.doubleValue());
+        };
     }
 
     private static byte fallbackTagID(JsonElement jObj) {
