@@ -651,33 +651,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
             return;
         }
         for (BigItemStack toItem : cur.toItems) {
-            StringBuilder nameLine = new StringBuilder();
-            if (toItem.stackSize > 1) {
-                nameLine.append(
-                    IKey.str(toItem.stackSize + " ")
-                        .style(IKey.AQUA));
-            }
-            nameLine.append(IKey.RESET);
-            ItemStack baseStack = toItem.getBaseStack();
-            boolean hasCustomName = baseStack.hasDisplayName();
-            if (hasCustomName) {
-                nameLine.append(
-                    IKey.str(baseStack.getDisplayName() + " ")
-                        .style(IKey.AQUA, IKey.ITALIC));
-                nameLine.append(IKey.RESET);
-                nameLine.append(
-                    IKey.str(
-                        "(" + baseStack.getItem()
-                            .getItemStackDisplayName(baseStack) + ")")
-                        .style(IKey.AQUA));
-            } else {
-                nameLine.append(
-                    IKey.str(
-                        baseStack.getItem()
-                            .getItemStackDisplayName(baseStack))
-                        .style(IKey.AQUA));
-            }
-            builder.addLine(nameLine.toString());
+            builder.addLine(toItem.getVerboseDisplayName(IKey.AQUA));
         }
         builder.emptyLine();
 
@@ -700,16 +674,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
             }
             for (BigItemStack fromItem : cur.fromItems) {
                 builder.addLine(
-                    IKey.str(
-                        fromItem.stackSize + " "
-                            + fromItem.getBaseStack()
-                                .getDisplayName()
-                            + (fromItem.hasOreDict()
-                                ? " (" + IKey.lang("vendingmachine.gui.alternative_oredict")
-                                    + " "
-                                    + fromItem.getOreDict()
-                                    + ")"
-                                : ""))
+                    IKey.str(fromItem.getVerboseOreDictDisplay())
                         .style(IKey.DARK_GREEN));
             }
             builder.emptyLine();
@@ -720,10 +685,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
                     .style(IKey.DARK_GREEN, IKey.ITALIC));
             for (BigItemStack fromItem : cur.ncItems) {
                 builder.addLine(
-                    IKey.str(
-                        fromItem.stackSize + " "
-                            + fromItem.getBaseStack()
-                                .getDisplayName())
+                    IKey.str(fromItem.getSimpleDisplayName())
                         .style(IKey.DARK_GREEN));
             }
             builder.emptyLine();
