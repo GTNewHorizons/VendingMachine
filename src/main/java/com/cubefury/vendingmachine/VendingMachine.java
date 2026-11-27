@@ -62,6 +62,7 @@ public class VendingMachine {
     public static boolean isBqLoaded = false;
     public static boolean isGt5uNhLoaded = false;
     public static boolean isAeLoaded = false;
+    public static boolean isMaterialLibLoaded = false;
 
     public static int CONTROLLER_MTE_ID = 2741;
     public static int ME_UPLINK_MTE_ID = 2742;
@@ -96,10 +97,12 @@ public class VendingMachine {
         isBqLoaded = Loader.isModLoaded("betterquesting");
         isGt5uNhLoaded = Loader.isModLoaded("gregtech_nh");
         isAeLoaded = Loader.isModLoaded("appliedenergistics2");
+        isMaterialLibLoaded = Loader.isModLoaded("materiallib");
 
         LOG.info("Better Questing Integration enabled: {}", isBqLoaded);
         LOG.info("Gregtech Integration enabled: {}", isGt5uNhLoaded);
         LOG.info("AE2 Integration enabled {}", isAeLoaded);
+        LOG.info("MaterialLib Integration enabled: {}", isMaterialLibLoaded);
 
         GameRegistry.registerItem(ItemPlaceholder.placeholder, "placeholder");
 

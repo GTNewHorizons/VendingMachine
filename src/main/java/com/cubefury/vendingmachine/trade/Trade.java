@@ -67,7 +67,11 @@ public class Trade {
 
     public void readFromNBT(NBTTagCompound nbt) {
         if (nbt.hasKey("displayItem")) {
-            BigItemStack readStack = BigItemStack.loadItemStackFromNBT(nbt.getCompoundTag("displayItem"));
+            NBTTagCompound displayNbt = nbt.getCompoundTag("displayItem");
+            BigItemStack readStack = JsonHelper.JsonToMaterialLibStack(displayNbt);
+            if (readStack == null) {
+                readStack = BigItemStack.loadItemStackFromNBT(displayNbt);
+            }
             displayItem = readStack == null ? displayItem : readStack;
         }
 
