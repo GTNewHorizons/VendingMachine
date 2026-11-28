@@ -86,8 +86,8 @@ public class EventHandler {
 
     @SubscribeEvent
     public void onPlayerDeath(LivingDeathEvent event) {
-        if (event.entityLiving instanceof EntityPlayer) {
-            terminateVendingSession((EntityPlayer) event.entityLiving);
+        if (event.entityLiving instanceof EntityPlayer player) {
+            terminateVendingSession(player);
         }
     }
 

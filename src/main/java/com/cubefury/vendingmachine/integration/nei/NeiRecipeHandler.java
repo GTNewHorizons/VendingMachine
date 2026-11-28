@@ -195,8 +195,7 @@ public class NeiRecipeHandler extends TemplateRecipeHandler {
 
     // Caching the last hovered valid quest here is a bit jank, but it works I guess
     public boolean isMouseOverBqCondition(int recipeIndex, int curY, UUID questId, String text) {
-        if (!(Minecraft.getMinecraft().currentScreen instanceof GuiRecipe)) return false;
-        GuiRecipe<?> gui = (GuiRecipe<?>) Minecraft.getMinecraft().currentScreen;
+        if (!(Minecraft.getMinecraft().currentScreen instanceof GuiRecipe<?>gui)) return false;
 
         List<String> textArray = GuiDraw.fontRenderer.listFormattedStringToWidth(text, GUI_WIDTH);
         int width = textArray.stream()

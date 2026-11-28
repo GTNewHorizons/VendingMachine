@@ -9,7 +9,6 @@ import net.minecraftforge.common.DimensionManager;
 
 import com.cubefury.vendingmachine.VendingMachine;
 import com.cubefury.vendingmachine.api.network.UnserializedPacket;
-import com.cubefury.vendingmachine.api.util.Tuple2;
 import com.cubefury.vendingmachine.blocks.MTEVendingMachine;
 import com.cubefury.vendingmachine.blocks.gui.MTEVendingMachineGui;
 import com.cubefury.vendingmachine.blocks.gui.TradeItemDisplay;
@@ -52,30 +51,19 @@ public class NetTradeRequestSync {
         PacketSender.INSTANCE.sendToPlayers(new UnserializedPacket(ID_NAME, new NBTTagCompound()), player);
     }
 
-    public static void onServer(Tuple2<NBTTagCompound, EntityPlayerMP> message) {
-        World world = DimensionManager.getWorld(
-            message.first()
-                .getInteger("dim"));
-        TileEntity te = world.getTileEntity(
-            message.first()
-                .getInteger("x"),
-            message.first()
-                .getInteger("y"),
-            message.first()
-                .getInteger("z"));
+    public static void onServer(NBTTagCompound tag, EntityPlayerMP player) {
+        World world = DimensionManager.getWorld(tag.getInteger("dim"));
+        TileEntity te = world.getTileEntity(tag.getInteger("x"), tag.getInteger("y"), tag.getInteger("z"));
         if (
-            te instanceof IGregTechTileEntity
-                && ((IGregTechTileEntity) te).getMetaTileEntity() instanceof MTEVendingMachine
+            te instanceof IGregTechTileEntity gte && gte.getMetaTileEntity() instanceof MTEVendingMachine vendingMachine
         ) {
-            ((MTEVendingMachine) ((IGregTechTileEntity) te).getMetaTileEntity()).addTradeRequest(
+            vendingMachine.addTradeRequest(
                 new TradeRequest(
-                    message.second(),
-                    NBTConverter.UuidValueType.TRADEGROUP.readId(message.first()),
-                    message.first()
-                        .getInteger("tradeGroupOrder"),
-                    WalletMode.values()[message.first()
-                        .getByte("wallet")],
-                    (MTEVendingMachine) ((IGregTechTileEntity) te).getMetaTileEntity()));
+                    player,
+                    NBTConverter.UuidValueType.TRADEGROUP.readId(tag),
+                    tag.getInteger("tradeGroupOrder"),
+                    WalletMode.values()[tag.getByte("wallet")],
+                    vendingMachine));
         }
     }
 

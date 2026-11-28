@@ -11,8 +11,13 @@ import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.StringUtils;
 import net.minecraftforge.oredict.OreDictionary;
+
+import org.jetbrains.annotations.NotNull;
+
+import com.cleanroommc.modularui.api.drawable.IKey;
 
 import cpw.mods.fml.common.Optional;
 
@@ -140,14 +145,53 @@ public class BigItemStack {
         return stack;
     }
 
+    public @NotNull String getSimpleDisplayName() {
+        return stackSize + " " + baseStack.getDisplayName();
+    }
+
+    public @NotNull String getVerboseDisplayName(EnumChatFormatting textColor) {
+        StringBuilder nameLine = new StringBuilder();
+        if (stackSize > 1) {
+            nameLine.append(
+                IKey.str(stackSize + " ")
+                    .style(textColor));
+        }
+        nameLine.append(IKey.RESET);
+        boolean hasCustomName = this.baseStack.hasDisplayName();
+        if (hasCustomName) {
+            nameLine.append(
+                IKey.str(this.baseStack.getDisplayName() + " ")
+                    .style(textColor, IKey.ITALIC));
+            nameLine.append(IKey.RESET);
+            nameLine.append(
+                IKey.str(
+                    "(" + this.baseStack.getItem()
+                        .getItemStackDisplayName(this.baseStack) + ")")
+                    .style(textColor));
+        } else {
+            nameLine.append(
+                IKey.str(
+                    this.baseStack.getItem()
+                        .getItemStackDisplayName(this.baseStack))
+                    .style(textColor));
+        }
+        return nameLine.toString();
+    }
+
+    public @NotNull String getVerboseOreDictDisplay() {
+        return stackSize + " "
+            + baseStack.getDisplayName()
+            + (hasOreDict() ? " (" + IKey.lang("vendingmachine.gui.alternative_oredict") + " " + getOreDict() + ")"
+                : "");
+    }
+
     @Override
     public boolean equals(Object stack) {
         if (stack == baseStack) return true; // idk why this was in BQ but ok
 
-        if (stack instanceof ItemStack) {
-            return baseStack.isItemEqual((ItemStack) stack)
-                && ItemStack.areItemStackTagsEqual(baseStack, (ItemStack) stack)
-                && stackSize == ((ItemStack) stack).stackSize;
+        if (stack instanceof ItemStack itemStack) {
+            return baseStack.isItemEqual(itemStack) && ItemStack.areItemStackTagsEqual(baseStack, itemStack)
+                && stackSize == (itemStack).stackSize;
         }
 
         if (stack instanceof BigItemStack castStack) {

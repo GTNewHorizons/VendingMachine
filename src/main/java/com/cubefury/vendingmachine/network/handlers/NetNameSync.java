@@ -18,7 +18,6 @@ import net.minecraftforge.common.util.Constants;
 
 import com.cubefury.vendingmachine.VendingMachine;
 import com.cubefury.vendingmachine.api.network.UnserializedPacket;
-import com.cubefury.vendingmachine.api.util.Tuple2;
 import com.cubefury.vendingmachine.events.MarkDirtyNamesEvent;
 import com.cubefury.vendingmachine.network.PacketSender;
 import com.cubefury.vendingmachine.network.PacketTypeRegistry;
@@ -93,16 +92,12 @@ public class NetNameSync {
         }
     }
 
-    private static void onServer(Tuple2<NBTTagCompound, EntityPlayerMP> message) {
+    private static void onServer(NBTTagCompound tag, EntityPlayerMP player) {
         UUID[] uuids = null;
         String[] names = null;
 
-        if (
-            message.first()
-                .hasKey("uuids", Constants.NBT.TAG_LIST)
-        ) {
-            NBTTagList uList = message.first()
-                .getTagList("uuids", Constants.NBT.TAG_STRING);
+        if (tag.hasKey("uuids", Constants.NBT.TAG_LIST)) {
+            NBTTagList uList = tag.getTagList("uuids", Constants.NBT.TAG_STRING);
             uuids = new UUID[uList.tagCount()];
             for (int i = 0; i < uuids.length; i++) {
                 try {
@@ -110,18 +105,14 @@ public class NetNameSync {
                 } catch (Exception ignored) {}
             }
         }
-        if (
-            message.first()
-                .hasKey("names", Constants.NBT.TAG_LIST)
-        ) {
-            NBTTagList uList = message.first()
-                .getTagList("names", Constants.NBT.TAG_STRING);
+        if (tag.hasKey("names", Constants.NBT.TAG_LIST)) {
+            NBTTagList uList = tag.getTagList("names", Constants.NBT.TAG_STRING);
             names = new String[uList.tagCount()];
             for (int i = 0; i < names.length; i++) {
                 names[i] = uList.getStringTagAt(i);
             }
         }
-        sendNames(new EntityPlayerMP[] { message.second() }, uuids, names);
+        sendNames(new EntityPlayerMP[] { player }, uuids, names);
     }
 
     @SideOnly(Side.CLIENT)

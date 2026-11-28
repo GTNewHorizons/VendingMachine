@@ -34,7 +34,6 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraft.network.play.server.S29PacketSoundEffect;
 import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.world.IWorldAccess;
-import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.ForgeDirection;
@@ -304,33 +303,27 @@ public class MTEVendingMachine extends MTEMultiBlockBase
      */
     public void playSoundEffect(String sound) {
         IGregTechTileEntity te = getBaseMetaTileEntity();
-        if (te != null) {
-            World world = te.getWorld();
-            if (world instanceof WorldServer worldServer) {
-                EntityPlayer player = getCurrentUser();
-                float volume = getRandomVolume();
-                float pitch = getRandomPitch();
-                for (IWorldAccess worldAccess : worldServer.worldAccesses) {
-                    worldAccess.playSoundToNearExcept(
-                        player,
-                        sound,
-                        te.getXCoord() + 0.5f,
-                        te.getYCoord() + 0.5f,
-                        te.getZCoord() + 0.5f,
-                        volume,
-                        pitch);
-                }
-                if (player instanceof EntityPlayerMP mpPlayer) {
-                    S29PacketSoundEffect packet = new S29PacketSoundEffect(
-                        sound,
-                        player.posX,
-                        player.posY - player.yOffset,
-                        player.posZ,
-                        volume,
-                        pitch);
-                    mpPlayer.playerNetServerHandler.sendPacket(packet);
-                }
-            }
+        if (te == null || !(te.getWorld() instanceof WorldServer worldServer)) {
+            return;
+        }
+        EntityPlayer player = getCurrentUser();
+        float volume = getRandomVolume();
+        float pitch = getRandomPitch();
+        float xPos = te.getXCoord() + 0.5f;
+        float yPos = te.getYCoord() + 0.5f;
+        float zPos = te.getZCoord() + 0.5f;
+        for (IWorldAccess worldAccess : worldServer.worldAccesses) {
+            worldAccess.playSoundToNearExcept(player, sound, xPos, yPos, zPos, volume, pitch);
+        }
+        if (player instanceof EntityPlayerMP mpPlayer) {
+            S29PacketSoundEffect packet = new S29PacketSoundEffect(
+                sound,
+                player.posX,
+                player.posY - player.yOffset,
+                player.posZ,
+                volume,
+                pitch);
+            mpPlayer.playerNetServerHandler.sendPacket(packet);
         }
     }
 

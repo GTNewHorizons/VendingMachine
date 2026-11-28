@@ -14,13 +14,12 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumChatFormatting;
-import net.minecraftforge.common.util.Constants;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -53,7 +52,6 @@ import com.cleanroommc.modularui.widgets.CycleButtonWidget;
 import com.cleanroommc.modularui.widgets.ListWidget;
 import com.cleanroommc.modularui.widgets.PagedWidget;
 import com.cleanroommc.modularui.widgets.SlotGroupWidget;
-import com.cleanroommc.modularui.widgets.TextWidget;
 import com.cleanroommc.modularui.widgets.ToggleButton;
 import com.cleanroommc.modularui.widgets.layout.Flow;
 import com.cleanroommc.modularui.widgets.layout.Grid;
@@ -96,14 +94,14 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
     private boolean ejectItems = false;
     private boolean ejectCoins = false;
     private final Map<CurrencyType, Boolean> ejectSingleCoin = new HashMap<>();
-    public final Map<TradeCategory, List<TradeItemDisplayWidget>> displayedTradesTiles = new HashMap<>();
-    public final Map<TradeCategory, List<TradeItemDisplayWidget>> displayedTradesList = new HashMap<>();
+    public final Map<TradeCategory, List<TradeItemDisplayWidget>> displayedTradesTiles = new ConcurrentHashMap<>();
+    public final Map<TradeCategory, List<TradeItemDisplayWidget>> displayedTradesList = new ConcurrentHashMap<>();
     public final Set<TradeCategory> highlightedTabs = new HashSet<>();
     private final List<TradeCategory> tradeCategories = new ArrayList<>();
 
     private PosGuiData guiData;
     private final PagedWidget.Controller tabController;
-    private PagedWidget pagedWidget;
+    private PagedWidget<?> pagedWidget;
     private final List<ListWidget> tradeLists;
     public IWidget favouritesTabWidget;
     private final SearchBar searchBar;
@@ -165,15 +163,11 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
         this.tradeLists = new ArrayList<>();
 
         for (TradeCategory c : this.tradeCategories) {
-            displayedTradesTiles.put(c, new ArrayList<>(MTEVendingMachine.MAX_TRADES));
+            var titleList = displayedTradesTiles.computeIfAbsent(c, k -> new ArrayList<>(MTEVendingMachine.MAX_TRADES));
+            var tradeList = displayedTradesList.computeIfAbsent(c, k -> new ArrayList<>(MTEVendingMachine.MAX_TRADES));
             for (int i = 0; i < MTEVendingMachine.MAX_TRADES; i++) {
-                displayedTradesTiles.get(c)
-                    .add(new TradeItemDisplayWidget(null, this.base, DisplayType.TILE));
-            }
-            displayedTradesList.put(c, new ArrayList<>(MTEVendingMachine.MAX_TRADES));
-            for (int i = 0; i < MTEVendingMachine.MAX_TRADES; i++) {
-                displayedTradesList.get(c)
-                    .add(new TradeItemDisplayWidget(null, this.base, DisplayType.LIST));
+                titleList.add(new TradeItemDisplayWidget(null, this.base, DisplayType.TILE));
+                tradeList.add(new TradeItemDisplayWidget(null, this.base, DisplayType.LIST));
             }
         }
 
@@ -256,94 +250,99 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
             .top(1)
             .minElementMargin(1)
             .coverChildren()
-            .grid(
-                Arrays.asList(
-                    Arrays.asList(
-                        volumeButton = new CycleButtonWidget().size(14)
-                            .overlay(
-                                new DynamicDrawable(
-                                    () -> VMConfig.music.current_track.getTexture()
-                                        .size(14)))
-                            .stateCount(MusicTrack.values().length)
-                            .value(new IntValue.Dynamic(() -> VMConfig.music.current_track.ordinal(), val -> {
-                                if (Interactable.hasShiftDown()) {
-                                    volumePanel.togglePanel();
-                                } else {
-                                    VMConfig.music.current_track = MusicTrack.values()[val];
-                                    if (VMConfig.music.current_track == MusicTrack.NONE) {
-                                        VMMusicManager.stopVendingMachineMusic();
-                                    } else {
-                                        VMMusicManager.startVendingMachineMusic(false);
-                                    }
-                                    ConfigurationManager.save(VMConfig.class);
-                                }
-                            }))
-                            .tooltipDynamic(builder -> {
-                                builder.clearText();
-                                builder.addLine(
-                                    IKey.lang("vendingmachine.gui.display_track") + " "
-                                        + VMConfig.music.current_track.getLocalizedName());
-                                builder.addLine(
-                                    IKey.lang(
-                                        "vendingmachine.gui.volume.tooltip_volume_display",
-                                        VolumeControlGui.getVolumeAsString())
-                                        .style(EnumChatFormatting.GRAY));
-                                builder.addLine(
-                                    IKey.lang("vendingmachine.gui.volume.tooltip_open_panel")
-                                        .style(EnumChatFormatting.GRAY));
-                                setForceRefresh();
-                            })
-                            .tooltipAutoUpdate(true),
-                        new CycleButtonWidget().size(14)
-                            .overlay(
-                                new DynamicDrawable(
-                                    () -> VMConfig.gui.display_type.getTexture()
-                                        .size(12)))
-                            .stateCount(DisplayType.values().length)
-                            .value(new IntValue.Dynamic(() -> VMConfig.gui.display_type.ordinal(), val -> {
-                                VMConfig.gui.display_type = DisplayType.values()[val];
-                                ConfigurationManager.save(VMConfig.class);
-                            }))
-                            .tooltipDynamic(builder -> {
-                                builder.clearText();
-                                builder.addLine(
-                                    IKey.lang("vendingmachine.gui.display_mode") + " "
-                                        + VMConfig.gui.display_type.getLocalizedName());
-                            })
-                            .tooltipAutoUpdate(true)),
-                    Arrays.asList(
-                        new CycleButtonWidget().size(14)
-                            .overlay(
-                                new DynamicDrawable(
-                                    () -> VMConfig.gui.show_coins ? GuiTextures.SHOW_COINS.asIcon()
-                                        .size(12)
-                                        : GuiTextures.HIDE_COINS.asIcon()
-                                            .size(12)))
-                            .stateCount(2)
-                            .value(new BoolValue.Dynamic(() -> VMConfig.gui.show_coins, val -> {
-                                VMConfig.gui.show_coins = val;
-                                pagedWidget.scheduleResize();
-                                tradeLists.forEach(AbstractWidget::scheduleResize);
-                                ConfigurationManager.save(VMConfig.class);
-                            })),
-                        new CycleButtonWidget().size(14)
-                            .overlay(
-                                new DynamicDrawable(
-                                    () -> VMConfig.gui.sort_mode.getTexture()
-                                        .size(12)))
-                            .stateCount(SortMode.values().length)
-                            .value(new IntValue.Dynamic(() -> VMConfig.gui.sort_mode.ordinal(), val -> {
-                                VMConfig.gui.sort_mode = SortMode.values()[val];
-                                ConfigurationManager.save(VMConfig.class);
-                            }))
-                            .tooltipDynamic(builder -> {
-                                builder.clearText();
-                                builder.addLine(
-                                    IKey.lang("vendingmachine.gui.display_sort") + " "
-                                        + VMConfig.gui.sort_mode.getLocalizedName());
-                                setForceRefresh();
-                            })
-                            .tooltipAutoUpdate(true))));
+            .grid(Arrays.asList(getVolumeAndDisplayControls(), getShowCoinsAndSortButtons()));
+    }
+
+    private @NotNull List<CycleButtonWidget> getVolumeAndDisplayControls() {
+        IntValue.Dynamic trackCycle = new IntValue.Dynamic(() -> VMConfig.music.current_track.ordinal(), val -> {
+            if (Interactable.hasShiftDown()) {
+                volumePanel.togglePanel();
+            } else {
+                VMConfig.music.current_track = MusicTrack.values()[val];
+                if (VMConfig.music.current_track == MusicTrack.NONE) {
+                    VMMusicManager.stopVendingMachineMusic();
+                } else {
+                    VMMusicManager.startVendingMachineMusic(false);
+                }
+                ConfigurationManager.save(VMConfig.class);
+            }
+        });
+
+        volumeButton = new CycleButtonWidget().size(14)
+            .overlay(
+                new DynamicDrawable(
+                    () -> VMConfig.music.current_track.getTexture()
+                        .size(14)))
+            .stateCount(MusicTrack.values().length)
+            .value(trackCycle)
+            .tooltipDynamic(builder -> {
+                builder.clearText();
+                builder.addLine(
+                    IKey.lang("vendingmachine.gui.display_track") + " "
+                        + VMConfig.music.current_track.getLocalizedName());
+                builder.addLine(
+                    IKey.lang("vendingmachine.gui.volume.tooltip_volume_display", VolumeControlGui.getVolumeAsString())
+                        .style(EnumChatFormatting.GRAY));
+                builder.addLine(
+                    IKey.lang("vendingmachine.gui.volume.tooltip_open_panel")
+                        .style(EnumChatFormatting.GRAY));
+                setForceRefresh();
+            })
+            .tooltipAutoUpdate(true);
+
+        CycleButtonWidget displayButton = new CycleButtonWidget().size(14)
+            .overlay(
+                new DynamicDrawable(
+                    () -> VMConfig.gui.display_type.getTexture()
+                        .size(12)))
+            .stateCount(DisplayType.values().length)
+            .value(new IntValue.Dynamic(() -> VMConfig.gui.display_type.ordinal(), val -> {
+                VMConfig.gui.display_type = DisplayType.values()[val];
+                ConfigurationManager.save(VMConfig.class);
+            }))
+            .tooltipDynamic(builder -> {
+                builder.clearText();
+                builder.addLine(
+                    IKey.lang("vendingmachine.gui.display_mode") + " " + VMConfig.gui.display_type.getLocalizedName());
+            })
+            .tooltipAutoUpdate(true);
+        return Arrays.asList(volumeButton, displayButton);
+    }
+
+    private @NotNull List<CycleButtonWidget> getShowCoinsAndSortButtons() {
+        CycleButtonWidget showCoinsButton = new CycleButtonWidget().size(14)
+            .overlay(
+                new DynamicDrawable(
+                    () -> VMConfig.gui.show_coins ? GuiTextures.SHOW_COINS.asIcon()
+                        .size(12)
+                        : GuiTextures.HIDE_COINS.asIcon()
+                            .size(12)))
+            .stateCount(2)
+            .value(new BoolValue.Dynamic(() -> VMConfig.gui.show_coins, val -> {
+                VMConfig.gui.show_coins = val;
+                pagedWidget.scheduleResize();
+                tradeLists.forEach(AbstractWidget::scheduleResize);
+                ConfigurationManager.save(VMConfig.class);
+            }));
+
+        CycleButtonWidget sortButton = new CycleButtonWidget().size(14)
+            .overlay(
+                new DynamicDrawable(
+                    () -> VMConfig.gui.sort_mode.getTexture()
+                        .size(12)))
+            .stateCount(SortMode.values().length)
+            .value(new IntValue.Dynamic(() -> VMConfig.gui.sort_mode.ordinal(), val -> {
+                VMConfig.gui.sort_mode = SortMode.values()[val];
+                ConfigurationManager.save(VMConfig.class);
+            }))
+            .tooltipDynamic(builder -> {
+                builder.clearText();
+                builder.addLine(
+                    IKey.lang("vendingmachine.gui.display_sort") + " " + VMConfig.gui.sort_mode.getLocalizedName());
+                setForceRefresh();
+            })
+            .tooltipAutoUpdate(true);
+        return Arrays.asList(showCoinsButton, sortButton);
     }
 
     // The tab list shrinks to fit its tabs, but never grows past the panel, so it scrolls on small GUI scales
@@ -519,7 +518,9 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
                     .width(30)
                     .height(20))
             .child(
-                (IWidget) new TextWidget(IKey.lang("vendingmachine.gui.in")).textAlign(Alignment.CENTER)
+                IKey.lang("vendingmachine.gui.in")
+                    .asWidget()
+                    .textAlign(Alignment.CENTER)
                     .top(8)
                     .widthRel(1.0f))
             .child(
@@ -527,30 +528,33 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
                     .child(createInputSlots().center())
                     .top(20)
                     .height(18 * 4))
-            .child(
-                Flow.row()
-                    .child(
-                        new ToggleButton().overlay(
-                            GuiTextures.EJECT_SLOTS.asIcon()
-                                .size(16))
-                            .tooltipBuilder(t -> t.addLine(IKey.lang("vendingmachine.gui.item_eject")))
-                            .syncHandler("ejectItems")
-                            .right(6))
-                    .child(
-                        new ToggleButton().overlay(
-                            GuiTextures.EJECT_COINS.asIcon()
-                                .size(16))
-                            .tooltipBuilder(t -> t.addLine(IKey.lang("vendingmachine.gui.coin_eject")))
-                            .playClickSound(false)
-                            .syncHandler("ejectCoins")
-                            .left(6))
-                    .top(98)
-                    .height(18))
+            .child(createEjectRow())
             .child(
                 Flow.row()
                     .child(createDispenserChute())
                     .bottom(6)
                     .height(18 * 5));
+    }
+
+    private static Flow createEjectRow() {
+        return Flow.row()
+            .child(
+                new ToggleButton().overlay(
+                    GuiTextures.EJECT_SLOTS.asIcon()
+                        .size(16))
+                    .tooltipBuilder(t -> t.addLine(IKey.lang("vendingmachine.gui.item_eject")))
+                    .syncHandler("ejectItems")
+                    .right(6))
+            .child(
+                new ToggleButton().overlay(
+                    GuiTextures.EJECT_COINS.asIcon()
+                        .size(16))
+                    .tooltipBuilder(t -> t.addLine(IKey.lang("vendingmachine.gui.coin_eject")))
+                    .playClickSound(false)
+                    .syncHandler("ejectCoins")
+                    .left(6))
+            .top(98)
+            .height(18);
     }
 
     private SlotGroupWidget createInputSlots() {
@@ -642,138 +646,92 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
     }
 
     private void constructTradeTooltip(RichTooltip builder, TradeItemDisplay cur) {
-        if (cur != null) {
-            for (BigItemStack toItem : cur.toItems) {
-                StringBuilder nameLine = new StringBuilder();
-                if (toItem.stackSize > 1) {
-                    nameLine.append(
-                        IKey.str(toItem.stackSize + " ")
-                            .style(IKey.AQUA));
-                }
-                nameLine.append(IKey.RESET);
-                ItemStack baseStack = toItem.getBaseStack();
-                boolean hasCustomName = false;
-                if (
-                    baseStack.stackTagCompound != null
-                        && baseStack.stackTagCompound.hasKey("display", Constants.NBT.TAG_COMPOUND)
-                ) {
-                    NBTTagCompound nbt = baseStack.stackTagCompound.getCompoundTag("display");
-                    if (nbt.hasKey("Name", Constants.NBT.TAG_STRING)) {
-                        nameLine.append(
-                            IKey.str(nbt.getString("Name") + " ")
-                                .style(IKey.AQUA, IKey.ITALIC));
-                        nameLine.append(IKey.RESET);
-                        hasCustomName = true;
-                    }
-                }
-                if (hasCustomName) {
-                    nameLine.append(
-                        IKey.str(
-                            "(" + baseStack.getItem()
-                                .getItemStackDisplayName(baseStack) + ")")
-                            .style(IKey.AQUA));
-                } else {
-                    nameLine.append(
-                        IKey.str(
-                            baseStack.getItem()
-                                .getItemStackDisplayName(baseStack))
-                            .style(IKey.AQUA));
-                }
-                builder.addLine(nameLine.toString());
+        if (cur == null) {
+            return;
+        }
+        for (BigItemStack toItem : cur.toItems) {
+            builder.addLine(toItem.getVerboseDisplayName(IKey.AQUA));
+        }
+        builder.emptyLine();
+
+        if (!cur.fromCurrency.isEmpty() || !cur.fromItems.isEmpty()) {
+            builder.addLine(
+                IKey.lang("vendingmachine.gui.required_inputs")
+                    .style(IKey.DARK_GREEN, IKey.ITALIC));
+            for (CurrencyItem currencyItem : cur.fromCurrency) {
+                builder.add(
+                    IKey.str(currencyItem.value + " ")
+                        .style(IKey.DARK_GREEN));
+                builder.add(
+                    IDrawable.of(currencyItem.type.coinBackground1, currencyItem.type.coinIcon1)
+                        .asIcon()
+                        .size(12));
+                builder.add(
+                    IKey.str(" " + currencyItem.type.getLocalizedName())
+                        .style(IKey.DARK_GREEN));
+                builder.newLine();
+            }
+            for (BigItemStack fromItem : cur.fromItems) {
+                builder.addLine(
+                    IKey.str(fromItem.getVerboseOreDictDisplay())
+                        .style(IKey.DARK_GREEN));
             }
             builder.emptyLine();
-
-            if (!cur.fromCurrency.isEmpty() || !cur.fromItems.isEmpty()) {
-                builder.addLine(
-                    IKey.lang("vendingmachine.gui.required_inputs")
-                        .style(IKey.DARK_GREEN, IKey.ITALIC));
-                for (CurrencyItem currencyItem : cur.fromCurrency) {
-                    builder.add(
-                        IKey.str(currencyItem.value + " ")
-                            .style(IKey.DARK_GREEN));
-                    builder.add(
-                        IDrawable.of(currencyItem.type.coinBackground1, currencyItem.type.coinIcon1)
-                            .asIcon()
-                            .size(12));
-                    builder.add(
-                        IKey.str(" " + currencyItem.type.getLocalizedName())
-                            .style(IKey.DARK_GREEN));
-                    builder.newLine();
-                }
-                for (BigItemStack fromItem : cur.fromItems) {
-                    builder.addLine(
-                        IKey.str(
-                            fromItem.stackSize + " "
-                                + fromItem.getBaseStack()
-                                    .getDisplayName()
-                                + (fromItem.hasOreDict()
-                                    ? " (" + IKey.lang("vendingmachine.gui.alternative_oredict")
-                                        + " "
-                                        + fromItem.getOreDict()
-                                        + ")"
-                                    : ""))
-                            .style(IKey.DARK_GREEN));
-                }
-                builder.emptyLine();
-            }
-            if (!cur.ncItems.isEmpty()) {
-                builder.addLine(
-                    IKey.lang("vendingmachine.gui.nc_inputs")
-                        .style(IKey.DARK_GREEN, IKey.ITALIC));
-                for (BigItemStack fromItem : cur.ncItems) {
-                    builder.addLine(
-                        IKey.str(
-                            fromItem.stackSize + " "
-                                + fromItem.getBaseStack()
-                                    .getDisplayName())
-                            .style(IKey.DARK_GREEN));
-                }
-                builder.emptyLine();
-            }
-
-            TradeGroup tg = TradeDatabase.INSTANCE.getTradeGroupFromId(cur.tgID);
-            if (
-                tg != null && tg.getTrades()
-                    .size() > 1
-            ) {
-                builder.addLine(
-                    IKey.str(
-                        Translator.translate(
-                            "vendingmachine.gui.shared_trades_tooltip",
-                            tg.getTrades()
-                                .size() - 1))
-                        .style(IKey.AQUA, IKey.ITALIC));
-                builder.emptyLine();
-            }
-
-            if (tg.cooldown != -1) {
-                builder.addLine(
-                    IKey.str(
-                        Translator.translate(
-                            "vendingmachine.gui.cooldown_remaining_tooltip",
-                            teamSize - cur.cdTradeCount,
-                            teamSize))
-                        .style(IKey.DARK_AQUA));
-                builder.addLine(
-                    IKey.str(
-                        Translator.translate(
-                            cur.cooldown > 0 ? "vendingmachine.gui.cooldown_started_tooltip"
-                                : "vendingmachine.gui.cooldown_idle_tooltip",
-                            cur.cooldownText))
-                        .style(IKey.DARK_AQUA));
-                builder.addLine(
-                    IKey.str(Translator.translate("vendingmachine.gui.trades_scale_tooltip"))
-                        .style(IKey.DARK_AQUA));
-                builder.emptyLine();
-            }
-
-            builder.addLine(
-                IKey.str(Translator.translate("vendingmachine.gui.trade_hint"))
-                    .style(IKey.GRAY));
-            builder.addLine(
-                IKey.str(Translator.translate("vendingmachine.gui.favourite_hint"))
-                    .style(IKey.GRAY));
         }
+        if (!cur.ncItems.isEmpty()) {
+            builder.addLine(
+                IKey.lang("vendingmachine.gui.nc_inputs")
+                    .style(IKey.DARK_GREEN, IKey.ITALIC));
+            for (BigItemStack fromItem : cur.ncItems) {
+                builder.addLine(
+                    IKey.str(fromItem.getSimpleDisplayName())
+                        .style(IKey.DARK_GREEN));
+            }
+            builder.emptyLine();
+        }
+
+        TradeGroup tg = TradeDatabase.INSTANCE.getTradeGroupFromId(cur.tgID);
+        if (
+            tg != null && tg.getTrades()
+                .size() > 1
+        ) {
+            builder.addLine(
+                IKey.str(
+                    Translator.translate(
+                        "vendingmachine.gui.shared_trades_tooltip",
+                        tg.getTrades()
+                            .size() - 1))
+                    .style(IKey.AQUA, IKey.ITALIC));
+            builder.emptyLine();
+        }
+
+        if (tg != null && tg.cooldown != -1) {
+            builder.addLine(
+                IKey.str(
+                    Translator.translate(
+                        "vendingmachine.gui.cooldown_remaining_tooltip",
+                        teamSize - cur.cdTradeCount,
+                        teamSize))
+                    .style(IKey.DARK_AQUA));
+            builder.addLine(
+                IKey.str(
+                    Translator.translate(
+                        cur.cooldown > 0 ? "vendingmachine.gui.cooldown_started_tooltip"
+                            : "vendingmachine.gui.cooldown_idle_tooltip",
+                        cur.cooldownText))
+                    .style(IKey.DARK_AQUA));
+            builder.addLine(
+                IKey.str(Translator.translate("vendingmachine.gui.trades_scale_tooltip"))
+                    .style(IKey.DARK_AQUA));
+            builder.emptyLine();
+        }
+
+        builder.addLine(
+            IKey.str(Translator.translate("vendingmachine.gui.trade_hint"))
+                .style(IKey.GRAY));
+        builder.addLine(
+            IKey.str(Translator.translate("vendingmachine.gui.favourite_hint"))
+                .style(IKey.GRAY));
     }
 
     public void resetTradeDisplayScroll() {
@@ -810,34 +768,19 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
 
             // Incomplete Structure status message
             Flow statusRow = Flow.row().height(10).width(TRADE_ROW_WIDTH).marginLeft(2)
-                .child(new TextWidget(IKey.lang("vendingmachine.gui.error.incomplete_structure")))
+                .child(IKey.lang("vendingmachine.gui.error.incomplete_structure").asWidget())
                 .setEnabledIf(slot -> !this.getBase().getActive());
             tradeList.child(statusRow);
 
             // Higher first row top margin
             Flow row = new TradeRow().height(TILE_ITEM_HEIGHT + 4).width(TRADE_ROW_WIDTH).marginLeft(2);
 
+            List<TradeItemDisplayWidget> titleCategory = displayedTradesTiles.get(category);
             // Tiles Display
             for (int i = 0; i < MTEVendingMachine.MAX_TRADES; i++) {
-                int index = i;
-                displayedTradesTiles.get(category).get(i).setRootPanel(rootPanel);
-                row.child(displayedTradesTiles.get(category).get(i)
-                    .tooltipDynamic(builder -> {
-                        builder.clearText();
-                        synchronized (displayedTradesTiles) {
-                            if (index < displayedTradesTiles.get(category).size()) {
-                                constructTradeTooltip(builder, displayedTradesTiles.get(category).get(index).getDisplay());
-                                }
-                            }
-                    })
-                    .tooltipAutoUpdate(true)
-                    .setEnabledIf(slot -> {
-                        if (!this.getBase().getActive()) {
-                            return false;
-                        }
-                        TradeItemDisplayWidget display = ((TradeItemDisplayWidget) slot);
-                        return VMConfig.gui.display_type == display.displayType && display.getDisplay() != null;
-                    })
+                TradeItemDisplayWidget titleDisplay = titleCategory.get(i);
+                titleDisplay.setRootPanel(rootPanel);
+                row.child(updateDisplayWidget(displayedTradesTiles, category, titleDisplay, i)
                     .margin(2));
                 if (i % TILE_ITEMS_PER_ROW == TILE_ITEMS_PER_ROW - 1) {
                     tradeList.child(row);
@@ -849,28 +792,13 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
                 tradeList.child(row);
             }
 
+            List<TradeItemDisplayWidget> listCategory = displayedTradesList.get(category);
             // List Display
             row = new TradeRow().height(LIST_ITEM_HEIGHT).width(TRADE_ROW_WIDTH).marginLeft(2);
             for (int i = 0; i < MTEVendingMachine.MAX_TRADES; i++) {
-                int index = i;
-                displayedTradesList.get(category).get(i).setRootPanel(rootPanel);
-                row.child(displayedTradesList.get(category).get(i)
-                    .tooltipDynamic(builder -> {
-                        builder.clearText();
-                        synchronized (displayedTradesList) {
-                            if (index < displayedTradesList.get(category).size()) {
-                                constructTradeTooltip(builder, displayedTradesList.get(category).get(index).getDisplay());
-                            }
-                        }
-                    })
-                    .tooltipAutoUpdate(true)
-                    .setEnabledIf(slot -> {
-                        if (!this.getBase().getActive()) {
-                            return false;
-                        }
-                        TradeItemDisplayWidget display = ((TradeItemDisplayWidget) slot);
-                        return VMConfig.gui.display_type == display.displayType && display.getDisplay() != null;
-                    }));
+                TradeItemDisplayWidget listDisplay = listCategory.get(i);
+                listDisplay.setRootPanel(rootPanel);
+                row.child(updateDisplayWidget(displayedTradesList, category, listDisplay, i));
                 tradeList.child(row);
                 row = new TradeRow().height(LIST_ITEM_HEIGHT).width(TRADE_ROW_WIDTH).marginLeft(2);
             }
@@ -882,6 +810,25 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
         return Flow.row().child(paged.top(0))
             .left(3)
             .top(24);
+    }
+
+    private TradeItemDisplayWidget updateDisplayWidget(Map<TradeCategory, List<TradeItemDisplayWidget>> displayMap, TradeCategory category, TradeItemDisplayWidget titleDisplay, int index) {
+        return (TradeItemDisplayWidget) titleDisplay
+            .tooltipDynamic(builder -> {
+                builder.clearText();
+                List<TradeItemDisplayWidget> displayList = displayMap.get(category);
+                if (index < displayList.size()) {
+                    constructTradeTooltip(builder, displayList.get(index).getDisplay());
+                }
+            })
+            .tooltipAutoUpdate(true)
+            .setEnabledIf(slot -> {
+                if (!this.getBase().getActive()) {
+                    return false;
+                }
+                TradeItemDisplayWidget display = ((TradeItemDisplayWidget) slot);
+                return VMConfig.gui.display_type == display.displayType && display.getDisplay() != null;
+            });
     }
     // spotless:on
 
@@ -1036,37 +983,29 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
 
     private void updateTradeDisplay(Map<TradeCategory, List<TradeItemDisplay>> trades,
         Map<TradeCategory, List<TradeItemDisplayWidget>> display) {
-        synchronized (display) {
-            for (Map.Entry<TradeCategory, List<TradeItemDisplayWidget>> entry : display.entrySet()) {
-                int displayedSize = trades.get(entry.getKey()) == null ? 0
-                    : trades.get(entry.getKey())
-                        .size();
-                for (int i = 0; i < MTEVendingMachine.MAX_TRADES; i++) {
-                    if (i < displayedSize) {
-                        entry.getValue()
-                            .get(i)
-                            .setDisplay(
-                                trades.get(entry.getKey())
-                                    .get(i));
-                    } else {
-                        entry.getValue()
-                            .get(i)
-                            .setDisplay(null);
-                    }
+        for (Map.Entry<TradeCategory, List<TradeItemDisplayWidget>> entry : display.entrySet()) {
+            int displayedSize = trades.getOrDefault(entry.getKey(), Collections.emptyList())
+                .size();
+            List<TradeItemDisplay> tradeList = trades.get(entry.getKey());
+            for (int i = 0; i < MTEVendingMachine.MAX_TRADES; i++) {
+                TradeItemDisplayWidget tradeDisplay = entry.getValue()
+                    .get(i);
+                if (i < displayedSize) {
+                    tradeDisplay.setDisplay(tradeList.get(i));
+                } else {
+                    tradeDisplay.setDisplay(null);
                 }
             }
         }
+
     }
 
     public void updateTradeDisplay(Map<TradeCategory, List<TradeItemDisplay>> trades) {
         if (favouritesTabWidget != null) {
-            favouritesTabWidget.setEnabled(
-                !trades.get(TradeCategory.FAVOURITES)
-                    .isEmpty());
-            if (
-                trades.get(TradeCategory.FAVOURITES)
-                    .isEmpty() && this.tabController.getActivePageIndex() == 0
-            ) {
+            boolean emptyFavourites = trades.get(TradeCategory.FAVOURITES)
+                .isEmpty();
+            favouritesTabWidget.setEnabled(!emptyFavourites);
+            if (emptyFavourites && this.tabController.getActivePageIndex() == 0) {
                 this.tabController.setPage(1);
             }
         }
@@ -1079,7 +1018,7 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
         this.highlightedTabs.clear();
         if (
             this.searchBar.getText()
-                .equals("")
+                .isEmpty()
         ) {
             return;
         }
@@ -1096,27 +1035,23 @@ public class MTEVendingMachineGui extends MTEMultiBlockBaseGui<MTEVendingMachine
     public Map<TradeCategory, List<TradeItemDisplay>> getCurrentTradeDisplayData() {
         Map<TradeCategory, List<TradeItemDisplay>> currentData = new HashMap<>();
 
-        synchronized (displayedTradesTiles) {
-            this.displayedTradesTiles.forEach((k, v) -> {
-                currentData.put(
-                    k,
+        this.displayedTradesTiles.forEach((k, v) -> {
+            currentData.put(
+                k,
+                v.stream()
+                    .map(TradeItemDisplayWidget::getDisplay)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList()));
+        });
+
+        this.displayedTradesList.forEach((k, v) -> {
+            currentData.get(k)
+                .addAll(
                     v.stream()
                         .map(TradeItemDisplayWidget::getDisplay)
                         .filter(Objects::nonNull)
                         .collect(Collectors.toList()));
-            });
-        }
-
-        synchronized (displayedTradesList) {
-            this.displayedTradesList.forEach((k, v) -> {
-                currentData.get(k)
-                    .addAll(
-                        v.stream()
-                            .map(TradeItemDisplayWidget::getDisplay)
-                            .filter(Objects::nonNull)
-                            .collect(Collectors.toList()));
-            });
-        }
+        });
 
         return currentData;
     }

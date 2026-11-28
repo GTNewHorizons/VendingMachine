@@ -84,8 +84,7 @@ public class TradeGroup {
         for (int i = 0; i < reqList.tagCount(); i++) {
             ICondition condition = ConditionParser.getConditionFromNBT(reqList.getCompoundTagAt(i));
             requirementSet.add(condition);
-            if (VendingMachine.isBqLoaded && condition instanceof BqCondition) {
-                BqCondition bqc = (BqCondition) condition;
+            if (VendingMachine.isBqLoaded && condition instanceof BqCondition bqc) {
                 BqAdapter.INSTANCE.addQuestTrigger(bqc.getQuestId(), this);
             }
         }

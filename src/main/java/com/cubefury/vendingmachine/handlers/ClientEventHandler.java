@@ -38,10 +38,7 @@ public class ClientEventHandler {
         if (player == null || !player.isSneaking()) return;
         if (CurrencyItem.fromItemStack(player.getHeldItem()) == null) return;
         TileEntity te = world.getTileEntity(event.x, event.y, event.z);
-        if (
-            !(te instanceof IGregTechTileEntity)
-                || !(((IGregTechTileEntity) te).getMetaTileEntity() instanceof MTEVendingMachine)
-        ) return;
+        if (!(te instanceof IGregTechTileEntity gte) || !(gte.getMetaTileEntity() instanceof MTEVendingMachine)) return;
         NetCoinDeposit.sendDeposit(world, event.x, event.y, event.z, VMConfig.gui.wallet_mode);
         event.setCanceled(true);
     }

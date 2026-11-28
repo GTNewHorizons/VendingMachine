@@ -9,7 +9,6 @@ import net.minecraft.util.ResourceLocation;
 
 import com.cubefury.vendingmachine.VendingMachine;
 import com.cubefury.vendingmachine.api.network.UnserializedPacket;
-import com.cubefury.vendingmachine.api.util.Tuple2;
 import com.cubefury.vendingmachine.network.PacketSender;
 import com.cubefury.vendingmachine.network.PacketTypeRegistry;
 import com.cubefury.vendingmachine.trade.TradeDatabase;
@@ -53,11 +52,8 @@ public class NetTradeDbSync {
         PacketSender.INSTANCE.sendToServer(new UnserializedPacket(ID_NAME, payload));
     }
 
-    public static void onServer(Tuple2<NBTTagCompound, EntityPlayerMP> message) {
-        sendDatabase(
-            message.second(),
-            message.first()
-                .getBoolean("merge"));
+    public static void onServer(NBTTagCompound tag, EntityPlayerMP player) {
+        sendDatabase(player, tag.getBoolean("merge"));
     }
 
     @SideOnly(Side.CLIENT)
